@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-06-10 (continua)
+
+- PR #1 mergiata su main (`fix/item-not-found-and-internal-links`).
+- Issue #2 aperta: segnalazione bug RNDT (link IP interno + 500/501 per ID inesistente).
+
 ## 2026-06-10
 
 - Valutazione qualità (v0.1.0): punteggi per dimensione in `docs/evaluation.md`.
