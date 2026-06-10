@@ -10,6 +10,10 @@ from openrndt.client import rndt_request
 ITEM_PATH = "/rest/metadata/item"
 
 
+class ItemNotFoundError(Exception):
+    pass
+
+
 def _encode_id(item_id: str) -> str:
     return quote(item_id, safe="")
 
@@ -18,7 +22,10 @@ def get_item(item_id: str) -> dict[str, Any]:
     """JSON Elasticsearch del singolo metadato (_source + flag)."""
     response = rndt_request(f"{ITEM_PATH}/{_encode_id(item_id)}")
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+    if data.get("found") is False:
+        raise ItemNotFoundError(item_id)
+    return data
 
 
 def get_item_xml(item_id: str) -> str:

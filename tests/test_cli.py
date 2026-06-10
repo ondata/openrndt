@@ -53,6 +53,18 @@ def test_cli_get_xml_and_html_mutually_exclusive():
     assert "non entrambi" in result.output
 
 
+@respx.mock
+def test_cli_get_not_found_shows_message():
+    """ID inesistente (found:false) deve produrre exit 1 e messaggio leggibile."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
+        return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
+    )
+    result = runner.invoke(app, ["get", "inesistente"])
+    assert result.exit_code == 1
+    assert "non trovato" in result.output.lower()
+    assert "inesistente" in result.output
+
+
 def test_cli_base_url_override(monkeypatch):
     """Verifica che --base-url venga rispettato."""
     custom = "https://example.invalid/rndt"
