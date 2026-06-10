@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+import json
+from typing import Any, NoReturn
 
 import httpx
 import typer
@@ -40,6 +41,24 @@ def _root(
 ) -> None:
     config.set_base_url(base_url)
     output.set_mode(fmt.lower())
+
+
+def _http_error(exc: httpx.HTTPError) -> NoReturn:
+    """Stampa un messaggio leggibile su stderr ed esce 1 — mai uno stack trace.
+
+    Distingue una risposta HTTP di errore (status) da un problema di rete
+    (connessione rifiutata, timeout dopo i retry, DNS): in entrambi i casi
+    l'agente che orchestra la CLI deve capire l'esito dal solo output.
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
+    else:
+        url = getattr(getattr(exc, "request", None), "url", None) or config.get_base_url()
+        typer.echo(
+            f"Errore di rete: impossibile contattare {url} ({type(exc).__name__}).",
+            err=True,
+        )
+    raise typer.Exit(1)
 
 
 def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -101,15 +120,24 @@ def search(
             fmt="json",
             item_id=item_id,
         )
-    except httpx.HTTPStatusError as exc:
-        typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
         raise typer.Exit(1)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
+    except httpx.HTTPError as exc:
+        _http_error(exc)
     if not isinstance(payload, dict):
+        typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
         raise typer.Exit(1)
     if output.get_mode() == "json":
         output.emit(payload)
     else:
         rows = _result_rows(payload)
+        if not rows:
+            typer.echo("Nessun risultato per la ricerca.", err=True)
+            return
         title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
         output.emit(payload, table_rows=rows, table_title=title)
 
@@ -123,6 +151,12 @@ def get(
     """Recupera il dettaglio di un singolo metadato."""
     if as_xml and as_html:
         raise typer.BadParameter("Specifica --xml oppure --html, non entrambi.")
+    if not (as_xml or as_html) and output.get_mode() == "csv":
+        typer.echo(
+            "Il dettaglio di un metadato non è tabellare: usa --format json (default) o table.",
+            err=True,
+        )
+        raise typer.Exit(1)
     try:
         if as_xml:
             output.emit_text(get_item_xml(item_id))
@@ -134,9 +168,11 @@ def get(
     except ItemNotFoundError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1)
-    except httpx.HTTPStatusError as exc:
-        typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
         raise typer.Exit(1)
+    except httpx.HTTPError as exc:
+        _http_error(exc)
     output.emit(payload)
 
 

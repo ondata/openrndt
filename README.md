@@ -84,6 +84,22 @@ except ItemNotFoundError:
     print("metadato non trovato")
 ```
 
+Le funzioni propagano le eccezioni `httpx`: `httpx.HTTPStatusError` per le
+risposte 4xx/5xx e `httpx.ConnectError` / `httpx.TimeoutException` per i
+problemi di rete. I retry interni coprono i timeout e i 5xx (3 tentativi),
+mentre gli errori di connessione/DNS (`ConnectError`) vengono propagati subito.
+Tutte derivano da `httpx.HTTPError`, comodo per catturarle insieme:
+
+```python
+import httpx
+from openrndt import search
+
+try:
+    results = search(q="catasto")
+except httpx.HTTPError as exc:
+    print(f"richiesta fallita: {exc}")
+```
+
 Il base URL è configurabile via variabile d'ambiente o parametro:
 
 ```python
@@ -93,8 +109,23 @@ set_base_url("https://mio-mirror.example.com/RNDT")
 
 ## Per agenti AI
 
-Il progetto include una skill Claude Code in `skills/rndt-explorer/` che guida un
-agente attraverso le 4 fasi: scoperta delle codelist, ricerca con filtri progressivi,
+L'utente primario di questa CLI è un agente che legge `stdout` e compone i comandi
+passo passo. Da qui i principi di design (sul modello di
+[opensdmx](https://github.com/aborruso/opensdmx)):
+
+- **Output strutturato, mai oggetti Python.** Default JSON su `stdout`; `--format
+  table` per la lettura umana, `--format csv` per i risultati tabellari.
+- **In modalità JSON, `stdout` contiene solo JSON.** Errori e avvisi vanno su
+  `stderr`: si può fare pipe diretta in `jq`.
+- **Errori leggibili e self-contained: mai stack trace.** Un errore di rete o HTTP
+  produce un messaggio comprensibile su `stderr` ed exit code `1`, non un traceback.
+- **Exit code chiari.** `0` successo, `1` errore (rete, HTTP, ID inesistente),
+  `2` parametri non validi.
+- **Niente formati ambigui.** `get <id> --format csv` (dettaglio non tabellare)
+  fallisce con un messaggio esplicito invece di restituire output vuoto.
+
+Il progetto include inoltre una skill Claude Code in `skills/rndt-explorer/` che guida
+un agente attraverso le 4 fasi: scoperta delle codelist, ricerca con filtri progressivi,
 lettura del dettaglio, download delle risorse collegate (WMS/WFS/download).
 
 ## Riferimenti
