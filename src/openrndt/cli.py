@@ -123,8 +123,8 @@ def get(
             output.emit_text(get_item_html(item_id))
             return
         payload = get_item(item_id)
-    except ItemNotFoundError:
-        typer.echo(f"Metadato non trovato: {item_id}", err=True)
+    except ItemNotFoundError as exc:
+        typer.echo(str(exc), err=True)
         raise typer.Exit(1)
     except httpx.HTTPStatusError as exc:
         typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)

@@ -11,7 +11,9 @@ ITEM_PATH = "/rest/metadata/item"
 
 
 class ItemNotFoundError(Exception):
-    pass
+    def __init__(self, item_id: str) -> None:
+        self.item_id = item_id
+        super().__init__(f"Metadato non trovato: {item_id}")
 
 
 def _encode_id(item_id: str) -> str:
