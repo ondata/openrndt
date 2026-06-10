@@ -42,6 +42,13 @@ def search(
 
     Ritorna un dict (parsed JSON) se `fmt` è `json` o `json-source`,
     altrimenti la stringa con il body grezzo (XML, CSV, KML, …).
+
+    Nota su `sort` (verificato live): l'ordinamento reale usa la sintassi
+    `campo:asc|desc` su un campo sortable (keyword `_s`, data `_dt`, intero `_i`),
+    es. ``sort="apiso_Modified_dt:desc"``. I valori ``dateDescending`` /
+    ``dateAscending`` documentati ufficialmente NON ordinano (vengono ignorati).
+    Non esiste un campo data-di-pubblicazione ordinabile: il proxy più affidabile
+    per "ultimi pubblicati" è ``apiso_Modified_dt``.
     """
     if num > MAX_NUM:
         raise ValueError(f"`num` non può superare {MAX_NUM} (richiesto: {num}).")

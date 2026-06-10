@@ -74,7 +74,15 @@ def search(
     ),
     time: str | None = typer.Option(None, "--time", help="Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd."),
     modified: str | None = typer.Option(None, "--modified", help="Intervallo modifica record nel catalogo yyyy-mm-dd/yyyy-mm-dd."),
-    sort: str | None = typer.Option(None, "--sort", help="Ordinamento (dateDescending|dateAscending|relevance|title[:desc])."),
+    sort: str | None = typer.Option(
+        None,
+        "--sort",
+        help=(
+            "Ordinamento 'campo:asc|desc' su campo sortable (es. apiso_Modified_dt:desc). "
+            "Attenzione: 'dateDescending'/'dateAscending' NON ordinano su RNDT. "
+            "Vedi `discover --what sort_values`."
+        ),
+    ),
     start: int = typer.Option(1, "--start", help="Indice 1-based del primo record."),
     num: int = typer.Option(10, "--num", "-n", help="Numero massimo di record (max 5000)."),
     item_id: str | None = typer.Option(None, "--id", help="ID metadato specifico."),

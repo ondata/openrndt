@@ -65,18 +65,33 @@ openrndt --format json search --q "catasto" --num 50 \
 `_source` contiene **tutti** i campi indicizzati Elasticsearch del metadato.
 Questi sono i più ricorrenti e utili per costruire `q=campo:valore`:
 
-| Campo                       | Cosa contiene                                  |
-|-----------------------------|------------------------------------------------|
-| `title`                     | titolo del metadato                            |
-| `description`               | descrizione testuale                           |
-| `fileid`                    | uguale al `id` del risultato                   |
-| `keywords_s`                | parole chiave (include la categoria ISO 19115) |
-| `INSPIRETheme_s`            | tema INSPIRE (es. `Idrografia`, `Trasporti`)   |
-| `contact_organizations_s`   | enti responsabili del dato                     |
-| `AmbitoTerritoriale_s`      | `Regionale`, `Nazionale`, `Locale`             |
-| `links_s`                   | URL dei servizi (WMS/WFS/download)             |
-| `webServices_s`             | array dei servizi web esposti                  |
-| `bbox`                      | bounding box (anche dentro `_source`)          |
+| Campo                           | Cosa contiene                                                     |
+|---------------------------------|-------------------------------------------------------------------|
+| `title`                         | titolo del metadato                                               |
+| `description`                   | descrizione testuale                                              |
+| `fileid`                        | uguale al `id` del risultato                                      |
+| `keywords_s`                    | parole chiave (include la categoria ISO 19115)                    |
+| `INSPIRETheme_s`                | tema INSPIRE (es. `Idrografia`, `Trasporti`)                      |
+| `contact_organizations_s`       | array di tutti gli enti responsabili                              |
+| `apiso_OrganizationName_txt`    | nome completo dell'organizzazione principale                      |
+| `EnteResponsabile_s`            | ente responsabile in forma breve (es. `Regione Siciliana`)        |
+| `apiso_Type_s`                  | tipo di risorsa: `dataset`, `service`, ecc.                       |
+| `PuntoDiContattoEmail_s`        | indirizzo email di contatto del responsabile                      |
+| `PuntoDiContatto_s`             | nome del punto di contatto                                        |
+| `PuntoDiContattoSitoWeb_s`      | sito web del punto di contatto                                    |
+| `AmbitoTerritoriale_s`          | `Regionale`, `Nazionale`, `Locale`                                |
+| `links_s`                       | URL dei servizi (WMS/WFS/download)                                |
+| `webServices_s`                 | array dei servizi web esposti                                     |
+| `bbox`                          | bounding box (anche dentro `_source`)                             |
+
+> **`author.name` vs organizzazione**: `author.name` nel payload di ricerca è lo
+> username di sistema (es. `agostino.cirasa`), non il nome dell'ente. Usa
+> `_source.apiso_OrganizationName_txt` per il nome esteso.
+
+> **Codice IPA**: non c'è un campo dedicato per il codice IPA dell'ufficio.
+> Il prefisso dell'`id` prima dei due punti (es. `r_sicili` da `r_sicili:4e0a416f-...`)
+> è il codice IPA dell'**ente capofila** (es. Regione Siciliana), non dell'ufficio
+> specifico (es. Assessorato). Estraibile con `jq -r '.id | split(":")[0]'`.
 
 Per esplorare un payload, prendi un risultato qualsiasi e fai:
 
