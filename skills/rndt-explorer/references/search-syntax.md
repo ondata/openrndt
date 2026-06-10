@@ -68,6 +68,50 @@ openrndt search --q 'title:*alluvion*' --num 10
 openrndt search --time "2024-01-01/2024-12-31" --num 10
 ```
 
+## Ordinamento (`--sort`) — attenzione
+
+Verificato live: i valori `dateDescending`/`dateAscending` documentati
+**non ordinano** (RNDT restituisce ordine identico fra i due → ignorati).
+Il meccanismo reale è la sintassi Elasticsearch `campo:asc|desc` su un campo
+*sortable* (keyword `_s`, data `_dt`, intero `_i`).
+
+```bash
+# Ultimi metadati per data di modifica scheda (proxy migliore per "più recenti")
+openrndt search --q 'EnteResponsabile_s:"Regione Siciliana"' --sort 'apiso_Modified_dt:desc' --num 5
+
+# Crescente
+openrndt search --q 'apiso_Type_s:dataset' --sort 'apiso_Modified_dt:asc' --num 5
+
+# Pertinenza (funziona)
+openrndt search --q 'catasto' --sort 'relevance' --num 5
+```
+
+Limiti noti:
+
+- **Niente ordinamento per data di pubblicazione**: la data `publication` esiste
+  nell'XML ISO (`gmd:CI_Date dateType=publication`) ma non è un campo indicizzato
+  ordinabile. Il proxy disponibile è `apiso_Modified_dt` (dateStamp del metadato).
+  `apiso_CreationDate_dt` è spesso `null` o fittizio (`2012-01-01`): inaffidabile.
+- Ordinare per un campo `text`/analizzato (es. `title` nudo) dà errore
+  Elasticsearch *"Fielddata is disabled"*: usa un campo keyword.
+- Il servizio **CSW** (`/csw`) ignora del tutto `<ogc:SortBy>`: non ordina per
+  nessuna proprietà. Dettagli e implicazioni INSPIRE in `ref/rest-api-rndt.md`.
+
+## Filtrare per ente — usa la forma stabile
+
+Lo stesso ente compare con molte varianti del nome lungo in
+`apiso_OrganizationName_txt` (uffici/dipartimenti diversi). Filtrare per la
+stringa esatta lunga è fragile e perde record. Preferisci la forma breve
+`EnteResponsabile_s` o il prefisso dell'`id` (codice IPA dell'ente capofila):
+
+```bash
+# Robusto: forma breve dell'ente
+openrndt search --q 'EnteResponsabile_s:"Regione Siciliana"' --sort 'apiso_Modified_dt:desc' --num 5
+
+# Robusto: per prefisso id (codice IPA ente capofila)
+openrndt search --q 'apiso_Identifier_s:r_sicili*' --sort 'apiso_Modified_dt:desc' --num 5
+```
+
 ## Suggerimenti
 
 - Termini con apostrofo: usa virgolette, es. `"d'Aosta"`.

@@ -30,13 +30,21 @@ DATA_CATEGORIES: dict[str, str] = {
     "utilitiesCommunication": "Utility e comunicazioni",
 }
 
-# Valori validi per il parametro `sort` (vedi ref/rest-api-rndt.md).
+# Valori per il parametro `sort` (vedi ref/rest-api-rndt.md).
+#
+# IMPORTANTE (verificato live): il meccanismo reale è `campo:asc|desc` su un campo
+# Elasticsearch *sortable* (keyword `_s`, data `_dt`, intero `_i`). I valori
+# "amichevoli" `dateDescending`/`dateAscending` documentati sulla pagina ufficiale
+# NON ordinano (su RNDT restituiscono ordine identico fra loro → ignorati).
+# Ordinare per un campo `text`/analizzato (es. `title` nudo) dà errore Elasticsearch
+# "Fielddata is disabled". Non esiste un campo data-di-pubblicazione ordinabile.
 SORT_VALUES: dict[str, str] = {
-    "dateDescending": "Data decrescente (default)",
-    "dateAscending": "Data crescente",
-    "relevance": "Pertinenza",
-    "title": "Titolo (crescente)",
-    "title:desc": "Titolo (decrescente)",
+    "apiso_Modified_dt:desc": "Per data: ultimi metadati modificati per primi (proxy migliore per 'più recenti').",
+    "apiso_Modified_dt:asc": "Per data: metadati modificati meno di recente per primi.",
+    "sys_modified_dt:desc": "Per data di reindex catalogo (poco utile: valori ravvicinati).",
+    "relevance": "Pertinenza (verificato).",
+    "dateDescending": "⚠️ Documentato ma NON ordina su RNDT (ignorato, identico a dateAscending).",
+    "dateAscending": "⚠️ Documentato ma NON ordina su RNDT (ignorato).",
 }
 
 # Formati output del parametro `f`.
@@ -109,11 +117,12 @@ LUCENE_FIELDS: dict[str, str] = {
     "INSPIRETheme_s": "Tema INSPIRE",
     "OpenDataTheme_s": "Tema open data",
     "AmbitoTerritoriale_s": "Ambito: Nazionale | Regionale | Provinciale | Comunale",
-    # Date
-    "apiso_Modified_dt": "Data modifica metadato (ISO 8601, usare range [da TO a])",
-    "apiso_RevisionDate_dt": "Data revisione risorsa (ISO 8601, usare range [da TO a])",
-    "sys_created_dt": "Data creazione nel catalogo",
-    "sys_modified_dt": "Data ultima modifica nel catalogo",
+    # Date (sortable: usabili sia in range [da TO a] sia come `sort=campo:desc`)
+    "apiso_Modified_dt": "dateStamp del metadato (sortable). Miglior proxy per 'ultimi aggiornati'.",
+    "apiso_RevisionDate_dt": "Data revisione risorsa = ISO dateType 'revision' (sortable).",
+    "apiso_CreationDate_dt": "Data creazione risorsa. Spesso null/fittizia (es. 2012-01-01): inaffidabile per sort.",
+    "sys_created_dt": "Data creazione record nel catalogo (reindex).",
+    "sys_modified_dt": "Data ultima modifica record nel catalogo = reindex (sortable, ma poco informativa).",
     # Accesso e licenze
     "apiso_AccessConstraints_s": "Vincoli di accesso / licenza (es. CC BY 4.0)",
     "apiso_OtherConstraints_s": "Altri vincoli",

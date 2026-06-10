@@ -17,7 +17,7 @@ https://geodati.gov.it/RNDT/rest/metadata/search?<parametro>&<parametro>&…
 | `bbox`         | Estensione geografica (ovest,sud,est,nord)        | `xmin,ymin,xmax,ymax` in WGS84 |
 | `dataCategory` | Categoria tematica (ISO 19115 TopicCategoryCode) — **vedi nota sotto** | uno o più valori separati da virgola |
 | `time`         | Intervallo temporale                              | `yyyy-mm-dd` (inizio/fine) |
-| `sort`         | Ordinamento                                       | `dateAscending`, `dateDescending` (default), `relevance`, `title`; può ricevere suffisso `:desc` |
+| `sort`         | Ordinamento — **vedi nota sotto**                 | sintassi reale `campo:asc\|desc` (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` documentati ma **non ordinano** |
 | `start`        | Numero primo record (1-based)                     | intero |
 | `num`          | Numero massimo risultati                          | intero, max 5000, default 10 |
 | `f`            | Formato risposta                                  | `atom`, `json`, `json-source`, `csw`, `rss`, `csv`, `kml`, `eros` |
@@ -50,14 +50,60 @@ questa clausola, componendola in AND con un eventuale `--q` esplicito.
 Non risulta documentato come issue né sulla pagina ufficiale né nello
 Swagger di `gpt.geocloud.com`.
 
-## Sort — valori validi
+## ⚠️ Nota — `sort`: i valori `dateDescending`/`dateAscending` non ordinano
 
-- `dateAscending` — data crescente
-- `dateDescending` — data decrescente (default)
-- `relevance` — pertinenza
-- `title` — titolo
+Verifica live (2026-06-10), cross-validata anche sull'endpoint di test Esri
+(`gpt.geocloud.com/geoportal3`):
 
-Suffisso `:desc` accettato (es. `sort=title:desc`).
+```bash
+# Stesso ordine identico → il sort per data "amichevole" è ignorato
+curl ".../search?q=apiso_Type_s:dataset&sort=dateDescending&num=3"  # id: MARSAGLIA, SARDEG, MESERO
+curl ".../search?q=apiso_Type_s:dataset&sort=dateAscending&num=3"   # id: MARSAGLIA, SARDEG, MESERO (identici)
+```
+
+Il meccanismo di ordinamento che **funziona** è la sintassi Elasticsearch
+`campo:asc|desc` su un campo *sortable*:
+
+```bash
+# Ordina davvero per data di modifica del metadato
+curl ".../search?q=apiso_Type_s:dataset&sort=apiso_Modified_dt:desc&num=3"  # 2026-06-05, 2026-05-28, …
+curl ".../search?q=apiso_Type_s:dataset&sort=apiso_Modified_dt:asc&num=3"   # 1988-10-05, 2000-01-01, …
+```
+
+Regole verificate:
+
+- Sortable: campi keyword (`_s`), data (`_dt`), intero (`_i`).
+- Ordinare per un campo `text`/analizzato (es. `sort=title` nudo) dà errore
+  Elasticsearch: *"Fielddata is disabled on [title]… Please use a keyword field instead."*
+- `relevance` funziona (ordina per pertinenza).
+- **Non esiste un campo data-di-pubblicazione ordinabile.** Le varianti
+  `apiso_PublicationDate_dt`, `apiso_Date_dt`, ecc. sono assenti dall'indice.
+  Mapping date verificato: `apiso_RevisionDate_dt` = ISO `dateType=revision`,
+  `apiso_Modified_dt` = dateStamp del metadato, `apiso_CreationDate_dt` spesso
+  `null` o fittizio (`2012-01-01`). La data di pubblicazione esiste **solo**
+  nell'XML (`gmd:CI_Date` con `dateType=publication`), non come campo indicizzato.
+- Proxy pratico per "ultimi pubblicati/aggiornati": `sort=apiso_Modified_dt:desc`.
+
+## ⚠️ Nota — il servizio CSW non ordina (`SortBy` ignorato)
+
+Endpoint CSW: `https://geodati.gov.it/RNDT/csw` (OGC CSW 2.0.2 ISO AP).
+Verifica live (2026-06-10): l'elemento `<ogc:SortBy>` viene **completamente
+ignorato**. Una `GetRecords` con `SortProperty` `apiso:Modified`, `apiso:Title`
+o `apiso:PublicationDate`, in `ASC` o `DESC`, restituisce sempre gli stessi
+record nello stesso ordine di default (MARSAGLIA, SARDEG, MESERO):
+
+```bash
+curl -X POST -H 'Content-Type: application/xml' --data @query.xml \
+  'https://geodati.gov.it/RNDT/csw'
+# <ogc:SortBy><ogc:SortProperty>
+#   <ogc:PropertyName>apiso:PublicationDate</ogc:PropertyName>
+#   <ogc:SortOrder>DESC</ogc:SortOrder>
+# </ogc:SortProperty></ogc:SortBy>  → ordine invariato
+```
+
+Questo viola la INSPIRE *Technical Guidance for the implementation of INSPIRE
+Discovery Services v3.1*, che richiede il supporto dell'ordinamento (`SortBy`)
+nel servizio di discovery CSW.
 
 ## Formati output
 
