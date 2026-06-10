@@ -53,6 +53,8 @@ def search(
     Solleva ``ValueError`` su parametri non validi e ``httpx.HTTPError`` (incluse
     ``httpx.HTTPStatusError`` per le risposte 4xx/5xx e ``httpx.ConnectError`` /
     ``httpx.TimeoutException`` per i problemi di rete) se la richiesta fallisce.
+    Con ``fmt`` JSON, una risposta con body non-JSON valido (pur status 2xx)
+    solleva ``json.JSONDecodeError`` (sottoclasse di ``ValueError``).
     """
     if num > MAX_NUM:
         raise ValueError(f"`num` non può superare {MAX_NUM} (richiesto: {num}).")

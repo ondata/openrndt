@@ -100,7 +100,7 @@ def test_cli_search_connect_error_no_traceback():
 
 
 @respx.mock
-def test_cli_search_zero_results_csv_warns(search_response_json):
+def test_cli_search_zero_results_csv_warns():
     """search con 0 risultati in CSV: avviso su stderr, exit 0, niente output vuoto silenzioso."""
     empty = {"total": 0, "num": 0, "start": 1, "results": []}
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
@@ -109,6 +109,30 @@ def test_cli_search_zero_results_csv_warns(search_response_json):
     result = runner.invoke(app, ["--format", "csv", "search", "--q", "zzz"])
     assert result.exit_code == 0, result.output
     assert "nessun risultato" in result.output.lower()
+
+
+@respx.mock
+def test_cli_search_malformed_json_no_traceback():
+    """Body non-JSON con status 200: messaggio leggibile, exit 1 (non 2), nessuno stack trace."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, text="<html>boom</html>")
+    )
+    result = runner.invoke(app, ["search", "--q", "x"])
+    assert result.exit_code == 1, result.output
+    assert "inattesa" in result.output.lower()
+    assert "Traceback" not in result.output
+
+
+@respx.mock
+def test_cli_get_malformed_json_no_traceback():
+    """get con body non-JSON e status 200: messaggio leggibile, exit 1, nessuno stack trace."""
+    respx.get(url__regex=rf"{DEFAULT_BASE_URL}/rest/metadata/item/.*").mock(
+        return_value=httpx.Response(200, text="<html>boom</html>")
+    )
+    result = runner.invoke(app, ["get", "foo"])
+    assert result.exit_code == 1, result.output
+    assert "inattesa" in result.output.lower()
+    assert "Traceback" not in result.output
 
 
 def test_cli_search_invalid_num_no_traceback():

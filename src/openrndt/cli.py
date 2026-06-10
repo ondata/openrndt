@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+import json
+from typing import Any, NoReturn
 
 import httpx
 import typer
@@ -42,7 +43,7 @@ def _root(
     output.set_mode(fmt.lower())
 
 
-def _http_error(exc: httpx.HTTPError) -> None:
+def _http_error(exc: httpx.HTTPError) -> NoReturn:
     """Stampa un messaggio leggibile su stderr ed esce 1 — mai uno stack trace.
 
     Distingue una risposta HTTP di errore (status) da un problema di rete
@@ -52,7 +53,7 @@ def _http_error(exc: httpx.HTTPError) -> None:
     if isinstance(exc, httpx.HTTPStatusError):
         typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
     else:
-        url = getattr(getattr(exc, "request", None), "url", "RNDT")
+        url = getattr(getattr(exc, "request", None), "url", None) or config.get_base_url()
         typer.echo(
             f"Errore di rete: impossibile contattare {url} ({type(exc).__name__}).",
             err=True,
@@ -119,6 +120,9 @@ def search(
             fmt="json",
             item_id=item_id,
         )
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
+        raise typer.Exit(1)
     except ValueError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(2)
@@ -163,6 +167,9 @@ def get(
         payload = get_item(item_id)
     except ItemNotFoundError as exc:
         typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
         raise typer.Exit(1)
     except httpx.HTTPError as exc:
         _http_error(exc)

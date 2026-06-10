@@ -85,9 +85,10 @@ except ItemNotFoundError:
 ```
 
 Le funzioni propagano le eccezioni `httpx`: `httpx.HTTPStatusError` per le
-risposte 4xx/5xx e `httpx.ConnectError` / `httpx.TimeoutException` (dopo i
-retry) per i problemi di rete. Tutte derivano da `httpx.HTTPError`, comodo per
-catturarle insieme:
+risposte 4xx/5xx e `httpx.ConnectError` / `httpx.TimeoutException` per i
+problemi di rete. I retry interni coprono i timeout e i 5xx (3 tentativi),
+mentre gli errori di connessione/DNS (`ConnectError`) vengono propagati subito.
+Tutte derivano da `httpx.HTTPError`, comodo per catturarle insieme:
 
 ```python
 import httpx
