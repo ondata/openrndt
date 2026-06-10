@@ -8,7 +8,7 @@ import httpx
 import typer
 
 from openrndt import codelists, config, output
-from openrndt.item import get_item, get_item_html, get_item_xml
+from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
 from openrndt.search import search as do_search
 
 app = typer.Typer(
@@ -123,6 +123,9 @@ def get(
             output.emit_text(get_item_html(item_id))
             return
         payload = get_item(item_id)
+    except ItemNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
     except httpx.HTTPStatusError as exc:
         typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
         raise typer.Exit(1)

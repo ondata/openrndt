@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import httpx
+import pytest
 import respx
 
 from openrndt.config import DEFAULT_BASE_URL
-from openrndt.item import get_item, get_item_html, get_item_xml
+from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
 
 
 @respx.mock
@@ -35,3 +36,13 @@ def test_get_item_html():
         return_value=httpx.Response(200, text="<html><body>ok</body></html>")
     )
     assert "<html>" in get_item_html("abc:123")
+
+
+@respx.mock
+def test_get_item_not_found_raises():
+    """L'API torna 200 con found:false per ID inesistenti — deve sollevare ItemNotFoundError."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
+        return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
+    )
+    with pytest.raises(ItemNotFoundError):
+        get_item("inesistente")
