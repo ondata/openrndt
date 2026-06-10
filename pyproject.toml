@@ -1,0 +1,53 @@
+[project]
+name = "openrndt"
+version = "0.1.0"
+description = "CLI Python per il Repertorio Nazionale dei Dati Territoriali (RNDT) — pensata per essere orchestrata da un'AI"
+readme = "README.md"
+authors = [
+    { name = "Andrea Borruso", email = "aborruso@gmail.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.12"
+keywords = ["rndt", "geodati", "inspire", "metadata", "iso19115", "iso19139", "open-data", "italy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "httpx>=0.28.1",
+    "typer>=0.24.1",
+    "rich>=14.3.3",
+    "tenacity>=9.1.4",
+]
+
+[project.scripts]
+openrndt = "openrndt:main"
+
+[project.urls]
+Homepage = "https://geodati.gov.it/geoportale/"
+"REST API" = "https://geodati.gov.it/geoportale/eng/strumenti-en/rest-api"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "responses>=0.25",
+    "respx>=0.21",
+    "ruff>=0.11",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+ignore = ["E402"]
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"

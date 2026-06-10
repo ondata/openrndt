@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "rndt-explorer": {
+      "source": "/home/aborruso/git/idee/openrndt",
+      "sourceType": "local",
+      "computedHash": "89afbf73ca678f8992011e0d2dfcbe802135c15601607e766a7f9752dbeaedbf"
+    }
+  }
+}

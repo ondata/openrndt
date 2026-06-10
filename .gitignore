@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# AI tool configs (personal)
+.claude/
+.codex/
+.gemini/
+.opencode/
+
+# Working notes
+tasks/
+tmp/
+tmp.md
+
+# Local outputs
+*.out
+out.txt

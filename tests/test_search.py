@@ -1,0 +1,89 @@
+"""Test del modulo search con HTTP mockato via respx."""
+
+from __future__ import annotations
+
+import httpx
+import pytest
+import respx
+
+from openrndt.config import DEFAULT_BASE_URL
+from openrndt.search import MAX_NUM, search
+
+
+@respx.mock
+def test_search_returns_dict_on_json(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = search(q="catasto", num=2)
+    assert isinstance(result, dict)
+    assert result["total"] == 23580
+    assert len(result["results"]) == 2
+
+
+@respx.mock
+def test_search_passes_all_params():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(
+        q="suolo",
+        bbox="7,44,8,45",
+        data_category="planningCadastre",
+        time="2024-01-01/2024-12-31",
+        sort="title:desc",
+        start=11,
+        num=20,
+        item_id="abc",
+    )
+    request = route.calls.last.request
+    params = dict(request.url.params)
+    assert params["q"] == "(suolo) AND keywords_s:planningCadastre"
+    assert "dataCategory" not in params, "dataCategory non è un filtro nativo del RNDT"
+    assert params["bbox"] == "7,44,8,45"
+    assert params["time"] == "2024-01-01/2024-12-31"
+    assert params["sort"] == "title:desc"
+    assert params["start"] == "11"
+    assert params["num"] == "20"
+    assert params["id"] == "abc"
+    assert params["f"] == "json"
+
+
+@respx.mock
+def test_data_category_alone_becomes_keywords_clause():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(data_category="planningCadastre", num=1)
+    params = dict(route.calls.last.request.url.params)
+    assert params["q"] == "keywords_s:planningCadastre"
+
+
+@respx.mock
+def test_data_category_multiple_becomes_or_clause():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(data_category="planningCadastre,boundaries", num=1)
+    params = dict(route.calls.last.request.url.params)
+    assert params["q"] == "keywords_s:(planningCadastre OR boundaries)"
+
+
+@respx.mock
+def test_search_returns_text_on_non_json_format():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, text="title,id\nfoo,bar\n", headers={"content-type": "text/csv"})
+    )
+    result = search(num=1, fmt="csv")
+    assert isinstance(result, str)
+    assert "title,id" in result
+
+
+def test_search_validates_num_max():
+    with pytest.raises(ValueError, match="non può superare"):
+        search(num=MAX_NUM + 1)
+
+
+def test_search_validates_start_positive():
+    with pytest.raises(ValueError, match="≥ 1"):
+        search(start=0)
