@@ -1,6 +1,6 @@
 # openrndt
 
-CLI Python per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
+CLI Python e libreria per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
 pensata per essere orchestrata da un'AI.
 
 > Stato: alpha (v0.1) — read-only.
@@ -56,6 +56,40 @@ openrndt discover
 ```
 
 Tutti i comandi accettano `--format json` (default), `--format table`, `--format csv`.
+
+## Uso come libreria Python
+
+```python
+from openrndt import search, get_item, get_item_xml, ItemNotFoundError
+
+# Ricerca
+results = search(q="catasto", num=5)
+for r in results["results"]:
+    print(r["id"], r["title"])
+
+# Filtro per categoria e bbox
+results = search(data_category="planningCadastre", bbox="7,44,8,45", num=10)
+
+# Dettaglio singolo metadato
+item = get_item("age:D_E973_MARSAGLIA")
+print(item["_source"]["title"])
+
+# XML ISO 19139
+xml = get_item_xml("age:D_E973_MARSAGLIA")
+
+# Gestione ID inesistente
+try:
+    item = get_item("id_inesistente")
+except ItemNotFoundError:
+    print("metadato non trovato")
+```
+
+Il base URL è configurabile via variabile d'ambiente o parametro:
+
+```python
+from openrndt.config import set_base_url
+set_base_url("https://mio-mirror.example.com/RNDT")
+```
 
 ## Per agenti AI
 
