@@ -45,8 +45,8 @@ openrndt search --q 'contact_organizations_s:"Agenzia delle Entrate"' --num 5
 # Ente (nome completo — più preciso)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana - Assessorato del Territorio e dell'\''Ambiente"' --num 5
 
-# Ultimi 5 per ente, ordinati per data
-openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort dateDescending --num 5
+# Ultimi 5 per ente, ordinati per data (dateDescending NON ordina: usa apiso_Modified_dt:desc)
+openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort 'apiso_Modified_dt:desc' --num 5
 
 # Solo dataset (esclude servizi)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana" AND apiso_Type_s:dataset' --num 10

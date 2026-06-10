@@ -17,7 +17,7 @@ https://geodati.gov.it/RNDT/rest/metadata/search?<parametro>&<parametro>&…
 | `bbox`         | Estensione geografica (ovest,sud,est,nord)        | `xmin,ymin,xmax,ymax` in WGS84 |
 | `dataCategory` | Categoria tematica (ISO 19115 TopicCategoryCode) — **vedi nota sotto** | uno o più valori separati da virgola |
 | `time`         | Intervallo temporale                              | `yyyy-mm-dd` (inizio/fine) |
-| `sort`         | Ordinamento — **vedi nota sotto**                 | sintassi reale `campo:asc\|desc` (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` documentati ma **non ordinano** |
+| `sort`         | Ordinamento — **vedi nota sotto**                 | sintassi reale <code>campo:asc&#124;desc</code> (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` documentati ma **non ordinano** |
 | `start`        | Numero primo record (1-based)                     | intero |
 | `num`          | Numero massimo risultati                          | intero, max 5000, default 10 |
 | `f`            | Formato risposta                                  | `atom`, `json`, `json-source`, `csw`, `rss`, `csv`, `kml`, `eros` |

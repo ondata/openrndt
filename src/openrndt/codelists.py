@@ -75,7 +75,7 @@ SEARCH_PARAMS: dict[str, str] = {
     "dataCategory": "Una o più categorie ISO 19115 separate da virgola.",
     "time": "Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
-    "sort": "Ordinamento (vedi SORT_VALUES). Default: dateDescending.",
+    "sort": "Ordinamento 'campo:asc|desc' su campo sortable (es. apiso_Modified_dt:desc). ⚠️ 'dateDescending'/'dateAscending' NON ordinano su RNDT. Vedi SORT_VALUES.",
     "start": "Posizione del primo record (1-based, default 1).",
     "num": "Numero massimo di risultati (default 10, max 5000).",
     "f": "Formato output (vedi OUTPUT_FORMATS).",
