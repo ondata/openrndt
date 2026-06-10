@@ -87,6 +87,45 @@ def test_cli_get_html_not_found_shows_message():
     assert "501" in result.output
 
 
+@respx.mock
+def test_cli_search_connect_error_no_traceback():
+    """Errore di rete (connessione rifiutata): messaggio leggibile, exit 1, nessuno stack trace."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=httpx.ConnectError("connection refused")
+    )
+    result = runner.invoke(app, ["search", "--q", "x"])
+    assert result.exit_code == 1
+    assert "rete" in result.output.lower()
+    assert "Traceback" not in result.output
+
+
+@respx.mock
+def test_cli_search_zero_results_csv_warns(search_response_json):
+    """search con 0 risultati in CSV: avviso su stderr, exit 0, niente output vuoto silenzioso."""
+    empty = {"total": 0, "num": 0, "start": 1, "results": []}
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=empty)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--q", "zzz"])
+    assert result.exit_code == 0, result.output
+    assert "nessun risultato" in result.output.lower()
+
+
+def test_cli_search_invalid_num_no_traceback():
+    """Parametro fuori range (num > 5000): messaggio leggibile, exit 2, nessuno stack trace."""
+    result = runner.invoke(app, ["search", "--num", "6000"])
+    assert result.exit_code == 2
+    assert "5000" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_cli_get_csv_not_tabular():
+    """get --format csv: dettaglio non tabellare → messaggio esplicito, exit 1, nessuna rete."""
+    result = runner.invoke(app, ["--format", "csv", "get", "foo"])
+    assert result.exit_code == 1
+    assert "tabellare" in result.output.lower()
+
+
 def test_cli_base_url_override(monkeypatch):
     """Verifica che --base-url venga rispettato."""
     custom = "https://example.invalid/rndt"

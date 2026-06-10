@@ -21,7 +21,11 @@ def _encode_id(item_id: str) -> str:
 
 
 def get_item(item_id: str) -> dict[str, Any]:
-    """JSON Elasticsearch del singolo metadato (_source + flag)."""
+    """JSON Elasticsearch del singolo metadato (_source + flag).
+
+    Solleva ``ItemNotFoundError`` se l'ID non esiste e ``httpx.HTTPError``
+    (status o rete) se la richiesta fallisce.
+    """
     response = rndt_request(f"{ITEM_PATH}/{_encode_id(item_id)}")
     response.raise_for_status()
     data = response.json()
