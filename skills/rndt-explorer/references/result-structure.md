@@ -88,9 +88,10 @@ Questi sono i più ricorrenti e utili per costruire `q=campo:valore`:
 > username di sistema (es. `agostino.cirasa`), non il nome dell'ente. Usa
 > `_source.apiso_OrganizationName_txt` per il nome esteso.
 
-> **Codice IPA**: non c'è un campo dedicato. Il codice IPA è il prefisso
-> dell'`id` prima dei due punti (es. `r_sicili` da `r_sicili:4e0a416f-...`).
-> Estraibile con `jq -r '.id | split(":")[0]'`.
+> **Codice IPA**: non c'è un campo dedicato per il codice IPA dell'ufficio.
+> Il prefisso dell'`id` prima dei due punti (es. `r_sicili` da `r_sicili:4e0a416f-...`)
+> è il codice IPA dell'**ente capofila** (es. Regione Siciliana), non dell'ufficio
+> specifico (es. Assessorato). Estraibile con `jq -r '.id | split(":")[0]'`.
 
 Per esplorare un payload, prendi un risultato qualsiasi e fai:
 

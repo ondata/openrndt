@@ -51,9 +51,9 @@ openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort date
 # Solo dataset (esclude servizi)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana" AND apiso_Type_s:dataset' --num 10
 
-# Trovare l'username di un autore e ricavare il codice IPA
+# Ricavare il codice IPA dell'ente capofila (non dell'ufficio specifico)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --num 1 \
-  | jq -r '.results[0] | {autore: .author.name, codice_ipa: (.id | split(":")[0])}'
+  | jq -r '.results[0] | {autore: .author.name, codice_ipa_ente: (.id | split(":")[0])}'
 
 # Combinazione: catasto OR cartografia, escluso "test"
 openrndt search --q '(catasto OR cartografia) -test' --num 10
