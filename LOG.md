@@ -2,6 +2,10 @@
 
 ## 2026-06-10 (continua)
 
+- Skill `rndt-explorer` aggiornata con nuovi campi Lucene scoperti live: `apiso_OrganizationName_txt`, `EnteResponsabile_s`, `apiso_Type_s`, `PuntoDiContattoEmail_s`, `PuntoDiContatto_s`, `PuntoDiContattoSitoWeb_s`.
+- Documentata distinzione `author.name` (username sistema) vs `apiso_OrganizationName_txt` (nome ente).
+- Documentato codice IPA ricavabile dal prefisso dell'`id` (es. `r_sicili:uuid` → IPA `r_sicili`).
+- Aggiunti esempi query live per filtro per organizzazione, ordinamento per data, filtro per tipo risorsa.
 - PR #1 mergiata su main (`fix/item-not-found-and-internal-links`).
 - Issue #2 aperta: segnalazione bug RNDT (link IP interno + 500/501 per ID inesistente).
 

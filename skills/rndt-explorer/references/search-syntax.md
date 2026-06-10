@@ -26,7 +26,11 @@ Lista completa in [`result-structure.md`](./result-structure.md). I più ricorre
 - `description`
 - `keywords_s` (qui finisce anche la categoria ISO 19115)
 - `INSPIRETheme_s` (tema INSPIRE)
-- `contact_organizations_s` (ente)
+- `contact_organizations_s` (array di enti — cerca con wildcard)
+- `apiso_OrganizationName_txt` (nome completo organizzazione — più preciso per ricerche esatte)
+- `EnteResponsabile_s` (ente responsabile, forma breve)
+- `apiso_Type_s` (tipo risorsa: `dataset`, `service`, ecc.)
+- `PuntoDiContattoEmail_s` (email contatto)
 - `AmbitoTerritoriale_s` (Regionale/Nazionale/Locale)
 
 ## Esempi verificati live
@@ -35,8 +39,21 @@ Lista completa in [`result-structure.md`](./result-structure.md). I più ricorre
 # Tema INSPIRE
 openrndt search --q 'INSPIRETheme_s:Idrografia' --num 5         # → 845 totali
 
-# Ente
+# Ente (forma breve)
 openrndt search --q 'contact_organizations_s:"Agenzia delle Entrate"' --num 5
+
+# Ente (nome completo — più preciso)
+openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana - Assessorato del Territorio e dell'\''Ambiente"' --num 5
+
+# Ultimi 5 per ente, ordinati per data
+openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort dateDescending --num 5
+
+# Solo dataset (esclude servizi)
+openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana" AND apiso_Type_s:dataset' --num 10
+
+# Trovare l'username di un autore e ricavare il codice IPA
+openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --num 1 \
+  | jq -r '.results[0] | {autore: .author.name, codice_ipa: (.id | split(":")[0])}'
 
 # Combinazione: catasto OR cartografia, escluso "test"
 openrndt search --q '(catasto OR cartografia) -test' --num 10
