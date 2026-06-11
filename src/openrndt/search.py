@@ -114,8 +114,8 @@ def _resource_types(links: list[dict[str, Any]]) -> list[str]:
 def _topic_category(source: dict[str, Any], categories: list[dict[str, Any]]) -> str | None:
     """Categoria ISO 19115 del record.
 
-    Preferisce `apiso_TopicCategory_s` (campo canonico); in mancanza, cerca tra le
-    keyword una che corrisponda a una categoria ISO nota.
+    Preferisce `apiso_TopicCategory_s` (campo canonico); in mancanza, cerca una
+    categoria ISO nota sia tra le `keywords_s` sia tra i `categories` del record.
     """
     topic = source.get("apiso_TopicCategory_s")
     if isinstance(topic, list):
@@ -125,9 +125,8 @@ def _topic_category(source: dict[str, Any], categories: list[dict[str, Any]]) ->
     keywords = source.get("keywords_s")
     if isinstance(keywords, str):
         keywords = [keywords]
-    if not keywords:
-        keywords = [c.get("term") for c in categories]
-    return next((k for k in keywords if k in DATA_CATEGORIES), None)
+    candidates = list(keywords or []) + [c.get("term") for c in categories]
+    return next((k for k in candidates if k in DATA_CATEGORIES), None)
 
 
 def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:

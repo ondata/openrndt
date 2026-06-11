@@ -31,7 +31,7 @@ def emit(data: Any, *, table_rows: Iterable[dict[str, Any]] | None = None, table
 
     - `json`: serializza `data` con indentazione.
     - `table`: usa `table_rows` (lista di dict piatti) se fornita, altrimenti pretty-print del JSON.
-    - `csv`: scrive `table_rows` se fornita, altrimenti errore.
+    - `csv`: scrive `table_rows` se fornita, altrimenti output vuoto.
     - `compact`: scrive `table_rows` come NDJSON (una riga JSON per record).
     """
     if _output_mode == "json":

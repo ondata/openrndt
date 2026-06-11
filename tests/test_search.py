@@ -118,3 +118,18 @@ def test_compact_results_falls_back_to_author_name():
     assert record["org"] == "csw.foo"
     assert record["resources"] == []
     assert record["category"] is None
+
+
+def test_compact_results_category_from_categories_when_keywords_unhelpful():
+    # keywords_s popolato ma senza valori ISO: la categoria va cercata anche in `categories`
+    payload = {
+        "results": [
+            {
+                "id": "x",
+                "title": "T",
+                "categories": [{"term": "planningCadastre"}],
+                "_source": {"keywords_s": ["suolo", "frane"]},
+            }
+        ]
+    }
+    assert compact_results(payload)[0]["category"] == "planningCadastre"

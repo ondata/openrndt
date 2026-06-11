@@ -36,7 +36,7 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 ```
 
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
-campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `resources` —
+campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `resources` —
 ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
 
 Tutti i comandi hanno `--help`. La skill segue 4 fasi.
@@ -171,6 +171,12 @@ openrndt --format json search --q "catasto" --num 50 \
 
 Tabella `rel`/`dctype` completa in
 [`references/result-structure.md`](./references/result-structure.md).
+
+Una volta ottenuto l'endpoint di un servizio OGC (WMS/WFS/WCS/WMTS),
+esploralo con GDAL/OGR a output JSON (`gdalinfo -json "WMS:…"`,
+`ogrinfo -json "WFS:…"`): nomi dei layer, feature type, quali layer sono
+interrogabili con GetFeatureInfo, download vettoriale con `ogr2ogr`. Guida in
+[`references/ogc-services.md`](./references/ogc-services.md).
 
 ---
 

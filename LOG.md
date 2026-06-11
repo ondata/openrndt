@@ -8,6 +8,8 @@
   - Test: +6 (4 libreria, 2 CLI). 37/37 verdi, ruff pulito.
   - Doc: README (formati + Per agenti AI), SKILL.md, `docs/future-ideas.md` con gli altri spunti Copernicus (rerank semantico, snapshot/cronologia CI, Parquet).
 - **Verifica `--bbox`** (challenge utente): il filtro funziona (semantica overlaps; 485→21 record in Sicilia, 0 in oceano). Il rumore "Toscana sotto bbox Sicilia" è dovuto a record con bbox dichiarato errato (tutta Italia `6.6,35.5,18.5,47.1`) — problema di qualità nei metadati sorgente, non del filtro.
+- **Fix review PR #7** (Copilot + Greptile): SKILL elenca anche `updated` tra i campi compact; help `--format` chiarisce che `compact` è solo per `search`; docstring `emit()` csv allineata (output vuoto, non errore); `_topic_category` ora cerca la categoria ISO sia in `keywords_s` sia in `categories` (prima saltava il fallback se `keywords_s` era popolato ma senza valori ISO) +1 test; `docs/future-ideas.md` marca il compact come implementato. 38/38 verdi.
+- **Nuova reference skill `references/ogc-services.md`**: guida all'esplorazione dei servizi OGC (WMS/WFS/WCS/WMTS) linkati nel catalogo RNDT con GDAL/OGR a output JSON. Punti verificati: `gdalinfo`/`ogrinfo -json` danno solo Nome+Titolo (no `queryable`/abstract → solo nel GetCapabilities, che ha tutto), `gdallocationinfo` per GetFeatureInfo, `ogr2ogr` per download vettoriale. Esempio catasto AdE (layer `fabbricati`, non `BU.Building`; WFS senza fabbricati; 3 layer queryable). Linkata da Fase 4 della SKILL.
 
 ## 2026-06-10 (continua)
 

@@ -36,7 +36,7 @@ def _root(
         "json",
         "--format",
         "-F",
-        help="Formato di output: json (default), table, csv, compact (NDJSON per agenti).",
+        help="Formato di output: json (default), table, csv, compact (NDJSON per agenti, solo per search).",
         case_sensitive=False,
     ),
 ) -> None:

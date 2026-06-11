@@ -39,17 +39,12 @@ Aggiungere `--format parquet` (preserva i tipi, ottimo per duckdb/pandas).
 Coerente con l'uso analitico, basso costo. Unico formato extra che aggiunge
 valore reale rispetto a json/table/csv già presenti.
 
-### Output compatto per agenti AI
+### Output compatto per agenti AI — ✅ implementato
 
-Un formato `--format compact` (o `--agents`): una riga sintetica per record
-(id, titolo, ente, categoria, risorse) per far scremare velocemente l'agente
-senza ingoiare JSON completi.
-
-Nota: in Copernicus il "product document" sintetico è costruito *prima* di
-cercare, perché il catalogo è locale e la ricerca è locale. In openrndt il
-catalogo è remoto: la ricerca la fa RNDT, quindi non c'è un "prima" — il
-formato compatto è solo un **rendering dei risultati dopo** la `search`, cioè
-un'opzione di output di `search`. Niente pre-indicizzazione.
+Realizzato come `--format compact` (NDJSON, una riga per record). Vedi PR #7.
+Nota di design: in Copernicus il "product document" sintetico è costruito
+*prima* di cercare (catalogo locale); in openrndt il catalogo è remoto, quindi
+il formato compatto è solo un rendering dei risultati *dopo* la `search`.
 
 ## Da NON fare
 
