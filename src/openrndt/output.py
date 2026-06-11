@@ -1,4 +1,4 @@
-"""Output dispatcher: json | table | csv."""
+"""Output dispatcher: json | table | csv | compact."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _console = Console()
 
 def set_mode(mode: str) -> None:
     global _output_mode
-    if mode not in {"json", "table", "csv"}:
+    if mode not in {"json", "table", "csv", "compact"}:
         raise ValueError(f"Formato non supportato: {mode}")
     _output_mode = mode
 
@@ -31,10 +31,17 @@ def emit(data: Any, *, table_rows: Iterable[dict[str, Any]] | None = None, table
 
     - `json`: serializza `data` con indentazione.
     - `table`: usa `table_rows` (lista di dict piatti) se fornita, altrimenti pretty-print del JSON.
-    - `csv`: scrive `table_rows` se fornita, altrimenti errore.
+    - `csv`: scrive `table_rows` se fornita, altrimenti output vuoto.
+    - `compact`: scrive `table_rows` come NDJSON (una riga JSON per record).
     """
     if _output_mode == "json":
         sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+        return
+
+    if _output_mode == "compact":
+        rows = list(table_rows) if table_rows is not None else []
+        for row in rows:
+            sys.stdout.write(json.dumps(row, ensure_ascii=False) + "\n")
         return
 
     if _output_mode == "table":

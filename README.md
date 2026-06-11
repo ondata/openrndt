@@ -56,6 +56,14 @@ openrndt discover
 ```
 
 Tutti i comandi accettano `--format json` (default), `--format table`, `--format csv`.
+Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
+campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
+`resources`), pensata per agenti AI e pipe a basso consumo di token.
+
+```bash
+openrndt --format compact search --q "catasto" --num 3
+# {"id":"…","title":"…","org":"Comune di Torino","type":"service","category":null,"updated":"…","resources":["WMS"]}
+```
 
 ## Esempi di conversazione con un'AI
 
@@ -231,7 +239,8 @@ passo passo. Da qui i principi di design (sul modello di
 [opensdmx](https://github.com/aborruso/opensdmx)):
 
 - **Output strutturato, mai oggetti Python.** Default JSON su `stdout`; `--format
-  table` per la lettura umana, `--format csv` per i risultati tabellari.
+  table` per la lettura umana, `--format csv` per i risultati tabellari, `--format
+  compact` (NDJSON, una riga per record) per scremare molti risultati a basso costo.
 - **In modalità JSON, `stdout` contiene solo JSON.** Errori e avvisi vanno su
   `stderr`: si può fare pipe diretta in `jq`.
 - **Errori leggibili e self-contained: mai stack trace.** Un errore di rete o HTTP

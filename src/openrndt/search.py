@@ -5,9 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from openrndt.client import rndt_request
+from openrndt.codelists import DATA_CATEGORIES
 
 SEARCH_PATH = "/rest/metadata/search"
 MAX_NUM = 5000
+
+# Link `rel` che NON sono risorse fruibili (rappresentazioni del metadato stesso).
+_NON_RESOURCE_RELS = {"alternate", "icon", "self"}
 
 
 def _build_category_clause(values: str) -> str:
@@ -87,3 +91,67 @@ def search(
     if fmt in {"json", "json-source"}:
         return response.json()
     return response.text
+
+
+def _resource_types(links: list[dict[str, Any]]) -> list[str]:
+    """Tipi di risorsa fruibile (WMS/WFS/download/…) dedotti dai `links`.
+
+    Esclude le rappresentazioni del metadato (rel alternate/icon/self) e tiene i
+    `dctype` valorizzati; un `rel=enclosure` senza dctype è un download diretto.
+    """
+    types: set[str] = set()
+    for link in links:
+        if link.get("rel") in _NON_RESOURCE_RELS:
+            continue
+        dctype = link.get("dctype")
+        if dctype:
+            types.add(dctype)
+        elif link.get("rel") == "enclosure":
+            types.add("download")
+    return sorted(types)
+
+
+def _topic_category(source: dict[str, Any], categories: list[dict[str, Any]]) -> str | None:
+    """Categoria ISO 19115 del record.
+
+    Preferisce `apiso_TopicCategory_s` (campo canonico); in mancanza, cerca una
+    categoria ISO nota sia tra le `keywords_s` sia tra i `categories` del record.
+    """
+    topic = source.get("apiso_TopicCategory_s")
+    if isinstance(topic, list):
+        topic = topic[0] if topic else None
+    if topic:
+        return topic
+    keywords = source.get("keywords_s")
+    if isinstance(keywords, str):
+        keywords = [keywords]
+    candidates = list(keywords or []) + [c.get("term") for c in categories]
+    return next((k for k in candidates if k in DATA_CATEGORIES), None)
+
+
+def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Riduce la risposta di :func:`search` a record sintetici per agenti/pipe.
+
+    Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
+    ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
+    di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` e
+    ``resources`` (tipi di servizio/download fruibili). Pensata per l'output
+    ``--format compact`` (NDJSON), ma utilizzabile direttamente come libreria.
+    """
+    records: list[dict[str, Any]] = []
+    for r in payload.get("results", []) or []:
+        source = r.get("_source") or {}
+        categories = r.get("categories") or []
+        org = source.get("apiso_OrganizationName_txt") or (r.get("author") or {}).get("name")
+        records.append(
+            {
+                "id": r.get("id"),
+                "title": r.get("title"),
+                "org": org,
+                "type": source.get("apiso_Type_s"),
+                "category": _topic_category(source, categories),
+                "updated": r.get("updated"),
+                "resources": _resource_types(r.get("links") or []),
+            }
+        )
+    return records

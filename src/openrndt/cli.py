@@ -10,6 +10,7 @@ import typer
 
 from openrndt import codelists, config, output
 from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
+from openrndt.search import compact_results
 from openrndt.search import search as do_search
 
 app = typer.Typer(
@@ -35,7 +36,7 @@ def _root(
         "json",
         "--format",
         "-F",
-        help="Formato di output: json (default), table, csv.",
+        help="Formato di output: json (default), table, csv, compact (NDJSON per agenti, solo per search).",
         case_sensitive=False,
     ),
 ) -> None:
@@ -131,15 +132,23 @@ def search(
     if not isinstance(payload, dict):
         typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
         raise typer.Exit(1)
-    if output.get_mode() == "json":
+    mode = output.get_mode()
+    if mode == "json":
         output.emit(payload)
-    else:
-        rows = _result_rows(payload)
+        return
+    if mode == "compact":
+        rows = compact_results(payload)
         if not rows:
             typer.echo("Nessun risultato per la ricerca.", err=True)
             return
-        title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
-        output.emit(payload, table_rows=rows, table_title=title)
+        output.emit(payload, table_rows=rows)
+        return
+    rows = _result_rows(payload)
+    if not rows:
+        typer.echo("Nessun risultato per la ricerca.", err=True)
+        return
+    title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
+    output.emit(payload, table_rows=rows, table_title=title)
 
 
 @app.command()
@@ -151,7 +160,7 @@ def get(
     """Recupera il dettaglio di un singolo metadato."""
     if as_xml and as_html:
         raise typer.BadParameter("Specifica --xml oppure --html, non entrambi.")
-    if not (as_xml or as_html) and output.get_mode() == "csv":
+    if not (as_xml or as_html) and output.get_mode() in {"csv", "compact"}:
         typer.echo(
             "Il dettaglio di un metadato non è tabellare: usa --format json (default) o table.",
             err=True,
