@@ -29,10 +29,15 @@ catalogo ufficiale italiano dei metadati geografici (ISO 19115/19139).
 L'opzione **globale** `--format` (sempre PRIMA del comando) sceglie l'output:
 
 ```bash
-openrndt --format json search …   # default, per parsing
-openrndt --format table search …  # Rich, per umani
-openrndt --format csv search …    # per fogli di calcolo
+openrndt --format json search …    # default, per parsing
+openrndt --format table search …   # Rich, per umani
+openrndt --format csv search …     # per fogli di calcolo
+openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a basso costo
 ```
+
+Il formato `compact` (solo per `search`) emette una riga JSON per record con i
+campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `resources` —
+ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
 
 Tutti i comandi hanno `--help`. La skill segue 4 fasi.
 

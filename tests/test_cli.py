@@ -37,6 +37,28 @@ def test_cli_search_table(search_response_json):
 
 
 @respx.mock
+def test_cli_search_compact_ndjson(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "compact", "search", "--q", "catasto", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    lines = [ln for ln in result.stdout.splitlines() if ln.strip()]
+    assert len(lines) == 2  # una riga JSON per record
+    first = json.loads(lines[0])
+    assert first["id"] == "age:D_E973_MARSAGLIA"
+    assert first["org"] == "Agenzia delle Entrate"
+    assert first["resources"] == ["WFS", "WMS"]
+
+
+@respx.mock
+def test_cli_get_compact_rejected():
+    result = runner.invoke(app, ["--format", "compact", "get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 1
+    assert "non è tabellare" in result.output
+
+
+@respx.mock
 def test_cli_get_xml(item_response_xml):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA/xml").mock(
         return_value=httpx.Response(200, text=item_response_xml)

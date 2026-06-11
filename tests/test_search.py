@@ -7,7 +7,7 @@ import pytest
 import respx
 
 from openrndt.config import DEFAULT_BASE_URL
-from openrndt.search import MAX_NUM, search
+from openrndt.search import MAX_NUM, compact_results, search
 
 
 @respx.mock
@@ -87,3 +87,34 @@ def test_search_validates_num_max():
 def test_search_validates_start_positive():
     with pytest.raises(ValueError, match="≥ 1"):
         search(start=0)
+
+
+def test_compact_results_extracts_high_signal_fields(search_response_json):
+    records = compact_results(search_response_json)
+    assert len(records) == 2
+    first = records[0]
+    assert first["id"] == "age:D_E973_MARSAGLIA"
+    assert first["org"] == "Agenzia delle Entrate"  # da apiso_OrganizationName_txt
+    assert first["type"] == "dataset"
+    assert first["category"] == "planningCadastre"  # da apiso_TopicCategory_s
+    assert first["resources"] == ["WFS", "WMS"]  # dedup + sort dai links
+    assert set(first) == {"id", "title", "org", "type", "category", "updated", "resources"}
+
+
+def test_compact_results_resources_dedup_and_skip_metadata_links(search_response_json):
+    second = compact_results(search_response_json)[1]
+    # links: WFS, WFS, WMS + 3 alternate → solo i servizi, dedotti e ordinati
+    assert second["resources"] == ["WFS", "WMS"]
+
+
+def test_compact_results_empty_payload():
+    assert compact_results({"results": []}) == []
+    assert compact_results({}) == []
+
+
+def test_compact_results_falls_back_to_author_name():
+    payload = {"results": [{"id": "x", "title": "T", "author": {"name": "csw.foo"}}]}
+    record = compact_results(payload)[0]
+    assert record["org"] == "csw.foo"
+    assert record["resources"] == []
+    assert record["category"] is None

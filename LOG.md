@@ -1,5 +1,14 @@
 # LOG
 
+## 2026-06-11
+
+- **Nuovo formato `--format compact` (NDJSON per agenti).** Quarto formato di output per `search`: una riga JSON per record con i soli campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`, `resources`). Pensato per far scremare molti risultati a basso consumo di token prima del `get`. Spunto dal progetto Copernicus-Services-Products-Metadata (rendering sintetico dei risultati; lì *prima* della ricerca perché catalogo locale, qui *dopo* perché catalogo remoto).
+  - Libreria: `compact_results(payload)` in `search.py` — `org` da `apiso_OrganizationName_txt` (fallback `author.name`), `category` da `apiso_TopicCategory_s` (fallback keyword ISO), `resources` = dctype dei `links` (escluse rappresentazioni del metadato), dedup+sort.
+  - `output.py`: aggiunto mode `compact` + branch NDJSON. `get --format compact` rifiutato come csv (dettaglio non tabellare).
+  - Test: +6 (4 libreria, 2 CLI). 37/37 verdi, ruff pulito.
+  - Doc: README (formati + Per agenti AI), SKILL.md, `docs/future-ideas.md` con gli altri spunti Copernicus (rerank semantico, snapshot/cronologia CI, Parquet).
+- **Verifica `--bbox`** (challenge utente): il filtro funziona (semantica overlaps; 485→21 record in Sicilia, 0 in oceano). Il rumore "Toscana sotto bbox Sicilia" è dovuto a record con bbox dichiarato errato (tutta Italia `6.6,35.5,18.5,47.1`) — problema di qualità nei metadati sorgente, non del filtro.
+
 ## 2026-06-10 (continua)
 
 - **README: sezione "Esempi di conversazione con un'AI"** per utenti GIS desktop (non CLI). 7 scenari conversation-first (domanda in linguaggio naturale → comando openrndt leggibile → URL WMS/WFS da incollare in QGIS), tutti con risultati RNDT reali e verificati live: uso suolo Emilia-Romagna (WMS getCapabilities testato 200), catasto Piemonte, ortofoto (Sardegna/Lodi/Piemonte), reticolo idrografico WFS (ISPRA/ARPA Veneto/Basilicata), 430 dataset Regione Lombardia, bbox area Bologna (40, framing onesto "sovrapposizione"), 259 frane open data. Niente jq mostrato, niente link con IP interni (bug issue #2).
