@@ -85,7 +85,7 @@ Filtri principali:
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
 | `--time`            | range temporale della **risorsa** `yyyy-mm-dd/yyyy-mm-dd`   |
 | `--modified`        | range modifica del **record nel catalogo** `yyyy-mm-dd/yyyy-mm-dd` |
-| `--sort`            | <code>campo:asc&#124;desc</code> su campo sortable (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` **non ordinano** |
+| `--sort`            | <code>campo:asc&#124;desc</code> su campo sortable (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` **non ordinano**. `apiso_Modified_dt` è la data della *scheda*, non dei *dati* — vedi "Quale data stai ordinando" in [`references/search-syntax.md`](./references/search-syntax.md) |
 | `--start --num`     | paginazione (1-based, max `num`=5000)                       |
 | `--id`              | recupera un solo metadato per ID                            |
 

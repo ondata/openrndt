@@ -89,12 +89,31 @@ openrndt search --q 'apiso_Type_s:dataset' --sort 'apiso_Modified_dt:asc' --num 
 openrndt search --q 'catasto' --sort 'relevance' --num 5
 ```
 
+### Quale data stai ordinando (importante)
+
+Sul RNDT convivono più date, e quella "giusta" per l'utente spesso non esiste:
+
+| Campo | Cosa è | Ordinabile? |
+|---|---|---|
+| `_source.apiso_Modified_dt` | dateStamp della **scheda di metadati** | ✅ — il miglior proxy per "più recenti" |
+| data di pubblicazione dei dati | solo nell'XML ISO (`dateType=publication`), **non indicizzata** | ❌ non esiste come campo |
+| `_source.apiso_CreationDate_dt` | creazione della risorsa | spesso `null` o fittizia (`2012-01-01`): inaffidabile |
+| `updated` (top-level nei risultati) | **reindicizzazione del catalogo** | non è il campo su cui ordini |
+
+Quindi: `apiso_Modified_dt:desc` ordina per data di modifica della *scheda*,
+non dei *dati* — dillo all'utente quando presenti i risultati come "più recenti".
+
+**Trappola di verifica**: dopo un sort per `apiso_Modified_dt`, il campo
+`updated` che vedi nei risultati (e nell'output `compact`) mostra la data di
+reindex, NON quella ordinata. Per vedere la data vera:
+
+```bash
+openrndt search --q "catasto" --sort "apiso_Modified_dt:desc" --num 5 \
+  | jq -r '.results[] | "\(._source.apiso_Modified_dt)  \(.title)"'
+```
+
 Limiti noti:
 
-- **Niente ordinamento per data di pubblicazione**: la data `publication` esiste
-  nell'XML ISO (`gmd:CI_Date dateType=publication`) ma non è un campo indicizzato
-  ordinabile. Il proxy disponibile è `apiso_Modified_dt` (dateStamp del metadato).
-  `apiso_CreationDate_dt` è spesso `null` o fittizio (`2012-01-01`): inaffidabile.
 - Il sort su `title` (campo text) in passato dava errore Elasticsearch
   *"Fielddata is disabled"*; **riverificato il 2026-07-17: ora funziona**
   (`title:asc` ordina alfabeticamente — il comportamento dell'API è cambiato).
