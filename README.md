@@ -21,9 +21,7 @@ uv tool install openrndt
 uvx openrndt --help
 ```
 
-> Non ancora pubblicato su PyPI (roadmap verso la v1.0). Nel frattempo installa da locale.
-
-### Da locale
+### Da locale (per sviluppo o versioni non ancora pubblicate)
 
 ```bash
 git clone https://github.com/ondata/openrndt.git
