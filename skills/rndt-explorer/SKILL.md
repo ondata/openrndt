@@ -15,9 +15,10 @@ description: >
 license: MIT
 compatibility: >
   Richiede la CLI openrndt (comandi: search, get, discover).
+  Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "0.1"
+  version: "1.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -38,6 +39,12 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
 campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `resources` —
 ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
+Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
+guarda `_source.links_s`.
+
+Altre opzioni globali (sempre PRIMA del comando): `--timeout <secondi>` per il
+timeout HTTP per singolo tentativo (default 30s; con i retry il caso peggiore è
+~3x — utile abbassarlo se il portale è lento), `--base-url` per un mirror.
 
 Tutti i comandi hanno `--help`. La skill segue 4 fasi.
 
@@ -184,7 +191,8 @@ interrogabili con GetFeatureInfo, download vettoriale con `ogr2ogr`. Guida in
 
 [`references/workflows.md`](./references/workflows.md) raccoglie sequenze
 testate live (catasto per provincia, WMS di un tema INSPIRE, dataset di un
-ente, aggiornamenti recenti per categoria, export CSV, sanity check con i
+ente, aggiornamenti recenti per categoria, export CSV, dati scaricabili con
+licenza e citazione della fonte per data journalist, sanity check con i
 totali attesi).
 
 ## Output e parsing

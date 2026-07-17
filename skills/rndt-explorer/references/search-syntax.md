@@ -32,12 +32,15 @@ Lista completa in [`result-structure.md`](./result-structure.md). I più ricorre
 - `apiso_Type_s` (tipo risorsa: `dataset`, `service`, ecc.)
 - `PuntoDiContattoEmail_s` (email contatto)
 - `AmbitoTerritoriale_s` (Regionale/Nazionale/Locale)
+- `isOpendata` (licenza open data: `isOpendata:*` per tutti gli open data)
+- `apiso_CRS` (sistema di riferimento, es. `apiso_CRS:"EPSG:4326"` — utile per operatori GIS)
+- `apiso_Format_s` (formati disponibili, es. `Shapefile`, `GeoTIFF`, `GML`)
 
 ## Esempi verificati live
 
 ```bash
 # Tema INSPIRE
-openrndt search --q 'INSPIRETheme_s:Idrografia' --num 5         # → 845 totali
+openrndt search --q 'INSPIRETheme_s:Idrografia' --num 5         # → 863 totali (2026-07-17)
 
 # Ente (forma breve)
 openrndt search --q 'contact_organizations_s:"Agenzia delle Entrate"' --num 5
@@ -92,8 +95,11 @@ Limiti noti:
   nell'XML ISO (`gmd:CI_Date dateType=publication`) ma non è un campo indicizzato
   ordinabile. Il proxy disponibile è `apiso_Modified_dt` (dateStamp del metadato).
   `apiso_CreationDate_dt` è spesso `null` o fittizio (`2012-01-01`): inaffidabile.
-- Ordinare per un campo `text`/analizzato (es. `title` nudo) dà errore
-  Elasticsearch *"Fielddata is disabled"*: usa un campo keyword.
+- Il sort su `title` (campo text) in passato dava errore Elasticsearch
+  *"Fielddata is disabled"*; **riverificato il 2026-07-17: ora funziona**
+  (`title:asc` ordina alfabeticamente — il comportamento dell'API è cambiato).
+  I campi *garantiti* sortable restano comunque quelli `_s`/`_dt`/`_i`:
+  su altri campi text non c'è garanzia.
 - Il servizio **CSW** (`/csw`) ignora del tutto `<ogc:SortBy>`: non ordina per
   nessuna proprietà. Dettagli e implicazioni INSPIRE in `ref/rest-api-rndt.md`.
 

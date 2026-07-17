@@ -2,6 +2,7 @@
 
 ## 2026-07-17
 
+* **Update**: [api/known-issues.md](/api/known-issues.md), [skill.md](/skill.md) — audit live della skill rndt-explorer: il sort su `title` ora funziona (API cambiata), `dateDescending` riconfermato rotto; skill aggiornata (workflow corretti, campo `apiso_PublicationDate_dt` inesistente rimosso, formato compact documentato, nuovo workflow data journalist).
 * **Update**: [project.md](/project.md) — versione 1.0.0, roadmap produzione completata (`CHANGELOG.md` nel repository).
 * **Update**: [conventions/testing.md](/conventions/testing.md), [conventions/error-handling.md](/conventions/error-handling.md) — coverage 89%→99% (17 test nuovi, `tests/test_output.py`); bug reale trovato e corretto: `--format` invalido produceva un traceback, ora messaggio leggibile + exit 2.
 * **Update**: [cli/index.md](/cli/index.md), [conventions/error-handling.md](/conventions/error-handling.md), [architecture.md](/architecture.md) — documentata la nuova opzione globale `--timeout` (stesso pattern di `--base-url`, override in `config.py`).

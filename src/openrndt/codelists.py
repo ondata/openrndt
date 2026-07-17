@@ -35,9 +35,11 @@ DATA_CATEGORIES: dict[str, str] = {
 # IMPORTANTE (verificato live): il meccanismo reale è `campo:asc|desc` su un campo
 # Elasticsearch *sortable* (keyword `_s`, data `_dt`, intero `_i`). I valori
 # "amichevoli" `dateDescending`/`dateAscending` documentati sulla pagina ufficiale
-# NON ordinano (su RNDT restituiscono ordine identico fra loro → ignorati).
-# Ordinare per un campo `text`/analizzato (es. `title` nudo) dà errore Elasticsearch
-# "Fielddata is disabled". Non esiste un campo data-di-pubblicazione ordinabile.
+# NON ordinano (su RNDT restituiscono ordine identico fra loro → ignorati;
+# riconfermato 2026-07-17). Il sort su `title` (campo text) in passato dava errore
+# "Fielddata is disabled", ma dal 2026-07-17 risulta funzionare: i campi garantiti
+# sortable restano `_s`/`_dt`/`_i`. Non esiste un campo data-di-pubblicazione
+# ordinabile.
 SORT_VALUES: dict[str, str] = {
     "apiso_Modified_dt:desc": "Per data: ultimi metadati modificati per primi (proxy migliore per 'più recenti').",
     "apiso_Modified_dt:asc": "Per data: metadati modificati meno di recente per primi.",

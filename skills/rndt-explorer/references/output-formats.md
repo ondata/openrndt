@@ -2,7 +2,8 @@
 
 `openrndt` ha due livelli di formato:
 
-1. **Formato del comando CLI** (`--format` globale): `json` (default), `table`, `csv`.
+1. **Formato del comando CLI** (`--format` globale): `json` (default), `table`,
+   `csv`, `compact` (NDJSON, solo per `search`).
    Controlla come la CLI stampa il risultato.
 2. **Formato della risposta API** (`-f` interno, gestito automaticamente):
    `json`, `atom`, `csv`, `kml`, ecc. Non esposto direttamente nella CLI MVP —
@@ -13,10 +14,25 @@
 | Scenario                                          | Formato consigliato |
 |---------------------------------------------------|---------------------|
 | Pipeline `\| jq`, scripting Python/Bash            | `json` (default)    |
+| Scremare molti risultati a basso costo di token (agenti) | `compact`     |
 | Mostrare risultati in chat all'utente             | `table`             |
 | Esportare in foglio di calcolo                     | `csv`               |
 | Recuperare XML ISO 19139 per validatori INSPIRE   | `openrndt get <id> --xml` |
 | Generare pagina HTML del metadato                  | `openrndt get <id> --html` |
+
+## `compact` — NDJSON per agenti (solo `search`)
+
+Una riga JSON per record con i soli campi ad alto segnale: `id`, `title`,
+`org`, `type`, `category`, `updated`, `resources`.
+
+```bash
+openrndt --format compact search --q "frane AND isOpendata:*" --num 30
+```
+
+- `resources` elenca i tipi di servizio/download fruibili (`WMS`, `WFS`,
+  `download`, …). Se è `[]` il record non linka servizi: per i dettagli fai
+  `get <id>` e guarda `_source.links_s`.
+- `get --format compact` (come `csv`) è rifiutato: il dettaglio non è tabellare.
 
 ## Esempi
 

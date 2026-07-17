@@ -85,6 +85,10 @@ openrndt --format compact search --q "catasto" --num 3
 # {"id":"…","title":"…","org":"Comune di Torino","type":"service","category":null,"updated":"…","resources":["WMS"]}
 ```
 
+Se `resources` è `[]` il record non linka servizi fruibili: recupera il
+dettaglio con `get <id>` e guarda `_source.links_s` (spesso il download è
+dietro un portale dell'ente, non un link diretto).
+
 ## Esempi di conversazione con un'AI
 
 openrndt è pensato per essere **pilotato da un assistente AI**. Non devi imparare la
@@ -201,6 +205,26 @@ openrndt search --q "frane AND isOpendata:*" --num 10
 > **AI:** Ci sono **259 dataset open data** sulle frane — dall'inventario IFFI della
 > Regione Toscana ai rilievi con drone dell'emergenza alluvione 2023 in
 > Emilia-Romagna. Te li elenco con la licenza di ciascuno?
+
+### «Devo scaricare i dati e citare la fonte in un articolo»
+
+> **Tu:** Sto scrivendo un articolo sul rischio alluvioni. Mi servono i dati,
+> la licenza d'uso e come citare la fonte.
+
+L'AI cerca fra gli open data e recupera licenza ed ente dal dettaglio:
+
+```bash
+openrndt --format compact search --q "alluvioni AND isOpendata:*" --num 30
+openrndt search --id "ispra_rm:01IdroHazard_DT" \
+  | jq -r '.results[0].links[] | select(.dctype != null) | "\(.dctype)\t\(.href)"'
+openrndt get "ispra_rm:01IdroHazard_DT" \
+  | jq '{licenza: ._source.isOpendata, ente: ._source.EnteResponsabile_s}'
+```
+
+> **AI:** **ISPRA** pubblica *Popolazione a rischio alluvioni* con licenza
+> **CC-BY-4.0**: puoi riusarlo citando la fonte (es. "Fonte: ISPRA — Popolazione
+> a rischio alluvioni, CC-BY 4.0"). I dati sono esposti come WFS: te li scarico
+> in GeoPackage con `ogr2ogr`, pronti per QGIS o per un'analisi tabellare.
 
 ## Uso come libreria Python
 

@@ -24,5 +24,5 @@ La skill `rndt-explorer` (in `skills/rndt-explorer/` nel repository) insegna a u
 | `references/search-syntax.md` | Sintassi Lucene con esempi verificati. |
 | `references/result-structure.md` | Struttura del JSON di risposta. |
 | `references/output-formats.md` | Guida ai formati (vedi anche [la convenzione](/conventions/output-formats.md)). |
-| `references/workflows.md` | Flussi tipici end-to-end. |
+| `references/workflows.md` | Flussi tipici end-to-end, incluso il workflow per data journalist (dati scaricabili, licenza, citazione fonte). |
 | `references/ogc-services.md` | Esplorazione WMS/WFS/WCS/WMTS con GDAL/OGR. |

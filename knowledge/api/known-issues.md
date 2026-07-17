@@ -13,8 +13,8 @@ Tutti i punti seguenti sono stati verificati empiricamente contro l'API di produ
 | Comportamento documentato | Comportamento reale | Compensazione in openrndt |
 |---------------------------|---------------------|---------------------------|
 | Il parametro `dataCategory` filtra per categoria. | Non filtra: ritorna sempre il catalogo intero. | `--data-category` è tradotto nella clausola Lucene `q=keywords_s:VAL` (`OR` per valori multipli). |
-| `sort=dateDescending` / `dateAscending` ordinano per data. | Ignorati: ordine identico fra loro. | `discover --what sort_values` marca i valori rotti; la sintassi funzionante è `campo:asc\|desc` su campo sortable (es. `apiso_Modified_dt:desc`). |
-| — | Ordinare su un campo `text` analizzato (es. `title` nudo) dà errore Elasticsearch "Fielddata is disabled". | Documentato nelle codelist; usare i campi `_s`/`_dt`/`_i`. |
+| `sort=dateDescending` / `dateAscending` ordinano per data. | Ignorati: ordine identico fra loro (riconfermato 2026-07-17). | `discover --what sort_values` marca i valori rotti; la sintassi funzionante è `campo:asc\|desc` su campo sortable (es. `apiso_Modified_dt:desc`). |
+| — | Ordinare su un campo `text` analizzato (es. `title` nudo) dava errore Elasticsearch "Fielddata is disabled"; **dal 2026-07-17 risulta funzionare** (`title:asc` ordina alfabeticamente — comportamento API cambiato). | Documentato nelle codelist; i campi garantiti sortable restano `_s`/`_dt`/`_i`. |
 | Esiste una data di pubblicazione ordinabile. | Non esiste; `apiso_CreationDate_dt` è spesso null o fittizia (es. 2012-01-01). | Proxy consigliato per "più recenti": `apiso_Modified_dt:desc` (issue #4 del repository). |
 | L'endpoint CSW supporta `SortBy` (INSPIRE Discovery Services v3.1). | `SortBy` ignorato: non conforme. | Nessuna: documentato (issue #5 del repository). |
 | Item inesistente → errore HTTP. | Risponde `200` con body `{"found": false}`. | `get_item` controlla `found` e solleva `ItemNotFoundError`. |

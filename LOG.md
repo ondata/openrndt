@@ -1,5 +1,18 @@
 # LOG
 
+## 2026-07-17 (skill audit)
+
+- **Audit live della skill `rndt-explorer`** (comandi eseguiti contro l'API reale). Esito: struttura a 4 fasi solida, 4 punti stale corretti:
+  - `workflows.md` #3/#4 usavano `--sort dateDescending` (che NON ordina, riconfermato live) → sostituito con `apiso_Modified_dt:desc` + warning.
+  - `workflows.md` citava `apiso_PublicationDate_dt` → campo inesistente (verificato su record reale), rimosso; lista campi data corretta.
+  - **Scoperta: il sort su `title` ora funziona** (`title:asc` ordina alfabeticamente) — l'API è cambiata rispetto a maggio-giugno, quando dava "Fielddata is disabled". Aggiornati `search-syntax.md`, `codelists.py` (commento), `knowledge/api/known-issues.md`. I campi garantiti sortable restano `_s`/`_dt`/`_i`.
+  - `output-formats.md` non menzionava `compact` → aggiunta sezione dedicata (incl. `resources: []` → serve `get`).
+  - SKILL.md: frontmatter v0.1→1.0, installazione da PyPI in compatibility, opzioni globali `--timeout`/`--base-url`.
+  - **Nuovo workflow 7 per data journalist** (verificato end-to-end live su record ISPRA "Popolazione rischio alluvioni"): compact+isOpendata → `search --id` per link con dctype → `get` per licenza/ente/data (citazione fonte) → `ogr2ogr` dal WFS. Note oneste: enclosure raro, `isOpendata` a volte generico, download spesso dietro portali regionali.
+  - Sanity numbers aggiornati al 2026-07-17 (catalogo 23.580→23.632).
+  - Aggiunti `apiso_CRS`, `apiso_Format_s`, `isOpendata` ai campi utili di `search-syntax.md` (per operatori GIS).
+- 55/55 test, ruff e mypy verdi (unica modifica codice: commento in `codelists.py`).
+
 ## 2026-07-17
 
 - **Valutazione readiness produzione v0.1.0** in `docs/evaluation-v0.1.0.md`: codice production-grade, gap tutti infrastrutturali (no CI, no mypy, metadata PyPI incompleti, manca `py.typed` e CHANGELOG). Roadmap verso v1.0 inclusa.
