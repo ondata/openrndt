@@ -32,3 +32,21 @@ def _reset_base_url():
     config.set_base_url(None)
     yield
     config.set_base_url(None)
+
+
+@pytest.fixture(autouse=True)
+def _reset_timeout():
+    from openrndt import config
+
+    config.set_timeout(None)
+    yield
+    config.set_timeout(None)
+
+
+@pytest.fixture(autouse=True)
+def _reset_output_mode():
+    from openrndt import output
+
+    output.set_mode("json")
+    yield
+    output.set_mode("json")

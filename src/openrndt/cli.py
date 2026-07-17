@@ -32,6 +32,12 @@ def _root(
         "--base-url",
         help=f"Override del base URL RNDT (default: env {config.ENV_BASE_URL} o {config.DEFAULT_BASE_URL}).",
     ),
+    timeout: float | None = typer.Option(
+        None,
+        "--timeout",
+        help=f"Timeout HTTP in secondi per singolo tentativo (default: {config.DEFAULT_TIMEOUT}). "
+        "Con i retry su timeout/5xx (3 tentativi), il caso peggiore è ~3x questo valore.",
+    ),
     fmt: str = typer.Option(
         "json",
         "--format",
@@ -41,7 +47,12 @@ def _root(
     ),
 ) -> None:
     config.set_base_url(base_url)
-    output.set_mode(fmt.lower())
+    config.set_timeout(timeout)
+    try:
+        output.set_mode(fmt.lower())
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
 
 
 def _http_error(exc: httpx.HTTPError) -> NoReturn:
@@ -207,12 +218,12 @@ def discover(
         raise typer.BadParameter(
             f"Sezione sconosciuta: {what}. Disponibili: {', '.join(['all', *full.keys()])}."
         )
-    section = full[what]
+    values = full[what]
     if output.get_mode() == "json":
-        output.emit(section)
+        output.emit(values)
     else:
-        rows = [{"value": k, "description": v} for k, v in section.items()]
-        output.emit(section, table_rows=rows, table_title=what)
+        rows = [{"value": k, "description": v} for k, v in values.items()]
+        output.emit(values, table_rows=rows, table_title=what)
 
 
 def main() -> None:

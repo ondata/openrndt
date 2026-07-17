@@ -33,6 +33,20 @@ def test_discover_single_section():
 
 
 @respx.mock(assert_all_called=False)
+def test_discover_all_table():
+    result = runner.invoke(app, ["--format", "table", "discover"], env={"COLUMNS": "300"})
+    assert result.exit_code == 0, result.output
+    assert "planningCadastre" in result.output
+
+
+@respx.mock(assert_all_called=False)
+def test_discover_single_section_table():
+    result = runner.invoke(app, ["--format", "table", "discover", "--what", "output_formats"])
+    assert result.exit_code == 0, result.output
+    assert "json" in result.output.lower()
+
+
+@respx.mock(assert_all_called=False)
 def test_discover_unknown_section():
     result = runner.invoke(app, ["discover", "--what", "nope"])
     assert result.exit_code != 0

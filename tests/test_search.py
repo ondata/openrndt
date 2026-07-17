@@ -79,6 +79,26 @@ def test_search_returns_text_on_non_json_format():
     assert "title,id" in result
 
 
+@respx.mock
+def test_search_passes_modified_param():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(modified="2024-01-01/2024-12-31", num=1)
+    params = dict(route.calls.last.request.url.params)
+    assert params["modified"] == "2024-01-01/2024-12-31"
+
+
+@respx.mock
+def test_data_category_only_blank_values_ignored():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(data_category=" , ", num=1)
+    params = dict(route.calls.last.request.url.params)
+    assert "q" not in params
+
+
 def test_search_validates_num_max():
     with pytest.raises(ValueError, match="non può superare"):
         search(num=MAX_NUM + 1)
@@ -118,6 +138,34 @@ def test_compact_results_falls_back_to_author_name():
     assert record["org"] == "csw.foo"
     assert record["resources"] == []
     assert record["category"] is None
+
+
+def test_compact_results_resources_includes_bare_enclosure_as_download():
+    # rel=enclosure senza dctype: download diretto, non un servizio WMS/WFS.
+    payload = {
+        "results": [
+            {
+                "id": "x",
+                "title": "T",
+                "links": [{"rel": "enclosure", "url": "http://example/download.zip"}],
+            }
+        ]
+    }
+    assert compact_results(payload)[0]["resources"] == ["download"]
+
+
+def test_compact_results_category_when_keywords_s_is_single_string():
+    # keywords_s a volte è una stringa singola, non un array.
+    payload = {
+        "results": [
+            {
+                "id": "x",
+                "title": "T",
+                "_source": {"keywords_s": "planningCadastre"},
+            }
+        ]
+    }
+    assert compact_results(payload)[0]["category"] == "planningCadastre"
 
 
 def test_compact_results_category_from_categories_when_keywords_unhelpful():

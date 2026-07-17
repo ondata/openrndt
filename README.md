@@ -3,7 +3,7 @@
 CLI Python e libreria per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
 pensata per essere orchestrata da un'AI.
 
-> Stato: alpha (v0.1) — read-only.
+> Stato: v1.0 — read-only.
 
 ## Cos'è il RNDT
 
@@ -13,21 +13,36 @@ API per cercare e scaricare i metadati.
 
 ## Installazione
 
+### Da PyPI
+
 ```bash
-# CLI globale (consigliato): venv isolato, eseguibile in PATH
-uv tool install /path/to/openrndt
+uv tool install openrndt
+# oppure, senza installazione persistente:
+uvx openrndt --help
+```
+
+> Non ancora pubblicato su PyPI (roadmap verso la v1.0). Nel frattempo installa da locale.
+
+### Da locale
+
+```bash
+git clone https://github.com/ondata/openrndt.git
+cd openrndt
+
+# CLI globale: venv isolato, eseguibile in PATH
+uv tool install .
 
 # Aggiornamento dopo modifiche al codice
-uv tool install --reinstall /path/to/openrndt
+uv tool install --reinstall .
 
 # Disinstallazione
 uv tool uninstall openrndt
 ```
 
-Per sviluppo (modifiche con ricarica immediata):
+### Per sviluppo (modifiche con ricarica immediata)
 
 ```bash
-git clone <repo>
+git clone https://github.com/ondata/openrndt.git
 cd openrndt
 uv sync
 uv run openrndt --help
@@ -53,6 +68,13 @@ openrndt get age:D_E973_MARSAGLIA --xml > meta.xml
 
 # Codelist disponibili (no rete)
 openrndt discover
+```
+
+Il timeout HTTP per singolo tentativo è configurabile con `--timeout` (default 30s);
+con i retry su timeout/5xx (3 tentativi) il caso peggiore è ~3x questo valore:
+
+```bash
+openrndt --timeout 5 search --q "catasto" --num 5
 ```
 
 Tutti i comandi accettano `--format json` (default), `--format table`, `--format csv`.

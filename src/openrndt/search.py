@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from openrndt.client import rndt_request
 from openrndt.codelists import DATA_CATEGORIES
@@ -89,7 +89,8 @@ def search(
     response = rndt_request(SEARCH_PATH, params=params)
     response.raise_for_status()
     if fmt in {"json", "json-source"}:
-        return response.json()
+        data: dict[str, Any] = response.json()
+        return data
     return response.text
 
 
@@ -121,7 +122,7 @@ def _topic_category(source: dict[str, Any], categories: list[dict[str, Any]]) ->
     if isinstance(topic, list):
         topic = topic[0] if topic else None
     if topic:
-        return topic
+        return cast(str, topic)
     keywords = source.get("keywords_s")
     if isinstance(keywords, str):
         keywords = [keywords]

@@ -24,3 +24,6 @@ tmp.md
 # Local outputs
 *.out
 out.txt
+
+# Test coverage
+.coverage

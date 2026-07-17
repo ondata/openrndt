@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import httpx
 from tenacity import (
     Retrying,
@@ -10,14 +12,19 @@ from tenacity import (
     wait_exponential,
 )
 
-from openrndt.config import get_base_url
+from openrndt.config import get_base_url, get_timeout
 
 USER_AGENT = "openrndt/0.1 (+https://geodati.gov.it/RNDT)"
-DEFAULT_TIMEOUT = 30.0
 
 
-def rndt_request(path: str, params: dict | None = None, *, timeout: float = DEFAULT_TIMEOUT) -> httpx.Response:
-    """GET su un endpoint RNDT con retry su timeout e 5xx."""
+def rndt_request(path: str, params: dict[str, Any] | None = None, *, timeout: float | None = None) -> httpx.Response:
+    """GET su un endpoint RNDT con retry su timeout e 5xx.
+
+    Se `timeout` è `None` (default), usa il timeout configurato globalmente
+    (`config.set_timeout()` / `--timeout` in CLI, default 30 secondi).
+    """
+    if timeout is None:
+        timeout = get_timeout()
     base = get_base_url()
     url = f"{base}{path}"
     headers = {"User-Agent": USER_AGENT}

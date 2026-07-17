@@ -172,6 +172,69 @@ def test_cli_get_csv_not_tabular():
     assert "tabellare" in result.output.lower()
 
 
+def test_cli_invalid_format_no_traceback():
+    """--format con valore non supportato: messaggio leggibile, exit 2, nessuno stack trace."""
+    result = runner.invoke(app, ["--format", "yaml", "search", "--q", "x"])
+    assert result.exit_code == 2
+    assert "non supportato" in result.output.lower()
+    assert "Traceback" not in result.output
+
+
+@respx.mock
+def test_cli_get_json_success(item_response_json):
+    """get senza flag (default json) su un ID esistente: payload completo su stdout."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == item_response_json
+
+
+@respx.mock
+def test_cli_get_html_success():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA/html").mock(
+        return_value=httpx.Response(200, text="<html><body>Marsaglia</body></html>")
+    )
+    result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA", "--html"])
+    assert result.exit_code == 0, result.output
+    assert "Marsaglia" in result.stdout
+
+
+@respx.mock
+def test_cli_get_table_success(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["--format", "table", "get", "age:D_E973_MARSAGLIA"], env={"COLUMNS": "300"})
+    assert result.exit_code == 0, result.output
+    assert "MARSAGLIA" in result.output
+
+
+@respx.mock
+def test_cli_search_compact_zero_results_warns():
+    """search con 0 risultati in compact: avviso su stderr, exit 0 (come csv/table)."""
+    empty = {"total": 0, "num": 0, "start": 1, "results": []}
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=empty)
+    )
+    result = runner.invoke(app, ["--format", "compact", "search", "--q", "zzz"])
+    assert result.exit_code == 0, result.output
+    assert "nessun risultato" in result.output.lower()
+
+
+@respx.mock
+def test_cli_search_non_dict_payload_no_traceback():
+    """Risposta 200 con JSON valido ma non un oggetto (es. una lista): messaggio leggibile, exit 1."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=["non", "un", "oggetto"])
+    )
+    result = runner.invoke(app, ["search", "--q", "x"])
+    assert result.exit_code == 1, result.output
+    assert "non è un oggetto json" in result.output.lower()
+    assert "Traceback" not in result.output
+
+
 def test_cli_base_url_override(monkeypatch):
     """Verifica che --base-url venga rispettato."""
     custom = "https://example.invalid/rndt"

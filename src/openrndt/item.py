@@ -29,7 +29,7 @@ def get_item(item_id: str) -> dict[str, Any]:
     """
     response = rndt_request(f"{ITEM_PATH}/{_encode_id(item_id)}")
     response.raise_for_status()
-    data = response.json()
+    data: dict[str, Any] = response.json()
     if data.get("found") is False:
         raise ItemNotFoundError(item_id)
     return data
