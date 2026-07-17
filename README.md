@@ -13,7 +13,7 @@ pensata per essere orchestrata da un'AI.
 
 **Il modo giusto di trovare dati territoriali con l'AI.** I modelli linguistici capiscono bene le domande, ma inventano nomi di dataset e URL di servizi WMS/WFS che non esistono. Il pattern corretto è usare l'AI per *comporre interrogazioni al catalogo ufficiale*, non per generare i riferimenti. openrndt è il layer di esecuzione di quel pattern: l'AI decide cosa cercare, openrndt interroga il RNDT e restituisce metadati e URL reali, verificabili.
 
-> **Al meglio con un'AI.** openrndt funziona benissimo da solo, ma **dà il massimo se guidato da un agente AI**: la CLI è progettata per essere composta, interrogata e orchestrata passo passo. Per un'esperienza guidata — scoperta delle codelist, ricerca con filtri progressivi, dettaglio del metadato, risorse scaricabili — abbinala alla Agent Skill [`rndt-explorer`](skills/rndt-explorer/SKILL.md) inclusa in questo repo. I principi di design sono nella sezione [Per agenti AI](#per-agenti-ai).
+> **Al meglio con un'AI.** openrndt funziona benissimo da solo, ma **dà il massimo se guidato da un agente AI**: la CLI è progettata per essere composta, interrogata e orchestrata passo passo. Per un'esperienza guidata — scoperta delle codelist, ricerca con filtri progressivi, dettaglio del metadato, risorse scaricabili — abbinala alla Agent Skill [`rndt-explorer`](https://github.com/ondata/openrndt/blob/main/skills/rndt-explorer/SKILL.md) inclusa in questo repo. I principi di design sono nella sezione [Per agenti AI](#per-agenti-ai).
 
 > Stato: v1.0 — read-only.
 
@@ -292,7 +292,7 @@ set_base_url("https://mio-mirror.example.com/RNDT")
 
 L'utente primario di questa CLI è un agente che legge `stdout` e compone i comandi
 passo passo. Da qui i principi di design (sul modello di
-[opensdmx](https://github.com/aborruso/opensdmx)):
+[opensdmx](https://github.com/ondata/opensdmx)):
 
 - **Output strutturato, mai oggetti Python.** Default JSON su `stdout`; `--format
   table` per la lettura umana, `--format csv` per i risultati tabellari, `--format
@@ -306,15 +306,33 @@ passo passo. Da qui i principi di design (sul modello di
 - **Niente formati ambigui.** `get <id> --format csv` (dettaglio non tabellare)
   fallisce con un messaggio esplicito invece di restituire output vuoto.
 
-Il progetto include inoltre una skill Claude Code in `skills/rndt-explorer/` che guida
-un agente attraverso le 4 fasi: scoperta delle codelist, ricerca con filtri progressivi,
-lettura del dettaglio, download delle risorse collegate (WMS/WFS/download).
+### La skill `rndt-explorer` — esplorazione guidata
+
+Il repo include una **Agent Skill** per Claude Code:
+[`skills/rndt-explorer/`](https://github.com/ondata/openrndt/blob/main/skills/rndt-explorer/SKILL.md). Guida l'agente
+attraverso 4 fasi: scoperta delle codelist (offline), ricerca con filtri
+progressivi, lettura del dettaglio, individuazione delle risorse scaricabili
+(WMS, WFS, download diretto). Include workflow pronti e verificati per casi
+d'uso reali — dall'operatore GIS che vuole un layer per QGIS al data journalist
+che deve scaricare i dati, verificarne la licenza e citare la fonte.
+
+**Installazione** (dopo aver installato la CLI):
+
+```bash
+git clone https://github.com/ondata/openrndt.git
+mkdir -p ~/.claude/skills
+cp -r openrndt/skills/rndt-explorer ~/.claude/skills/
+```
+
+Da quel momento Claude Code attiva la skill da solo quando chiedi dati
+territoriali italiani — «mi serve il catasto della mia zona», «trova un WMS
+con le ortofoto della Sardegna» — senza che tu debba nominarla.
 
 ## Riferimenti
 
 - Pagina ufficiale REST API: <https://geodati.gov.it/geoportale/eng/strumenti-en/rest-api>
 - Spec completa (sito di test Esri Geoportal Server, non produzione): <https://gpt.geocloud.com/geoportal3/api/gpt_api.json>
-- Documentazione raccolta nella cartella [`ref/`](./ref).
+- Documentazione raccolta nella cartella [`ref/`](https://github.com/ondata/openrndt/tree/main/ref).
 
 ## Licenza
 
