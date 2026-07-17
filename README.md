@@ -1,3 +1,9 @@
+[![PyPI version](https://img.shields.io/pypi/v/openrndt)](https://pypi.org/project/openrndt/)
+[![GitHub](https://img.shields.io/badge/github-ondata%2Fopenrndt-blue?logo=github)](https://github.com/ondata/openrndt)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ondata/openrndt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Newsletter](https://img.shields.io/badge/newsletter-ondata-FF6719?logo=substack)](https://ondata.substack.com/)
+
 # openrndt
 
 CLI Python e libreria per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
