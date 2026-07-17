@@ -6,8 +6,14 @@
 
 # openrndt
 
+> **Nota:** strumento giovane — aiutaci a migliorarlo [aprendo issue](https://github.com/ondata/openrndt/issues) o condividendo feedback.
+
 CLI Python e libreria per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
 pensata per essere orchestrata da un'AI.
+
+**Il modo giusto di trovare dati territoriali con l'AI.** I modelli linguistici capiscono bene le domande, ma inventano nomi di dataset e URL di servizi WMS/WFS che non esistono. Il pattern corretto è usare l'AI per *comporre interrogazioni al catalogo ufficiale*, non per generare i riferimenti. openrndt è il layer di esecuzione di quel pattern: l'AI decide cosa cercare, openrndt interroga il RNDT e restituisce metadati e URL reali, verificabili.
+
+> **Al meglio con un'AI.** openrndt funziona benissimo da solo, ma **dà il massimo se guidato da un agente AI**: la CLI è progettata per essere composta, interrogata e orchestrata passo passo. Per un'esperienza guidata — scoperta delle codelist, ricerca con filtri progressivi, dettaglio del metadato, risorse scaricabili — abbinala alla Agent Skill [`rndt-explorer`](skills/rndt-explorer/SKILL.md) inclusa in questo repo. I principi di design sono nella sezione [Per agenti AI](#per-agenti-ai).
 
 > Stato: v1.0 — read-only.
 
