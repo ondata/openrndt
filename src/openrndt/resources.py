@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
+import socket
 from typing import Any
 from urllib.parse import parse_qs, urljoin, urlparse
 
@@ -99,11 +100,33 @@ def _blocked_host_reason(hostname: str | None) -> str | None:
     return None
 
 
+def _blocked_resolved_hostname_reason(hostname: str) -> str | None:
+    try:
+        infos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
+    except socket.gaierror:
+        return None
+    for info in infos:
+        sockaddr = info[4]
+        if not sockaddr:
+            continue
+        ip_str = sockaddr[0]
+        reason = _blocked_host_reason(ip_str)
+        if reason is not None:
+            return f"dns-resolves-to-{reason}"
+    return None
+
+
 def _validate_check_url(url: str) -> str | None:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         return "unsupported-scheme"
-    return _blocked_host_reason(parsed.hostname)
+    hostname = parsed.hostname
+    reason = _blocked_host_reason(hostname)
+    if reason is not None:
+        return reason
+    if hostname is None:
+        return "missing-hostname"
+    return _blocked_resolved_hostname_reason(hostname)
 
 
 def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:

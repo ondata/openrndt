@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import socket
+
 import httpx
 import respx
 
@@ -118,6 +120,39 @@ def test_check_resources_blocks_private_hosts():
     assert checked[0]["status_code"] is None
     assert checked[0]["error"] == "url-blocked:loopback-not-allowed"
     assert checked[0]["method"] == "HEAD"
+
+
+def test_check_resources_blocks_dns_resolving_to_private_ip(monkeypatch):
+    def _fake_getaddrinfo(host: str, port: object, proto: int):  # type: ignore[no-untyped-def]
+        assert host == "evil.test"
+        assert proto == socket.IPPROTO_TCP
+        return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("127.0.0.1", 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://evil.test/service", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["ok"] is False
+    assert checked[0]["status_code"] is None
+    assert checked[0]["error"] == "url-blocked:dns-resolves-to-loopback-not-allowed"
+
+
+@respx.mock
+def test_check_resources_allows_dns_resolving_to_public_ip(monkeypatch):
+    def _fake_getaddrinfo(host: str, port: object, proto: int):  # type: ignore[no-untyped-def]
+        assert host == "public.test"
+        return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("93.184.216.34", 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
+    respx.head("https://public.test/service").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://public.test/service", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["ok"] is True
+    assert checked[0]["status_code"] == 200
+    assert checked[0]["error"] is None
 
 
 @respx.mock
