@@ -50,6 +50,9 @@ def _stub_dns(monkeypatch):
 
     I test che vogliono un esito diverso (host privato, risoluzione fallita)
     rifanno il monkeypatch al proprio interno, che ha la precedenza.
+
+    Riguarda solo i test basati su hostname: quelli su IP literal non passano
+    da `getaddrinfo`, quindi lo stub non incide sul loro esito.
     """
 
     def _fake_getaddrinfo(host, port, *args, **kwargs):  # type: ignore[no-untyped-def]
