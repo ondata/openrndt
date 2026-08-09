@@ -50,8 +50,8 @@ def test_extract_resources_infers_from_links_when_dctype_missing():
 
 @respx.mock
 def test_check_resources_adds_http_status():
-    respx.get("https://ok.test/wms?service=WMS").mock(return_value=httpx.Response(200))
-    respx.get("https://bad.test/wfs?service=WFS").mock(return_value=httpx.Response(503))
+    respx.head("https://ok.test/wms?service=WMS").mock(return_value=httpx.Response(200))
+    respx.head("https://bad.test/wfs?service=WFS").mock(return_value=httpx.Response(503))
     rows = [
         {"type": "WMS", "url": "https://ok.test/wms?service=WMS", "source": "links_s"},
         {"type": "WFS", "url": "https://bad.test/wfs?service=WFS", "source": "links_s"},
@@ -59,13 +59,15 @@ def test_check_resources_adds_http_status():
     checked = check_resources(rows, timeout=1)
     assert checked[0]["status_code"] == 200
     assert checked[0]["ok"] is True
+    assert checked[0]["method"] == "HEAD"
     assert checked[1]["status_code"] == 503
     assert checked[1]["ok"] is False
+    assert checked[1]["method"] == "HEAD"
 
 
 @respx.mock
 def test_check_resources_handles_network_errors():
-    respx.get("https://down.test/wms?service=WMS").mock(side_effect=httpx.ConnectError("down"))
+    respx.head("https://down.test/wms?service=WMS").mock(side_effect=httpx.ConnectError("down"))
     checked = check_resources(
         [{"type": "WMS", "url": "https://down.test/wms?service=WMS", "source": "links_s"}],
         timeout=1,
@@ -73,3 +75,16 @@ def test_check_resources_handles_network_errors():
     assert checked[0]["ok"] is False
     assert checked[0]["status_code"] is None
     assert checked[0]["error"] == "ConnectError"
+
+
+@respx.mock
+def test_check_resources_falls_back_to_streaming_get_when_head_not_allowed():
+    respx.head("https://fallback.test/data.zip").mock(return_value=httpx.Response(405))
+    respx.get("https://fallback.test/data.zip").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "download", "url": "https://fallback.test/data.zip", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["status_code"] == 200
+    assert checked[0]["ok"] is True
+    assert checked[0]["method"] == "GET"

@@ -94,7 +94,7 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def check_resources(resources: list[dict[str, str]], *, timeout: float | None = None) -> list[dict[str, Any]]:
-    """Controlla raggiungibilità endpoint risorsa con GET e timeout breve."""
+    """Controlla raggiungibilità endpoint con probe leggero (HEAD, fallback GET)."""
     if timeout is None:
         timeout = get_timeout()
 
@@ -103,15 +103,31 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
     for resource in resources:
         row: dict[str, Any] = dict(resource)
         try:
-            response = httpx.get(
+            response = httpx.head(
                 resource["url"],
                 headers=headers,
                 timeout=timeout,
                 follow_redirects=True,
             )
+            # Alcuni endpoint non supportano HEAD: fallback a GET in streaming.
+            if response.status_code in {405, 501}:
+                with httpx.stream(
+                    "GET",
+                    resource["url"],
+                    headers=headers,
+                    timeout=timeout,
+                    follow_redirects=True,
+                ) as stream_response:
+                    row["status_code"] = stream_response.status_code
+                    row["ok"] = 200 <= stream_response.status_code < 400
+                    row["final_url"] = str(stream_response.url)
+                    row["method"] = "GET"
+                checked.append(row)
+                continue
             row["status_code"] = response.status_code
             row["ok"] = 200 <= response.status_code < 400
             row["final_url"] = str(response.url)
+            row["method"] = "HEAD"
         except httpx.HTTPError as exc:
             row["status_code"] = None
             row["ok"] = False
