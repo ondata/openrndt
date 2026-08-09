@@ -1,5 +1,18 @@
 # LOG
 
+## 2026-08-09 (v3.0.0: date separate, ricerca per ente, fix latency)
+
+- **`updated` e `indexed` non sono più lo stesso campo**. In `table`/`csv`/`compact`/`footprints`, `updated` è ora `apiso_Modified_dt` (data della scheda, quella su cui filtrano `--updated-from/--updated-to`) e `indexed` è `sys_modified_dt` (indicizzazione nel catalogo, il campo top-level `updated` dell'API). Era una collisione di nome interna alla CLI: si filtrava su un campo e se ne leggeva un altro, e dopo `--sort apiso_Modified_dt:desc` la colonna mostrata era scorrelata dall'ordine. Verificato live: record catasto con `updated 2026-04-25T15:37:34Z` e `apiso_Modified_dt 2019-11-13`. Rottura del formato → **3.0.0**.
+- Dove non si può rinominare (`--format json`, passthrough del payload API) la CLI stampa una nota su stderr, ma solo quando la ricerca usa un filtro o un ordinamento sulle date; la tabella porta la legenda in calce.
+- **`--org` / `--org-exact` su `search` e `footprints`**. `--org` cerca la frase su `apiso_OrganizationName_txt` (campo analizzato: case-insensitive, ordine dei token irrilevante). Verificato live: `--org "comune di torino"` → 269 record, tutti e soli del Comune di Torino. `--org-exact` resta per il confronto esatto su `EnteResponsabile_s`.
+- **Su zero risultati con `--org` la CLI mostra i nomi reali in catalogo**: una sola query esplorativa sul token più distintivo, aggregata a valle (l'API ignora `facet`, verificato). `--org "comune di bologna"` → `Citta' metropolitana di Bologna | Regione Emilia-Romagna`: il Comune di Bologna non pubblica in proprio.
+- **Fix `latency_ms` sempre 0** in `resources --check`: la durata era misurata in secondi ed emessa come millisecondi. ISPRA WMS/WFS/download passano da `0/0/0` a `147/139/129` ms. Il test esistente passava anche col bug (`isinstance(int)` e `>= 0`): ora la durata è iniettata e il valore atteso è esatto.
+- **Corretto un suggerimento sbagliato introdotto ieri**: su zero risultati la CLI consigliava per gli enti `contact_organizations_s:*nome*` definendolo «esatto e case-sensitive». Live: `*bologna*` → 0, `*Bologna*` → 112 ma quasi tutti di Regione E-R e ARPAE che *nominano* Bologna. Ora rimanda a `--org`.
+- Tabella profilo `default`: aggiunta la colonna `org`. `author` contiene la sorgente di harvest (`csw.piemonte`), non l'ente.
+- Verificata e smentita la debolezza «colonne troncate» del report: Rich usa `overflow="fold"`, manda a capo senza perdere caratteri.
+- API di libreria: `record_dates()` e `organization_names()` esportate al top-level insieme a `compact_results()`.
+- Test 123/123 verdi, ruff e mypy puliti. README, skill (`SKILL.md`, `search-syntax.md`, `result-structure.md`, `output-formats.md`, `workflows.md`) e bundle `knowledge/` allineati.
+
 ## 2026-08-09 (CLI: resources con redirect, latenza e batch)
 
 - **`resources` segue i redirect (max 3) solo verso host pubblici**: validazione per hop con la stessa allowlist dell'URL iniziale. L'endpoint ARPA Veneto (`http://gaia.arpa.veneto.it/…`, 301→https) prima dava `ok=false` — un falso negativo su un servizio funzionante — ora `ok=true, redirected=true`. Un 3xx verso host non pubblico (es. link-local) non viene seguito: `error=redirect-blocked:…`. Mantenuta e rafforzata la postura fail-closed (niente follow cieco).

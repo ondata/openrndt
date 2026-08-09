@@ -4,15 +4,29 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-09
+
+### Changed
+
+- **Rottura del formato di output**: negli output `table`, `csv`, `compact` e nelle proprietà del GeoJSON di `footprints`, il campo `updated` è ora `_source.apiso_Modified_dt` — la data della **scheda di metadato**, la stessa su cui filtrano `--updated-from`/`--updated-to`. L'istante di indicizzazione nel catalogo (`_source.sys_modified_dt`, che l'API espone come campo top-level `updated`) si chiama ora `indexed`. Prima le due grandezze condividevano il nome `updated`: si filtrava su un campo e se ne leggeva un altro, e un ordinamento per `apiso_Modified_dt:desc` mostrava una colonna scorrelata dall'ordine. Chi consuma `compact`/`csv`/GeoJSON deve rileggere il campo corretto; con `--format json` (payload grezzo dell'API) nulla cambia.
+- La tabella del profilo `default` di `search` mostra anche la colonna `org` (`apiso_OrganizationName_txt`): `author` resta, ma contiene la sorgente di harvest (es. `csw.piemonte`), non l'ente responsabile.
 
 ### Added
 
-- `search` e `footprints` con 0 risultati stampano su stderr **suggerimenti contestuali** (allargare `--q` con wildcard, rimuovere `--data-category`/`--time`/`--bbox`, nominativo ente esatto e case-sensitive, ricerca per territorio) invece del solo «Nessun risultato».
+- **`search --org` e `search --org-exact`** (anche su `footprints`): ricerca per ente responsabile. `--org` cerca la frase su `apiso_OrganizationName_txt`, campo analizzato e quindi case-insensitive e insensibile all'ordine dei token (`--org "comune di torino"` → 269 record, solo Comune di Torino); `--org-exact` fa il confronto esatto e case-sensitive su `EnteResponsabile_s`. Prima serviva scrivere la clausola Lucene a mano, e le forme più intuitive fallivano in silenzio.
+- Su zero risultati con `--org`, la CLI esegue **una query esplorativa** e stampa i nomi di ente realmente presenti in catalogo che somigliano a quello cercato (l'API RNDT ignora il parametro `facet`, quindi l'aggregazione è a valle): `--org "comune di bologna"` → `Citta' metropolitana di Bologna | Regione Emilia-Romagna`, cioè chi pubblica davvero quei dati.
+- La tabella di `search` porta in calce la legenda delle colonne data, e con `--format json` la CLI ricorda su stderr — solo quando la ricerca usa un filtro o un ordinamento sulle date — che nel payload grezzo `updated` è l'indicizzazione.
+- `openrndt.record_dates()` e `openrndt.organization_names()` esposti come API di libreria, insieme a `compact_results()`.
+- `search` e `footprints` con 0 risultati stampano su stderr **suggerimenti contestuali** (allargare `--q` con wildcard, rimuovere `--data-category`/`--time`/`--bbox`, ricerca per ente con `--org`, ricerca per territorio) invece del solo «Nessun risultato».
 - Se l'API risponde con errore HTTP mentre è attivo `--sort`, il messaggio su stderr ricorda i campi ordinabili su RNDT (`title`, `apiso_Modified_dt`, forma `campo:asc|desc`) e rimanda a `discover --what sort_values`.
 - `resources` accetta **più ID in batch** (`resources <id1> <id2> …`): health-check di un gruppo di metadati in un comando; gli errori per-record (`ItemNotFoundError`, HTTP, rete) producono una voce con `error` senza fermare gli altri. Con un solo ID il formato dell'output resta invariato.
 - `resources --check` **segue i redirect** (max 3) ma solo verso **host pubblici**, con la stessa validazione dell'URL iniziale: l'endpoint ARPA Veneto catalogato in `http` (301→`https`) ora risulta `ok=true, redirected=true` invece del falso negativo `ok=false`; un redirect verso un host non pubblico non viene seguito ed espone `error=redirect-blocked:…`.
-- `resources --check` riporta per ogni endpoint **`latency_ms`** (durata complessiva della probe, distingue un servizio 200 veloce da uno lento) e i campi `redirected` / `redirect_count` / `redirect_url` (prima destinazione).
+- `resources --check` riporta per ogni endpoint **`latency_ms`** (durata complessiva della probe) e i campi `redirected` / `redirect_count` / `redirect_url` (prima destinazione).
+
+### Fixed
+
+- **`latency_ms` di `resources --check` era sempre sbagliato**: la misura veniva presa in secondi ed emessa come millisecondi, quindi ogni probe sotto il mezzo secondo risultava `0` (live: WMS/WFS/download ISPRA tutti a `0`, ora 147/139/129 ms). Il test esistente passava anche col difetto: ora la durata è iniettata e il valore atteso è esatto.
+- Il suggerimento su zero risultati indicava per gli enti il campo peggiore, `contact_organizations_s` con wildcard, descrivendolo come «esatto e case-sensitive»: quella forma restituisce 0 con la minuscola (`*bologna*`) e, con la maiuscola, centinaia di record di altri enti che semplicemente *nominano* quel territorio. Ora rimanda a `--org`.
 
 ## [2.0.0] - 2026-08-09
 
