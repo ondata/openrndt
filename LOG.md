@@ -1,6 +1,6 @@
 # LOG
 
-## 2026-08-09 (1.2.0)
+## 2026-08-09 (release 2.0.0)
 
 - **`--profile` era una trappola silenziosa**: `openrndt search --profile gis` stampava JSON, perché il preset di colonne vale solo per `table`/`csv` e `--format` è globale (va prima del sottocomando). Nessun errore, nessun avviso: l'opzione veniva semplicemente ignorata. Ora `--profile` senza `--format` esplicito attiva da solo `table`, e con `--format json|compact` espliciti la CLI dice su stderr che il preset non si applica.
 - Il meccanismo è `output.set_mode(mode, explicit=...)`: il default `json` è marcato non-esplicito, così i comandi possono sovrascriverlo senza sovrascrivere una scelta dell'utente. Stessa distinzione su `--profile`, che passa a default `None` per separare «non passato» da `--profile default`.

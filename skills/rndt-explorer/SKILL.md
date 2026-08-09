@@ -18,7 +18,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "1.2"
+  version: "2.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
