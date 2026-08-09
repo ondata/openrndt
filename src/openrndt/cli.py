@@ -9,6 +9,7 @@ import httpx
 import typer
 
 from openrndt import codelists, config, output
+from openrndt._version import __version__
 from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
 from openrndt.resources import check_resources, extract_resources
 from openrndt.search import compact_results
@@ -26,8 +27,22 @@ app = typer.Typer(
 )
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"openrndt {__version__}")
+        raise typer.Exit(0)
+
+
 @app.callback()
 def _root(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help="Stampa la versione di openrndt ed esce.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
     base_url: str | None = typer.Option(
         None,
         "--base-url",

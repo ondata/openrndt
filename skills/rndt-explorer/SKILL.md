@@ -54,7 +54,8 @@ openrndt --format csv search ... --profile qgis
 
 Altre opzioni globali (sempre PRIMA del comando): `--timeout <secondi>` per il
 timeout HTTP per singolo tentativo (default 30s; con i retry il caso peggiore è
-~3x — utile abbassarlo se il portale è lento), `--base-url` per un mirror.
+~3x — utile abbassarlo se il portale è lento), `--base-url` per un mirror,
+`--version` (o `-V`) per sapere quale versione della CLI è installata.
 
 Tutti i comandi hanno `--help`. La skill segue 4 fasi.
 

@@ -16,7 +16,8 @@ Il package `src/openrndt/` è composto da 8 moduli piccoli e a responsabilità s
 | `search.py` | Chiamata e parsing di `/rest/metadata/search`; validazione parametri; `compact_results()` per l'output NDJSON. |
 | `item.py` | Dettaglio singolo metadato (`/rest/metadata/item/{id}`) in JSON, XML ISO 19139, HTML; `ItemNotFoundError`. |
 | `resources.py` | Estrazione risorse fruibili (WMS/WFS/download) da `links`/`links_s` e check opzionale endpoint HTTP. |
-| `client.py` | `rndt_request()`: GET httpx con retry esponenziale tenacity (3 tentativi su timeout e 5xx), timeout default 30 s, User-Agent dedicato. |
+| `client.py` | `rndt_request()`: GET httpx con retry esponenziale tenacity (3 tentativi su timeout e 5xx), timeout default 30 s, `USER_AGENT` derivato da `_version`. |
+| `_version.py` | Fonte unica della versione: legge i metadati della distribuzione con `importlib.metadata`, così `pyproject.toml` resta l'unico punto da alzare. Non importa nulla di interno, per non creare cicli con `client.py`. |
 | `codelists.py` | Costanti offline: categorie ISO 19115, valori `sort`, formati output, parametri di ricerca, campi Lucene. |
 | `config.py` | Base URL (default `https://geodati.gov.it/RNDT`, override via env `OPENRNDT_BASE_URL` o flag `--base-url`) e timeout HTTP (default 30s, override via flag `--timeout`), letti da `client.rndt_request()`. |
 | `output.py` | Dispatcher output: `json` (default), `table` (rich), `csv`, `compact` (NDJSON). |

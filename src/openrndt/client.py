@@ -12,9 +12,10 @@ from tenacity import (
     wait_exponential,
 )
 
+from openrndt._version import __version__
 from openrndt.config import get_base_url, get_timeout
 
-USER_AGENT = "openrndt/0.1 (+https://geodati.gov.it/RNDT)"
+USER_AGENT = f"openrndt/{__version__} (+https://geodati.gov.it/RNDT)"
 
 
 def rndt_request(path: str, params: dict[str, Any] | None = None, *, timeout: float | None = None) -> httpx.Response:
