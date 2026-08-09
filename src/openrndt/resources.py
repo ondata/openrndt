@@ -97,6 +97,10 @@ def _blocked_host_reason(hostname: str | None) -> str | None:
         return "unspecified-address-not-allowed"
     if addr.is_multicast:
         return "multicast-address-not-allowed"
+    # Catch-all per i range special-purpose non coperti dai predicati sopra
+    # (es. CGNAT 100.64.0.0/10, che non è né private né reserved).
+    if not addr.is_global:
+        return "non-global-address-not-allowed"
     return None
 
 
@@ -104,7 +108,8 @@ def _blocked_resolved_hostname_reason(hostname: str) -> str | None:
     try:
         infos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
     except socket.gaierror:
-        return None
+        # Non risolvibile = non validabile: si blocca, non si lascia passare.
+        return "dns-resolution-failed"
     for info in infos:
         sockaddr = info[4]
         if not sockaddr:
@@ -163,6 +168,16 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
     return rows
 
 
+def _apply_response(row: dict[str, Any], response: httpx.Response, method: str, url: str) -> None:
+    location = response.headers.get("location")
+    if location:
+        row["redirect_url"] = urljoin(url, location)
+    row["status_code"] = response.status_code
+    row["ok"] = 200 <= response.status_code < 300
+    row["final_url"] = str(response.url)
+    row["method"] = method
+
+
 def check_resources(resources: list[dict[str, str]], *, timeout: float | None = None) -> list[dict[str, Any]]:
     """Controlla raggiungibilità endpoint con probe leggero (HEAD, fallback GET).
 
@@ -194,11 +209,11 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                 timeout=timeout,
                 follow_redirects=False,
             )
-            location = response.headers.get("location")
-            if location:
-                row["redirect_url"] = urljoin(resource["url"], location)
-            # Alcuni endpoint non supportano HEAD: fallback a GET in streaming.
-            if response.status_code in {405, 501}:
+            _apply_response(row, response, "HEAD", resource["url"])
+            # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
+            # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
+            # l'endpoint riproviamo in streaming, senza scaricare il body.
+            if response.status_code >= 400:
                 with httpx.stream(
                     "GET",
                     resource["url"],
@@ -206,18 +221,7 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                     timeout=timeout,
                     follow_redirects=False,
                 ) as stream_response:
-                    location = stream_response.headers.get("location")
-                    if location:
-                        row["redirect_url"] = urljoin(resource["url"], location)
-                    row["status_code"] = stream_response.status_code
-                    row["ok"] = 200 <= stream_response.status_code < 300
-                    row["final_url"] = str(stream_response.url)
-                    row["method"] = "GET"
-                checked.append(row)
-                continue
-            row["status_code"] = response.status_code
-            row["ok"] = 200 <= response.status_code < 300
-            row["final_url"] = str(response.url)
+                    _apply_response(row, stream_response, "GET", resource["url"])
         except httpx.HTTPError as exc:
             row["error"] = type(exc).__name__
         checked.append(row)

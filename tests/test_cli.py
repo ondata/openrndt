@@ -364,6 +364,9 @@ def test_cli_resources_json_with_check(item_response_json):
     respx.head(
         "https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0"
     ).mock(return_value=httpx.Response(503))
+    respx.get(
+        "https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0"
+    ).mock(return_value=httpx.Response(503))
     result = runner.invoke(app, ["resources", "age:D_E973_MARSAGLIA"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)

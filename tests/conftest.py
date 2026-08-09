@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import socket
 from pathlib import Path
 
 import pytest
@@ -41,6 +42,20 @@ def _reset_timeout():
     config.set_timeout(None)
     yield
     config.set_timeout(None)
+
+
+@pytest.fixture(autouse=True)
+def _stub_dns(monkeypatch):
+    """Nessuna risoluzione DNS reale nei test: ogni hostname risolve a un IP pubblico.
+
+    I test che vogliono un esito diverso (host privato, risoluzione fallita)
+    rifanno il monkeypatch al proprio interno, che ha la precedenza.
+    """
+
+    def _fake_getaddrinfo(host, port, *args, **kwargs):  # type: ignore[no-untyped-def]
+        return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("93.184.216.34", port or 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
 
 
 @pytest.fixture(autouse=True)
