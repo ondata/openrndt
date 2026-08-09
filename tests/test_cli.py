@@ -137,6 +137,12 @@ def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
     result = runner.invoke(app, ["--format", "compact", "search", "--profile", "gis", "--num", "2"])
     assert result.exit_code == 0, result.output
     assert "--profile è ignorato con --format compact" in result.output
+    # l'avviso va su stderr: stdout resta NDJSON con le colonne di compact, non quelle del profilo
+    lines = [line for line in result.stdout.splitlines() if line.strip()]
+    assert lines
+    for line in lines:
+        row = json.loads(line)
+        assert set(row) == {"id", "title", "org", "type", "category", "updated", "resources"}
 
 
 @respx.mock
