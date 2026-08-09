@@ -256,6 +256,37 @@ def test_cli_search_zero_results_csv_warns():
     result = runner.invoke(app, ["--format", "csv", "search", "--q", "zzz"])
     assert result.exit_code == 0, result.output
     assert "nessun risultato" in result.output.lower()
+    assert "suggerimenti" in result.output.lower()
+    assert "wildcard" in result.output
+
+
+@respx.mock
+def test_cli_search_zero_results_json_hint_on_stderr():
+    """search con 0 risultati in json: stdout solo JSON puro, suggerimenti su stderr."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=empty)
+    )
+    result = runner.invoke(app, ["search", "--q", "zzz", "--bbox", "7,44,8,45"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == empty
+    assert "nessun risultato" in result.stderr.lower()
+    assert "suggerimenti" in result.stderr.lower()
+    assert "bbox" in result.stderr.lower()
+
+
+@respx.mock
+def test_cli_search_sort_http_500_hint():
+    """Sort non ordinabile → HTTP 500: messaggio con i campi ordinabili e rimando a discover."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(500, text="server error")
+    )
+    result = runner.invoke(app, ["search", "--q", "catasto", "--sort", "apiso_PublicationDate_dt:desc"])
+    assert result.exit_code == 1, result.output
+    assert "500" in result.output
+    assert "apiso_Modified_dt" in result.output
+    assert "discover" in result.output
+    assert "Traceback" not in result.output
 
 
 @respx.mock
@@ -346,6 +377,7 @@ def test_cli_search_compact_zero_results_warns():
     result = runner.invoke(app, ["--format", "compact", "search", "--q", "zzz"])
     assert result.exit_code == 0, result.output
     assert "nessun risultato" in result.output.lower()
+    assert "suggerimenti" in result.output.lower()
 
 
 @respx.mock
@@ -450,6 +482,41 @@ def test_cli_resources_no_check(item_response_json):
     assert payload["checked"] is False
     assert payload["count"] == 2
     assert "ok" not in payload["resources"][0]
+
+
+@respx.mock
+def test_cli_resources_batch_multiple_ids(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/altro%3Aid").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["resources", "--no-check", "age:D_E973_MARSAGLIA", "altro:id"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["count"] == 2
+    assert payload["checked"] is False
+    assert len(payload["results"]) == 2
+    assert payload["results"][0]["id"] == "age:D_E973_MARSAGLIA"
+    assert payload["results"][0]["count"] == 2
+    assert payload["results"][1]["id"] == "altro:id"
+
+
+@respx.mock
+def test_cli_resources_batch_collects_errors(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
+        return_value=httpx.Response(200, json={"found": False})
+    )
+    result = runner.invoke(app, ["resources", "--no-check", "age:D_E973_MARSAGLIA", "inesistente"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["count"] == 2
+    assert payload["results"][0]["id"] == "age:D_E973_MARSAGLIA"
+    assert "error" in payload["results"][1]
 
 
 @respx.mock

@@ -4,6 +4,16 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- `search` e `footprints` con 0 risultati stampano su stderr **suggerimenti contestuali** (allargare `--q` con wildcard, rimuovere `--data-category`/`--time`/`--bbox`, nominativo ente esatto e case-sensitive, ricerca per territorio) invece del solo «Nessun risultato».
+- Se l'API risponde con errore HTTP mentre è attivo `--sort`, il messaggio su stderr ricorda i campi ordinabili su RNDT (`title`, `apiso_Modified_dt`, forma `campo:asc|desc`) e rimanda a `discover --what sort_values`.
+- `resources` accetta **più ID in batch** (`resources <id1> <id2> …`): health-check di un gruppo di metadati in un comando; gli errori per-record (`ItemNotFoundError`, HTTP, rete) producono una voce con `error` senza fermare gli altri. Con un solo ID il formato dell'output resta invariato.
+- `resources --check` **segue i redirect** (max 3) ma solo verso **host pubblici**, con la stessa validazione dell'URL iniziale: l'endpoint ARPA Veneto catalogato in `http` (301→`https`) ora risulta `ok=true, redirected=true` invece del falso negativo `ok=false`; un redirect verso un host non pubblico non viene seguito ed espone `error=redirect-blocked:…`.
+- `resources --check` riporta per ogni endpoint **`latency_ms`** (durata complessiva della probe, distingue un servizio 200 veloce da uno lento) e i campi `redirected` / `redirect_count` / `redirect_url` (prima destinazione).
+
 ## [2.0.0] - 2026-08-09
 
 ### Changed

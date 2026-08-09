@@ -7,7 +7,7 @@ import socket
 import httpx
 import respx
 
-from openrndt.resources import check_resources, extract_resources
+from openrndt.resources import _MAX_REDIRECTS, check_resources, extract_resources
 
 
 def test_extract_resources_dedup_and_filter_non_resource_links(item_response_json):
@@ -216,7 +216,7 @@ def test_check_resources_blocks_when_dns_resolution_fails(monkeypatch):
 
 
 @respx.mock
-def test_check_resources_does_not_follow_redirects():
+def test_check_resources_blocks_redirect_to_non_public_host():
     respx.head("https://redir.test/service").mock(
         return_value=httpx.Response(302, headers={"Location": "http://169.254.1.10/internal"})
     )
@@ -225,6 +225,60 @@ def test_check_resources_does_not_follow_redirects():
         timeout=1,
     )
     assert checked[0]["status_code"] == 302
-    # 3xx = destinazione non verificata (redirect non seguiti): ok deve restare False.
+    # 3xx verso host non pubblico: non seguito, ok=False con errore esplicito.
     assert checked[0]["ok"] is False
     assert checked[0]["redirect_url"] == "http://169.254.1.10/internal"
+    assert checked[0]["error"] == "redirect-blocked:link-local-not-allowed"
+    assert checked[0]["redirected"] is False
+
+
+@respx.mock
+def test_check_resources_follows_redirect_to_public_host():
+    respx.head("https://redir.test/service").mock(
+        return_value=httpx.Response(301, headers={"Location": "https://final.test/wms?service=WMS"})
+    )
+    respx.head("https://final.test/wms?service=WMS").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://redir.test/service", "source": "links_s"}],
+        timeout=1,
+    )
+    row = checked[0]
+    # http→https reale: il 301 non è più dichiarato rotto, la probe segue e verifica.
+    assert row["ok"] is True
+    assert row["status_code"] == 200
+    assert row["final_url"] == "https://final.test/wms?service=WMS"
+    assert row["redirected"] is True
+    assert row["redirect_count"] == 1
+    assert row["redirect_url"] == "https://final.test/wms?service=WMS"
+    assert isinstance(row["latency_ms"], int)
+
+
+@respx.mock
+def test_check_resources_stops_after_max_redirects():
+    def _chain(request: httpx.Request) -> httpx.Response:
+        from urllib.parse import urlparse
+
+        path = urlparse(str(request.url)).path
+        n = int(path.lstrip("/") or "0")
+        return httpx.Response(302, headers={"Location": f"/{n + 1}"})
+
+    respx.route(host="chain.test", method="HEAD").mock(side_effect=_chain)
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://chain.test/0", "source": "links_s"}],
+        timeout=1,
+    )
+    row = checked[0]
+    assert row["error"] == "too-many-redirects"
+    assert row["redirect_count"] == _MAX_REDIRECTS
+    assert row["ok"] is False
+
+
+@respx.mock
+def test_check_resources_reports_latency():
+    respx.head("https://latency.test/wms").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://latency.test/wms", "source": "links_s"}],
+        timeout=1,
+    )
+    assert isinstance(checked[0]["latency_ms"], int)
+    assert checked[0]["latency_ms"] >= 0

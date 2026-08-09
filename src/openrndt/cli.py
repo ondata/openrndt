@@ -80,7 +80,7 @@ def _root(
             raise typer.Exit(2)
 
 
-def _http_error(exc: httpx.HTTPError) -> NoReturn:
+def _http_error(exc: httpx.HTTPError, *, sort: str | None = None) -> NoReturn:
     """Stampa un messaggio leggibile su stderr ed esce 1 — mai uno stack trace.
 
     Distingue una risposta HTTP di errore (status) da un problema di rete
@@ -89,6 +89,14 @@ def _http_error(exc: httpx.HTTPError) -> NoReturn:
     """
     if isinstance(exc, httpx.HTTPStatusError):
         typer.echo(f"Errore HTTP {exc.response.status_code}: {exc.request.url}", err=True)
+        if sort:
+            typer.echo(
+                "Se l'errore riguarda --sort: su RNDT ordinano solo `title` e "
+                "`apiso_Modified_dt` (forma campo:asc|desc); `dateAscending`, "
+                "`dateDescending` e `relevance` sono ignorati. "
+                "Vedi `discover --what sort_values`.",
+                err=True,
+            )
     else:
         url = getattr(getattr(exc, "request", None), "url", None) or config.get_base_url()
         typer.echo(
@@ -96,6 +104,50 @@ def _http_error(exc: httpx.HTTPError) -> NoReturn:
             err=True,
         )
     raise typer.Exit(1)
+
+
+def _total_count(payload: dict[str, Any]) -> int:
+    """Conteggio totale dalla risposta, gestendo il tipo variabile di `total`."""
+    total = payload.get("total")
+    if isinstance(total, dict):
+        return int(total.get("value", 0) or 0)
+    return int(total or 0)
+
+
+def _no_results_hint(
+    q: str | None,
+    bbox: str | None,
+    data_category: str | None,
+    time: str | None,
+) -> None:
+    """Avviso su stderr per ricerca senza risultati, con suggerimenti contestuali."""
+    hints: list[str] = []
+    if q:
+        if ":" in q:
+            hints.append(
+                "allarga o semplifica il testo di --q (campo:valore richiede il valore "
+                "esatto; per i campi _s è case-sensitive)"
+            )
+        else:
+            hints.append(f'allarga il testo di --q o usa wildcard (es. --q "*{q}*")')
+    if data_category:
+        hints.append("rimuovi --data-category")
+    if time:
+        hints.append("allarga o rimuovi --time (il periodo può non avere record)")
+    if bbox:
+        hints.append(
+            "allarga o rimuovi --bbox (il filtro è per sovrapposizione; "
+            "molti record dichiarano bbox nazionali)"
+        )
+    if q and ":" not in q:
+        hints.append(
+            "se cercavi un ente: il nominativo in contact_organizations_s è esatto e "
+            "case-sensitive (prova --q 'contact_organizations_s:*nome*'), oppure cerca "
+            "per territorio con --bbox e AmbitoTerritoriale_s:Locale"
+        )
+    typer.echo("Nessun risultato per la ricerca.", err=True)
+    if hints:
+        typer.echo("Suggerimenti: " + " ; ".join(hints), err=True)
 
 
 def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -329,18 +381,21 @@ def search(
         typer.echo(str(exc), err=True)
         raise typer.Exit(2)
     except httpx.HTTPError as exc:
-        _http_error(exc)
+        _http_error(exc, sort=sort)
     if not isinstance(payload, dict):
         typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
         raise typer.Exit(1)
+    zero = _total_count(payload) == 0
     mode = output.get_mode()
     if mode == "json":
         output.emit(payload)
+        if zero:
+            _no_results_hint(q, bbox, data_category, time)
         return
     if mode == "compact":
         rows = compact_results(payload)
         if not rows:
-            typer.echo("Nessun risultato per la ricerca.", err=True)
+            _no_results_hint(q, bbox, data_category, time)
             return
         output.emit(payload, table_rows=rows)
         return
@@ -351,7 +406,7 @@ def search(
     else:
         rows = _result_rows(payload)
     if not rows:
-        typer.echo("Nessun risultato per la ricerca.", err=True)
+        _no_results_hint(q, bbox, data_category, time)
         return
     title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
     output.emit(payload, table_rows=rows, table_title=title)
@@ -432,7 +487,7 @@ def footprints(
         typer.echo(str(exc), err=True)
         raise typer.Exit(2)
     except httpx.HTTPError as exc:
-        _http_error(exc)
+        _http_error(exc, sort=sort)
 
     if not isinstance(payload, dict):
         typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
@@ -455,6 +510,8 @@ def footprints(
         },
     }
     output.emit(geojson)
+    if _total_count(payload) == 0:
+        _no_results_hint(q, bbox, data_category, time)
 
 
 @app.command()
@@ -493,7 +550,10 @@ def get(
 
 @app.command()
 def resources(
-    item_id: str = typer.Argument(..., help="ID del metadato (es. age:D_E973_MARSAGLIA)."),
+    item_ids: list[str] = typer.Argument(
+        ...,
+        help="ID di uno o più metadati (es. age:D_E973_MARSAGLIA). Più ID = health-check in batch.",
+    ),
     check: bool = typer.Option(
         True,
         "--check/--no-check",
@@ -501,37 +561,76 @@ def resources(
     ),
 ) -> None:
     """Estrae risorse fruibili (WMS/WFS/download) e, opzionalmente, le verifica."""
-    try:
-        payload = get_item(item_id)
-    except ItemNotFoundError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(1)
-    except json.JSONDecodeError:
-        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
-        raise typer.Exit(1)
-    except httpx.HTTPError as exc:
-        _http_error(exc)
+    batch = len(item_ids) > 1
+    entries: list[dict[str, Any]] = []
+    for item_id in item_ids:
+        entry: dict[str, Any] = {"id": item_id}
+        try:
+            payload = get_item(item_id)
+        except ItemNotFoundError as exc:
+            entry["error"] = str(exc)
+            entries.append(entry)
+            continue
+        except json.JSONDecodeError:
+            entry["error"] = "Risposta RNDT inattesa (JSON non valido)."
+            entries.append(entry)
+            continue
+        except httpx.HTTPError as exc:
+            if batch:
+                if isinstance(exc, httpx.HTTPStatusError):
+                    entry["error"] = f"Errore HTTP {exc.response.status_code}"
+                else:
+                    entry["error"] = f"Errore di rete ({type(exc).__name__})"
+                entries.append(entry)
+                continue
+            _http_error(exc)
 
-    rows = extract_resources(payload)
-    if check:
-        rows_checked = check_resources(rows)
-    else:
-        rows_checked = rows
+        rows = extract_resources(payload)
+        if check:
+            rows_checked = check_resources(rows)
+        else:
+            rows_checked = rows
+        entry["count"] = len(rows_checked)
+        entry["checked"] = check
+        entry["resources"] = rows_checked
+        entries.append(entry)
 
-    response: dict[str, Any] = {
-        "id": item_id,
-        "count": len(rows_checked),
-        "checked": check,
-        "resources": rows_checked,
-    }
+    if not batch:
+        # Formato storico: il payload del singolo metadato al primo livello.
+        entry = entries[0]
+        if "error" in entry:
+            typer.echo(entry["error"], err=True)
+            raise typer.Exit(1)
+        response = dict(entry)
+        mode = output.get_mode()
+        if mode == "json":
+            output.emit(response)
+            return
+        if not response.get("resources"):
+            typer.echo("Nessuna risorsa fruibile trovata per il metadato.", err=True)
+            return
+        output.emit(response, table_rows=response["resources"], table_title=f"RNDT resources — {item_ids[0]}")
+        return
+
     mode = output.get_mode()
     if mode == "json":
-        output.emit(response)
+        output.emit({"count": len(entries), "checked": check, "results": entries})
         return
-    if not rows_checked:
-        typer.echo("Nessuna risorsa fruibile trovata per il metadato.", err=True)
+    rows_all: list[dict[str, Any]] = []
+    for entry in entries:
+        if "error" in entry:
+            rows_all.append({"id": entry["id"], "error": entry["error"]})
+            continue
+        for r in entry.get("resources") or []:
+            rows_all.append({"id": entry["id"], **r})
+    if not rows_all:
+        typer.echo("Nessuna risorsa fruibile trovata.", err=True)
         return
-    output.emit(response, table_rows=rows_checked, table_title=f"RNDT resources — {item_id}")
+    output.emit(
+        {"count": len(entries), "checked": check, "results": entries},
+        table_rows=rows_all,
+        table_title=f"RNDT resources — {len(entries)} metadati",
+    )
 
 
 @app.command()
