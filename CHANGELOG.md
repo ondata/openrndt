@@ -4,6 +4,13 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.2.0] - 2026-08-09
+
+### Changed
+
+- `search --profile` senza `--format` esplicito ora produce direttamente una tabella, invece di stampare JSON ignorando in silenzio il preset di colonne. **Cambio di comportamento**: chi usava `search --profile gis` in uno script aspettandosi JSON deve aggiungere `--format json`.
+- `search --profile` combinato con `--format json` o `--format compact` espliciti avvisa su stderr che il preset non si applica; l'output e il codice di uscita restano invariati.
+
 ## [1.1.0] - 2026-08-09
 
 ### Added

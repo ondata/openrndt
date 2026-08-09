@@ -18,7 +18,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "1.1"
+  version: "1.2"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -45,12 +45,13 @@ guarda `_source.links_s`.
 Per output tabellari/CSV di `search` puoi usare anche preset:
 
 ```bash
-openrndt --format table search ... --profile gis
+openrndt search ... --profile gis            # senza --format esce già in table
 openrndt --format csv search ... --profile qgis
 ```
 
 - `--profile gis`: colonne essenziali per analisi rapida (tipo/categoria/ente/risorse/bbox).
 - `--profile qgis`: colonne pronte per flussi QGIS/script (`wms_url`, `wfs_url`, `download_url`, `xmin..ymax`).
+- `--profile` con `--format json` o `compact` espliciti non si applica: la CLI lo dice su stderr e lascia l'output invariato.
 
 Altre opzioni globali (sempre PRIMA del comando): `--timeout <secondi>` per il
 timeout HTTP per singolo tentativo (default 30s; con i retry il caso peggiore è
@@ -102,7 +103,7 @@ Filtri principali:
 | `--sort`            | <code>campo:asc&#124;desc</code> su campo sortable (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` **non ordinano**. `apiso_Modified_dt` è la data della *scheda*, non dei *dati* — vedi "Quale data stai ordinando" in [`references/search-syntax.md`](./references/search-syntax.md) |
 | `--start --num`     | paginazione (1-based, max `num`=5000)                       |
 | `--id`              | recupera un solo metadato per ID                            |
-| `--profile`         | preset colonne output `table/csv`: `default`, `gis`, `qgis` |
+| `--profile`         | preset colonne output `table/csv`: `default`, `gis`, `qgis`; senza `--format` implica `table` |
 
 > **Importante**: il parametro `dataCategory` documentato sul RNDT **non
 > filtra**; la CLI traduce internamente `--data-category` in

@@ -12,18 +12,30 @@ from rich.console import Console
 from rich.table import Table
 
 _output_mode: str = "json"
+_mode_explicit: bool = False
 _console = Console()
 
 
-def set_mode(mode: str) -> None:
-    global _output_mode
+def set_mode(mode: str, *, explicit: bool = True) -> None:
+    """Imposta il formato corrente.
+
+    `explicit=False` marca il formato come valore di default (nessun `--format`
+    da riga di comando): i comandi possono allora sceglierne uno più adatto.
+    """
+    global _output_mode, _mode_explicit
     if mode not in {"json", "table", "csv", "compact"}:
         raise ValueError(f"Formato non supportato: {mode}")
     _output_mode = mode
+    _mode_explicit = explicit
 
 
 def get_mode() -> str:
     return _output_mode
+
+
+def is_mode_explicit() -> bool:
+    """True se il formato corrente è stato richiesto esplicitamente."""
+    return _mode_explicit
 
 
 def emit(data: Any, *, table_rows: Iterable[dict[str, Any]] | None = None, table_title: str | None = None) -> None:

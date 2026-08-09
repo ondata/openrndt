@@ -80,7 +80,10 @@ SEARCH_PARAMS: dict[str, str] = {
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
     "updated_from/updated_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_Modified_dt.",
     "published_from/published_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_PublicationDate_dt.",
-    "profile": "Parametro CLI (non API): preset colonne output per table/csv (`default`, `gis`, `qgis`).",
+    "profile": (
+        "Parametro CLI (non API): preset colonne output per table/csv (`default`, `gis`, `qgis`). "
+        "Senza `--format` attiva da solo l'output table."
+    ),
     "sort": "Ordinamento 'campo:asc|desc' su campo sortable (es. apiso_Modified_dt:desc). ⚠️ 'dateDescending'/'dateAscending' NON ordinano su RNDT. Vedi SORT_VALUES.",
     "start": "Posizione del primo record (1-based, default 1).",
     "num": "Numero massimo di risultati (default 10, max 5000).",
