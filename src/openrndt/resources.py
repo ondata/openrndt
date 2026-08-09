@@ -186,7 +186,7 @@ def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[http
     """
     start = time.perf_counter()
     response = httpx.head(url, headers=headers, timeout=timeout, follow_redirects=False)
-    elapsed = time.perf_counter() - start
+    elapsed = (time.perf_counter() - start) * 1000
     if response.status_code >= 400:
         # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
         # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
@@ -198,7 +198,7 @@ def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[http
             timeout=timeout,
             follow_redirects=False,
         ) as stream_response:
-            elapsed = time.perf_counter() - start
+            elapsed = (time.perf_counter() - start) * 1000
             return stream_response, "GET", elapsed
     return response, "HEAD", elapsed
 
