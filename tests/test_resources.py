@@ -73,10 +73,12 @@ def test_check_resources_adds_http_status():
     assert checked[0]["ok"] is True
     assert checked[0]["method"] == "HEAD"
     assert checked[0]["error"] is None
+    assert checked[0]["redirect_url"] is None
     assert checked[1]["status_code"] == 503
     assert checked[1]["ok"] is False
     assert checked[1]["method"] == "HEAD"
     assert checked[1]["error"] is None
+    assert checked[1]["redirect_url"] is None
 
 
 @respx.mock
@@ -104,3 +106,29 @@ def test_check_resources_falls_back_to_streaming_get_when_head_not_allowed():
     assert checked[0]["ok"] is True
     assert checked[0]["method"] == "GET"
     assert checked[0]["error"] is None
+    assert checked[0]["redirect_url"] is None
+
+
+def test_check_resources_blocks_private_hosts():
+    checked = check_resources(
+        [{"type": "download", "url": "http://127.0.0.1:8080/data.zip", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["ok"] is False
+    assert checked[0]["status_code"] is None
+    assert checked[0]["error"] == "url-blocked:loopback-not-allowed"
+    assert checked[0]["method"] == "HEAD"
+
+
+@respx.mock
+def test_check_resources_does_not_follow_redirects():
+    respx.head("https://redir.test/service").mock(
+        return_value=httpx.Response(302, headers={"Location": "http://169.254.1.10/internal"})
+    )
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://redir.test/service", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["status_code"] == 302
+    assert checked[0]["ok"] is True
+    assert checked[0]["redirect_url"] == "http://169.254.1.10/internal"

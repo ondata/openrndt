@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import ipaddress
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import httpx
 
@@ -73,6 +74,38 @@ def _normalize_kind(kind: str) -> str:
     return raw
 
 
+def _blocked_host_reason(hostname: str | None) -> str | None:
+    if not hostname:
+        return "missing-hostname"
+    host = hostname.strip().lower()
+    if host == "localhost" or host.endswith(".localhost"):
+        return "localhost-not-allowed"
+    try:
+        addr = ipaddress.ip_address(host)
+    except ValueError:
+        return None
+    if addr.is_loopback:
+        return "loopback-not-allowed"
+    if addr.is_link_local:
+        return "link-local-not-allowed"
+    if addr.is_private:
+        return "private-address-not-allowed"
+    if addr.is_reserved:
+        return "reserved-address-not-allowed"
+    if addr.is_unspecified:
+        return "unspecified-address-not-allowed"
+    if addr.is_multicast:
+        return "multicast-address-not-allowed"
+    return None
+
+
+def _validate_check_url(url: str) -> str | None:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return "unsupported-scheme"
+    return _blocked_host_reason(parsed.hostname)
+
+
 def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
     """Estrae e deduplica risorse utili (WMS/WFS/.../download) dal payload item."""
     source = item_payload.get("_source") or {}
@@ -119,15 +152,24 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
         row["status_code"] = None
         row["ok"] = False
         row["final_url"] = resource["url"]
+        row["redirect_url"] = None
         row["error"] = None
         row["method"] = "HEAD"
+        blocked_reason = _validate_check_url(resource["url"])
+        if blocked_reason is not None:
+            row["error"] = f"url-blocked:{blocked_reason}"
+            checked.append(row)
+            continue
         try:
             response = httpx.head(
                 resource["url"],
                 headers=headers,
                 timeout=timeout,
-                follow_redirects=True,
+                follow_redirects=False,
             )
+            location = response.headers.get("location")
+            if location:
+                row["redirect_url"] = urljoin(resource["url"], location)
             # Alcuni endpoint non supportano HEAD: fallback a GET in streaming.
             if response.status_code in {405, 501}:
                 with httpx.stream(
@@ -135,8 +177,11 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                     resource["url"],
                     headers=headers,
                     timeout=timeout,
-                    follow_redirects=True,
+                    follow_redirects=False,
                 ) as stream_response:
+                    location = stream_response.headers.get("location")
+                    if location:
+                        row["redirect_url"] = urljoin(resource["url"], location)
                     row["status_code"] = stream_response.status_code
                     row["ok"] = 200 <= stream_response.status_code < 400
                     row["final_url"] = str(stream_response.url)
