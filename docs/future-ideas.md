@@ -3,6 +3,39 @@
 Spunti raccolti per evoluzioni di openrndt. Non sono impegni: vanno valutati
 caso per caso rispetto al design (CLI snella, read-only, niente cache locale).
 
+## Spunti dalla valutazione v2.0.0 (2026-08-09)
+
+Dalla verifica live con scenari per tecnici GIS, analisti e uffici comunali
+(dettagli in `docs/evaluation-v2.0.0.md`):
+
+### Ricerca per ente (`--org` / `--suggest-org`)
+
+Punto debole verificato: `apiso_OrganizationName_txt:"Comune di Bologna"` → 0
+(testo analizzato), `EnteResponsabile_s`/prefisso IPA → 0 (comune non
+indicizzato con quei nomi), wildcard su `contact_organizations_s` → over-match.
+Proposta: flag `--org <nome>` che cerca in OR sui campi ente (con
+`--org-exact` per la stringa esatta), oppure `--suggest-org` che stampa i
+valori distinti che matchano il testo per scoprire la stringa giusta. Non tocca
+i dati a monte, solo il lato query.
+
+### Zero risultati e query invalide parlanti
+
+Su `total=0` suggerire percorsi alternativi (es. ricerca per territorio con
+`--bbox`); su `--sort` che genera HTTP 500 stampare i campi ordinabili (già
+disponibili offline in `discover --what sort_values`).
+
+### `resources` batch e con latenza
+
+Oggi accetta un solo ID e riporta solo lo status (HEAD). Per valutare i
+servizi di una ricerca intera servono argomenti multipli; per distinguere un
+servizio vivo da uno lento serve il tempo di risposta della probe, non il solo
+200.
+
+### Tabella `--wide`
+
+Le colonne title/bbox/org vengono troncate in terminali stretti. Opzione per
+non troncare o per scegliere le colonne.
+
 ## Spunti da Copernicus-Services-Products-Metadata
 
 Riferimento: <https://github.com/do-me/Copernicus-Services-Products-Metadata>
