@@ -160,6 +160,14 @@ openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
 
 > Il leading wildcard è bloccato solo quando si specifica un campo esplicito (`campo:*valore*`). Sul testo libero funziona.
 
+**Zero risultati? Leggi i suggerimenti su stderr.** Più spesso di quanto sembri, `0` è un esito legittimo, non un errore tuo. La CLI stampa suggerimenti contestuali: allarga il testo con wildcard, rimuovi `--data-category`/`--time`/`--bbox` uno alla volta, e cerca un ente col nominativo esatto. Tre cause ricorrenti:
+
+- **Periodo senza record**: `--time 2024-01-01/2024-12-31` può restituire 0 perché in quel periodo non c'è nulla — allarga l'intervallo prima di concludere (vedi `workflows.md`).
+- **Ente non indicizzato con quel nome**: `Comune di Bologna` → 0 se l'ente non è registrato col proprio nominativo nel catalogo (pubblica spesso tramite regione o città metropolitana). Percorsi robusti: ricerca per territorio (`--bbox` + `AmbitoTerritoriale_s:Locale`), o wildcard sul campo esatto `contact_organizations_s:*nome*` (case-sensitive).
+- **Bbox ampia nei metadati**: molti record dichiarano bbox nazionali, quindi `--bbox` stretto li esclude — se serve «cosa copre la mia area» allarga il riquadro.
+
+**`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
+
 ---
 
 ## Fase 3 — Detail (singolo metadato)
@@ -189,7 +197,27 @@ Per estrazione e check veloce endpoint usa direttamente:
 ```bash
 openrndt --format json resources <id>             # include ok/status_code/final_url
 openrndt --format json resources <id> --no-check  # solo estrazione URL
+
+# Health-check in batch: più ID in un comando (gli errori per-record non bloccano il resto)
+openrndt --format json resources <id1> <id2> <id3>
 ```
+
+Ogni riga del check riporta `ok`, `status_code`, `final_url`, `redirect_url`,
+`redirected`/`redirect_count`, `latency_ms` e l'eventuale `error`:
+
+- **I redirect vengono seguiti**, ma solo verso host pubblici: un endpoint
+  catalogato in `http` che risponde 301 verso il suo equivalente `https`
+  (es. `gaia.arpa.veneto.it`) ora risulta `ok=true` con `redirected=true`,
+  non più falso negativo. Un redirect verso un host non pubblico (loopback,
+  privato, DNS riservato) non viene seguito: `error=redirect-blocked:…`.
+- **`latency_ms`** è la durata complessiva della probe: distingue un servizio
+  vivo e veloce da uno 200 ma lento, che lo status da solo non dice.
+- **Batch**: con più ID l'output JSON è `{"count": N, "results": [per-id]}`;
+  un metadato mancante o irraggiungibile produce una voce con `error` senza
+  interrompere gli altri (con un solo ID resta il formato storico).
+
+Tabella `rel`/`dctype` completa in
+[`references/result-structure.md`](./references/result-structure.md).
 
 Esempio rapido — tutti i WMS dei primi 50 risultati di una ricerca:
 
@@ -198,9 +226,6 @@ openrndt --format json search --q "catasto" --num 50 \
   | jq -r '.results[].links[]? | select(.dctype=="WMS") | .href' \
   | sort -u
 ```
-
-Tabella `rel`/`dctype` completa in
-[`references/result-structure.md`](./references/result-structure.md).
 
 Una volta ottenuto l'endpoint di un servizio OGC (WMS/WFS/WCS/WMTS),
 esploralo con GDAL/OGR a output JSON (`gdalinfo -json "WMS:…"`,

@@ -194,6 +194,32 @@ openrndt search --q 'EnteResponsabile_s:"Regione Siciliana"' --sort 'apiso_Modif
 openrndt search --q 'apiso_Identifier_s:r_sicili*' --sort 'apiso_Modified_dt:desc' --num 5
 ```
 
+## Zero risultati — la CLI suggerisce
+
+`openrndt search` con `total=0` stampa su stderr suggerimenti contestuali:
+allargare il testo con wildcard, rimuovere `--data-category`/`--time`/`--bbox`,
+e per gli enti usare il nominativo esatto. Non è rumore: sono le cause
+verificate più frequenti del falso zero.
+
+Tre casi ricorrenti, tutti verificati live:
+
+1. **Periodo legittimamente vuoto.** `--time 2015-01-01/2024-12-31
+   --data-category inlandWaters` → 42; `--time 2024-01-01/2024-12-31` sulla
+   stessa query può dare numeri molto più bassi perché in quel periodo quei
+   record non esistono. Allarga l'intervallo prima di sospettare un bug.
+2. **Ente non indicizzato col proprio nominativo.** Il Comune di Bologna dà 0
+   sia con `apiso_OrganizationName_txt:"Comune di Bologna"` sia con
+   `EnteResponsabile_s:"Comune di Bologna"` e il prefisso IPA `c_a944*`: i suoi
+   prodotti entrano in catalogo tramite regione o città metropolitana. Percorsi
+   robusti: `--bbox` del territorio + `AmbitoTerritoriale_s:Locale` (e una
+   parola chiave), oppure wildcard sul campo esatto
+   `contact_organizations_s:*Bologna*` (case-sensitive, matcha qualunque record
+   che nomina l'ente).
+3. **Bbox ristretta.** Il filtro è per sovrapposizione, ma molti record
+   dichiarano bbox nazionali/globali: con un riquadro stretto si escludono in
+   silenzio. Se la domanda è «cosa copre la mia area», allarga il riquadro e
+   affina dopo.
+
 ## Suggerimenti
 
 - Termini con apostrofo: usa virgolette, es. `"d'Aosta"`.
