@@ -109,7 +109,7 @@ def _blocked_resolved_hostname_reason(hostname: str) -> str | None:
         sockaddr = info[4]
         if not sockaddr:
             continue
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         reason = _blocked_host_reason(ip_str)
         if reason is not None:
             return f"dns-resolves-to-{reason}"
