@@ -59,6 +59,20 @@ def _infer_kind(url: str) -> str:
     return "link"
 
 
+def _normalize_kind(kind: str) -> str:
+    raw = kind.strip()
+    if not raw:
+        return "link"
+    up = raw.upper()
+    if up in {"WMS", "WFS", "WCS", "WMTS"}:
+        return up
+    if up == "DOWNLOAD":
+        return "download"
+    if up == "LINK":
+        return "link"
+    return raw
+
+
 def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
     """Estrae e deduplica risorse utili (WMS/WFS/.../download) dal payload item."""
     source = item_payload.get("_source") or {}
@@ -73,8 +87,8 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
         if not isinstance(href, str) or rel in _NON_RESOURCE_RELS:
             continue
         kind_raw = link.get("dctype")
-        kind = str(kind_raw).upper() if isinstance(kind_raw, str) and kind_raw else _infer_kind(href)
-        if kind == "LINK":
+        kind = _normalize_kind(kind_raw) if isinstance(kind_raw, str) else _normalize_kind(_infer_kind(href))
+        if kind == "link":
             continue
         if href in seen:
             continue
@@ -83,7 +97,7 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
 
     for key in ("webServices_s", "links_s"):
         for url in _normalize_url_values(source.get(key)):
-            kind = _infer_kind(url)
+            kind = _normalize_kind(_infer_kind(url))
             if kind == "link":
                 continue
             if url in seen:
@@ -102,6 +116,11 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
     headers = {"User-Agent": USER_AGENT}
     for resource in resources:
         row: dict[str, Any] = dict(resource)
+        row["status_code"] = None
+        row["ok"] = False
+        row["final_url"] = resource["url"]
+        row["error"] = None
+        row["method"] = "HEAD"
         try:
             response = httpx.head(
                 resource["url"],
@@ -127,11 +146,7 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
             row["status_code"] = response.status_code
             row["ok"] = 200 <= response.status_code < 400
             row["final_url"] = str(response.url)
-            row["method"] = "HEAD"
         except httpx.HTTPError as exc:
-            row["status_code"] = None
-            row["ok"] = False
-            row["final_url"] = resource["url"]
             row["error"] = type(exc).__name__
         checked.append(row)
     return checked

@@ -62,6 +62,30 @@ def test_cli_search_csv_gis_profile(search_response_json):
 
 
 @respx.mock
+def test_cli_search_csv_gis_profile_skips_partial_bbox():
+    payload = {
+        "total": 1,
+        "num": 1,
+        "start": 1,
+        "results": [
+            {
+                "id": "x:1",
+                "title": "T",
+                "updated": "2026-01-01T00:00:00Z",
+                "author": {"name": "csw.foo"},
+                "_source": {"apiso_Type_s": "dataset", "apiso_OrganizationName_txt": "Org"},
+                "bbox": {"xmin": 10, "xmax": 20},
+                "links": [],
+            }
+        ],
+    }
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json=payload))
+    result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "1"])
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[1].endswith(",")
+
+
+@respx.mock
 def test_cli_search_csv_qgis_profile(search_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json=search_response_json)

@@ -105,7 +105,7 @@ def test_search_builds_updated_and_published_lucene_clauses():
     )
     params = dict(route.calls.last.request.url.params)
     assert params["q"] == (
-        "catasto AND apiso_Modified_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z] "
+        "(catasto) AND apiso_Modified_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z] "
         "AND apiso_PublicationDate_dt:[2020-01-01T00:00:00Z TO 2020-12-31T23:59:59Z]"
     )
 
@@ -128,6 +128,21 @@ def test_search_rejects_modified_and_updated_range_together():
 def test_search_rejects_invalid_date_format():
     with pytest.raises(ValueError, match="yyyy-mm-dd"):
         search(updated_from="2024/01/01")
+
+
+def test_search_rejects_invalid_calendar_date():
+    with pytest.raises(ValueError, match="calendario valida"):
+        search(updated_from="2024-13-40")
+
+
+@respx.mock
+def test_search_wraps_q_when_combined_with_other_clauses():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="title:catasto OR title:particelle", updated_from="2024-01-01", num=1)
+    params = dict(route.calls.last.request.url.params)
+    assert params["q"].startswith("(title:catasto OR title:particelle) AND ")
 
 
 @respx.mock

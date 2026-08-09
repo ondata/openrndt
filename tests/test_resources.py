@@ -48,6 +48,18 @@ def test_extract_resources_infers_from_links_when_dctype_missing():
     ]
 
 
+def test_extract_resources_normalizes_kind_and_skips_generic_link():
+    payload = {
+        "_source": {"links_s": ["https://example.test/landing"]},
+        "links": [
+            {"rel": "related", "dctype": "download", "href": "https://example.test/data.gpkg"},
+            {"rel": "related", "dctype": "LINK", "href": "https://example.test/page"},
+        ],
+    }
+    rows = extract_resources(payload)
+    assert rows == [{"type": "download", "url": "https://example.test/data.gpkg", "source": "links"}]
+
+
 @respx.mock
 def test_check_resources_adds_http_status():
     respx.head("https://ok.test/wms?service=WMS").mock(return_value=httpx.Response(200))
@@ -60,9 +72,11 @@ def test_check_resources_adds_http_status():
     assert checked[0]["status_code"] == 200
     assert checked[0]["ok"] is True
     assert checked[0]["method"] == "HEAD"
+    assert checked[0]["error"] is None
     assert checked[1]["status_code"] == 503
     assert checked[1]["ok"] is False
     assert checked[1]["method"] == "HEAD"
+    assert checked[1]["error"] is None
 
 
 @respx.mock
@@ -75,6 +89,7 @@ def test_check_resources_handles_network_errors():
     assert checked[0]["ok"] is False
     assert checked[0]["status_code"] is None
     assert checked[0]["error"] == "ConnectError"
+    assert checked[0]["method"] == "HEAD"
 
 
 @respx.mock
@@ -88,3 +103,4 @@ def test_check_resources_falls_back_to_streaming_get_when_head_not_allowed():
     assert checked[0]["status_code"] == 200
     assert checked[0]["ok"] is True
     assert checked[0]["method"] == "GET"
+    assert checked[0]["error"] is None

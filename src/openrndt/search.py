@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 import re
 from typing import Any, cast
 
@@ -45,6 +46,10 @@ def _normalize_bbox_crs(bbox_crs: str | None) -> str | None:
 def _validate_iso_date(value: str, *, param_name: str) -> None:
     if not _ISO_DATE_RE.match(value):
         raise ValueError(f"`{param_name}` deve essere nel formato yyyy-mm-dd.")
+    try:
+        date.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError(f"`{param_name}` non è una data di calendario valida.") from exc
 
 
 def _build_date_range_clause(field: str, start: str | None, end: str | None, *, label: str) -> str | None:
@@ -107,21 +112,23 @@ def search(
         raise ValueError("Usa `modified` oppure `updated_from/updated_to`, non entrambi.")
 
     params: dict[str, Any] = {"f": fmt, "start": start, "num": num}
-    q_parts: list[str] = []
-    if q:
-        q_parts.append(f"({q})" if data_category else q)
+    non_q_clauses: list[str] = []
     if data_category:
         clause = _build_category_clause(data_category)
         if clause:
-            q_parts.append(clause)
+            non_q_clauses.append(clause)
     updated_clause = _build_date_range_clause("apiso_Modified_dt", updated_from, updated_to, label="updated")
     if updated_clause:
-        q_parts.append(updated_clause)
+        non_q_clauses.append(updated_clause)
     published_clause = _build_date_range_clause(
         "apiso_PublicationDate_dt", published_from, published_to, label="published"
     )
     if published_clause:
-        q_parts.append(published_clause)
+        non_q_clauses.append(published_clause)
+    q_parts: list[str] = []
+    if q:
+        q_parts.append(f"({q})" if non_q_clauses else q)
+    q_parts.extend(non_q_clauses)
     if q_parts:
         params["q"] = " AND ".join(q_parts) if len(q_parts) > 1 else q_parts[0]
     if bbox:

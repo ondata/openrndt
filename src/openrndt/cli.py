@@ -94,6 +94,16 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _bbox_text(bbox: dict[str, Any]) -> str | None:
+    xmin = bbox.get("xmin")
+    ymin = bbox.get("ymin")
+    xmax = bbox.get("xmax")
+    ymax = bbox.get("ymax")
+    if not all(isinstance(v, (int, float)) for v in (xmin, ymin, xmax, ymax)):
+        return None
+    return f"{xmin},{ymin},{xmax},{ymax}"
+
+
 def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     records_by_id = {
@@ -111,11 +121,7 @@ def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "org": compact.get("org"),
                 "updated": compact.get("updated"),
                 "resources": ",".join(compact.get("resources") or []),
-                "bbox": (
-                    f"{bbox.get('xmin')},{bbox.get('ymin')},{bbox.get('xmax')},{bbox.get('ymax')}"
-                    if bbox
-                    else None
-                ),
+                "bbox": _bbox_text(bbox),
             }
         )
     return rows
