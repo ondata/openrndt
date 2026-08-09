@@ -7,6 +7,7 @@ import socket
 import httpx
 import respx
 
+from openrndt import resources as resources_module
 from openrndt.resources import _MAX_REDIRECTS, check_resources, extract_resources
 
 
@@ -274,11 +275,18 @@ def test_check_resources_stops_after_max_redirects():
 
 
 @respx.mock
-def test_check_resources_reports_latency():
+def test_check_resources_reports_latency(monkeypatch):
+    """`latency_ms` è in millisecondi: `perf_counter` conta secondi."""
     respx.head("https://latency.test/wms").mock(return_value=httpx.Response(200))
+    ticks = iter([10.0, 10.25])  # 250 ms di probe
+
+    class _FakeTime:
+        # Solo il `time` di resources: patchare il modulo globale romperebbe httpx.
+        perf_counter = staticmethod(lambda: next(ticks))
+
+    monkeypatch.setattr(resources_module, "time", _FakeTime)
     checked = check_resources(
         [{"type": "WMS", "url": "https://latency.test/wms", "source": "links_s"}],
         timeout=1,
     )
-    assert isinstance(checked[0]["latency_ms"], int)
-    assert checked[0]["latency_ms"] >= 0
+    assert checked[0]["latency_ms"] == 250
