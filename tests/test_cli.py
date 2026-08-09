@@ -666,3 +666,37 @@ def test_cli_search_org_zero_results_when_org_exists_blames_other_filters():
     assert result.exit_code == 0, result.output
     assert "esiste in catalogo" in result.output
     assert "rimuovi --data-category" in result.output
+
+
+@respx.mock
+def test_cli_search_org_probe_escapes_token():
+    """La probe passa da --org: il token finisce quotato, non concatenato a mano."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
+    )
+    result = runner.invoke(app, ["search", "--org", "regione emilia-romagna"])
+    assert result.exit_code == 0, result.output
+    assert route.calls[-1].request.url.params["q"] == 'apiso_OrganizationName_txt:"emilia-romagna"'
+
+
+@respx.mock
+def test_cli_search_json_notes_dates_when_sorting_by_index(search_response_json):
+    """Anche `sys_modified_dt` è un campo data: la nota deve scattare."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(
+        app, ["--format", "json", "search", "--sort", "sys_modified_dt:desc", "--num", "2"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "Nota sulle date" in result.output
+    plain = runner.invoke(app, ["--format", "json", "search", "--sort", "title:asc", "--num", "2"])
+    assert "Nota sulle date" not in plain.output
+
+
+def test_record_dates_ignores_non_string_values():
+    from openrndt.search import record_dates
+
+    result = {"updated": 1234567890, "_source": {"apiso_Modified_dt": {"x": 1}}}
+    assert record_dates(result) == (None, None)

@@ -14,7 +14,6 @@ from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_x
 from openrndt.resources import check_resources, extract_resources
 from openrndt.search import (
     ORG_EXACT_FIELD,
-    ORG_FIELD,
     compact_results,
     organization_names,
     record_dates,
@@ -132,8 +131,13 @@ def _table_date_caption(row: dict[str, Any]) -> str | None:
 
 
 def _uses_date_filters(sort: str | None, *filters: str | None) -> bool:
-    """True se la ricerca usa un filtro data o un ordinamento su un campo data."""
-    sorts_by_date = sort is not None and ("Modified" in sort or "Date" in sort)
+    """True se la ricerca usa un filtro data o un ordinamento su un campo data.
+
+    I campi data del RNDT hanno tutti suffisso ``_dt``: riconoscerli così copre
+    anche ``sys_modified_dt`` (ordinamento per indicizzazione), che è proprio il
+    caso in cui la nota serve di più.
+    """
+    sorts_by_date = sort is not None and "_dt" in sort.lower()
     return sorts_by_date or any(v is not None for v in filters)
 
 
@@ -168,7 +172,10 @@ def _suggest_orgs(org: str) -> list[str]:
     if token is None:
         return []
     try:
-        payload = do_search(q=f"{ORG_FIELD}:{token}", num=200, fmt="json")
+        # Passa da `org=` invece di comporre la clausola: il token finisce così
+        # tra virgolette con escape, e un nome con punteggiatura riservata
+        # (`Emilia-Romagna`, sigle con `:`) non altera la query esplorativa.
+        payload = do_search(org=token, num=200, fmt="json")
     except (httpx.HTTPError, ValueError):
         return []
     if not isinstance(payload, dict):

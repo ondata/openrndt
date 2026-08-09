@@ -248,7 +248,13 @@ def record_dates(result: dict[str, Any]) -> tuple[str | None, str | None]:
     if isinstance(updated, list):
         updated = updated[0] if updated else None
     indexed = source.get("sys_modified_dt") or result.get("updated")
-    return (cast("str | None", updated), cast("str | None", indexed))
+    # I valori arrivano da JSON non tipizzato: verificarli invece di asserirli
+    # con un cast, così un campo di forma inattesa diventa None e non un tipo
+    # sbagliato che si propaga silenziosamente negli output.
+    return (
+        updated if isinstance(updated, str) else None,
+        indexed if isinstance(indexed, str) else None,
+    )
 
 
 def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
