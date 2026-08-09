@@ -1,15 +1,16 @@
-"""CLI Typer di openrndt — 3 comandi MVP: search, get, discover."""
+"""CLI Typer di openrndt."""
 
 from __future__ import annotations
 
 import json
-from typing import Any, NoReturn
+from typing import Any, NoReturn, cast
 
 import httpx
 import typer
 
 from openrndt import codelists, config, output
 from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
+from openrndt.resources import check_resources, extract_resources
 from openrndt.search import compact_results
 from openrndt.search import search as do_search
 
@@ -93,10 +94,127 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _bbox_text(bbox: dict[str, Any]) -> str | None:
+    xmin = bbox.get("xmin")
+    ymin = bbox.get("ymin")
+    xmax = bbox.get("xmax")
+    ymax = bbox.get("ymax")
+    if not all(isinstance(v, (int, float)) for v in (xmin, ymin, xmax, ymax)):
+        return None
+    return f"{xmin},{ymin},{xmax},{ymax}"
+
+
+def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    records_by_id = {
+        r.get("id"): r for r in (payload.get("results", []) or []) if isinstance(r, dict) and r.get("id") is not None
+    }
+    for compact in compact_results(payload):
+        record = records_by_id.get(compact.get("id"), {})
+        bbox = record.get("bbox") or {}
+        rows.append(
+            {
+                "id": compact.get("id"),
+                "title": compact.get("title"),
+                "type": compact.get("type"),
+                "category": compact.get("category"),
+                "org": compact.get("org"),
+                "updated": compact.get("updated"),
+                "resources": ",".join(compact.get("resources") or []),
+                "bbox": _bbox_text(bbox),
+            }
+        )
+    return rows
+
+
+def _resource_url_map(result: dict[str, Any]) -> dict[str, str]:
+    resources: dict[str, str] = {}
+    for link in (result.get("links") or []):
+        if not isinstance(link, dict):
+            continue
+        href = link.get("href")
+        dctype = link.get("dctype")
+        if not isinstance(href, str) or not isinstance(dctype, str) or not dctype:
+            continue
+        key = dctype.upper()
+        if key not in resources:
+            resources[key] = href
+    return resources
+
+
+def _qgis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    records_by_id = {
+        r.get("id"): r for r in (payload.get("results", []) or []) if isinstance(r, dict) and r.get("id") is not None
+    }
+    for compact in compact_results(payload):
+        record = records_by_id.get(compact.get("id"), {})
+        bbox = record.get("bbox") or {}
+        links = _resource_url_map(record)
+        rows.append(
+            {
+                "id": compact.get("id"),
+                "title": compact.get("title"),
+                "type": compact.get("type"),
+                "category": compact.get("category"),
+                "org": compact.get("org"),
+                "updated": compact.get("updated"),
+                "wms_url": links.get("WMS"),
+                "wfs_url": links.get("WFS"),
+                "download_url": links.get("DOWNLOAD"),
+                "xmin": bbox.get("xmin"),
+                "ymin": bbox.get("ymin"),
+                "xmax": bbox.get("xmax"),
+                "ymax": bbox.get("ymax"),
+            }
+        )
+    return rows
+
+
+def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
+    bbox = result.get("bbox") or {}
+    xmin = bbox.get("xmin")
+    ymin = bbox.get("ymin")
+    xmax = bbox.get("xmax")
+    ymax = bbox.get("ymax")
+    if not all(isinstance(v, (int, float)) for v in (xmin, ymin, xmax, ymax)):
+        return None
+    source = result.get("_source") or {}
+    compact = {
+        "id": result.get("id"),
+        "title": result.get("title"),
+        "org": source.get("apiso_OrganizationName_txt") or (result.get("author") or {}).get("name"),
+        "type": source.get("apiso_Type_s"),
+        "updated": result.get("updated"),
+        "resources": sorted(_resource_url_map(result).keys()),
+    }
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [xmin, ymin],
+                    [xmax, ymin],
+                    [xmax, ymax],
+                    [xmin, ymax],
+                    [xmin, ymin],
+                ]
+            ],
+        },
+        "properties": compact,
+    }
+
+
 @app.command()
 def search(
     q: str | None = typer.Option(None, "--q", "-q", help="Testo di ricerca (Lucene/Elasticsearch)."),
     bbox: str | None = typer.Option(None, "--bbox", help="Bounding box WGS84 xmin,ymin,xmax,ymax."),
+    bbox_crs: str | None = typer.Option(
+        None,
+        "--bbox-crs",
+        help="CRS della bbox. Supportati: EPSG:4326 (default implicito), CRS:84, WGS84.",
+    ),
     data_category: str | None = typer.Option(
         None,
         "--data-category",
@@ -105,6 +223,26 @@ def search(
     ),
     time: str | None = typer.Option(None, "--time", help="Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd."),
     modified: str | None = typer.Option(None, "--modified", help="Intervallo modifica record nel catalogo yyyy-mm-dd/yyyy-mm-dd."),
+    updated_from: str | None = typer.Option(
+        None,
+        "--updated-from",
+        help="Filtra per data minima di aggiornamento metadato (yyyy-mm-dd, campo apiso_Modified_dt).",
+    ),
+    updated_to: str | None = typer.Option(
+        None,
+        "--updated-to",
+        help="Filtra per data massima di aggiornamento metadato (yyyy-mm-dd, campo apiso_Modified_dt).",
+    ),
+    published_from: str | None = typer.Option(
+        None,
+        "--published-from",
+        help="Filtra per data minima di pubblicazione (yyyy-mm-dd, campo apiso_PublicationDate_dt).",
+    ),
+    published_to: str | None = typer.Option(
+        None,
+        "--published-to",
+        help="Filtra per data massima di pubblicazione (yyyy-mm-dd, campo apiso_PublicationDate_dt).",
+    ),
     sort: str | None = typer.Option(
         None,
         "--sort",
@@ -117,15 +255,30 @@ def search(
     start: int = typer.Option(1, "--start", help="Indice 1-based del primo record."),
     num: int = typer.Option(10, "--num", "-n", help="Numero massimo di record (max 5000)."),
     item_id: str | None = typer.Option(None, "--id", help="ID metadato specifico."),
+    profile: str = typer.Option(
+        "default",
+        "--profile",
+        help="Preset colonne per output table/csv: default | gis | qgis.",
+        case_sensitive=False,
+    ),
 ) -> None:
     """Cerca metadati nel RNDT."""
+    profile = profile.lower()
+    if profile not in {"default", "gis", "qgis"}:
+        typer.echo("Profilo non supportato: usare `default`, `gis` oppure `qgis`.", err=True)
+        raise typer.Exit(2)
     try:
         payload = do_search(
             q=q,
             bbox=bbox,
+            bbox_crs=bbox_crs,
             data_category=data_category,
             time=time,
             modified=modified,
+            updated_from=updated_from,
+            updated_to=updated_to,
+            published_from=published_from,
+            published_to=published_to,
             sort=sort,
             start=start,
             num=num,
@@ -154,12 +307,117 @@ def search(
             return
         output.emit(payload, table_rows=rows)
         return
-    rows = _result_rows(payload)
+    if profile == "gis":
+        rows = _gis_result_rows(payload)
+    elif profile == "qgis":
+        rows = _qgis_result_rows(payload)
+    else:
+        rows = _result_rows(payload)
     if not rows:
         typer.echo("Nessun risultato per la ricerca.", err=True)
         return
     title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
     output.emit(payload, table_rows=rows, table_title=title)
+
+
+@app.command()
+def footprints(
+    q: str | None = typer.Option(None, "--q", "-q", help="Testo di ricerca (Lucene/Elasticsearch)."),
+    bbox: str | None = typer.Option(None, "--bbox", help="Bounding box WGS84 xmin,ymin,xmax,ymax."),
+    bbox_crs: str | None = typer.Option(
+        None,
+        "--bbox-crs",
+        help="CRS della bbox. Supportati: EPSG:4326 (default implicito), CRS:84, WGS84.",
+    ),
+    data_category: str | None = typer.Option(
+        None,
+        "--data-category",
+        "-c",
+        help="Categoria tematica ISO 19115 (es. planningCadastre). Vedi `discover`.",
+    ),
+    time: str | None = typer.Option(None, "--time", help="Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd."),
+    modified: str | None = typer.Option(None, "--modified", help="Intervallo modifica record nel catalogo yyyy-mm-dd/yyyy-mm-dd."),
+    updated_from: str | None = typer.Option(
+        None,
+        "--updated-from",
+        help="Filtra per data minima di aggiornamento metadato (yyyy-mm-dd, campo apiso_Modified_dt).",
+    ),
+    updated_to: str | None = typer.Option(
+        None,
+        "--updated-to",
+        help="Filtra per data massima di aggiornamento metadato (yyyy-mm-dd, campo apiso_Modified_dt).",
+    ),
+    published_from: str | None = typer.Option(
+        None,
+        "--published-from",
+        help="Filtra per data minima di pubblicazione (yyyy-mm-dd, campo apiso_PublicationDate_dt).",
+    ),
+    published_to: str | None = typer.Option(
+        None,
+        "--published-to",
+        help="Filtra per data massima di pubblicazione (yyyy-mm-dd, campo apiso_PublicationDate_dt).",
+    ),
+    sort: str | None = typer.Option(
+        None,
+        "--sort",
+        help=(
+            "Ordinamento 'campo:asc|desc' su campo sortable (es. apiso_Modified_dt:desc). "
+            "Attenzione: 'dateDescending'/'dateAscending' NON ordinano su RNDT. "
+            "Vedi `discover --what sort_values`."
+        ),
+    ),
+    start: int = typer.Option(1, "--start", help="Indice 1-based del primo record."),
+    num: int = typer.Option(10, "--num", "-n", help="Numero massimo di record (max 5000)."),
+) -> None:
+    """Esporta footprint bbox come GeoJSON FeatureCollection (EPSG:4326)."""
+    try:
+        payload = do_search(
+            q=q,
+            bbox=bbox,
+            bbox_crs=bbox_crs,
+            data_category=data_category,
+            time=time,
+            modified=modified,
+            updated_from=updated_from,
+            updated_to=updated_to,
+            published_from=published_from,
+            published_to=published_to,
+            sort=sort,
+            start=start,
+            num=num,
+            fmt="json",
+            item_id=None,
+        )
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
+        raise typer.Exit(1)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
+    except httpx.HTTPError as exc:
+        _http_error(exc)
+
+    if not isinstance(payload, dict):
+        typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
+        raise typer.Exit(1)
+
+    features: list[dict[str, Any]] = []
+    for result in cast(list[dict[str, Any]], payload.get("results", []) or []):
+        feature = _bbox_feature(result)
+        if feature is not None:
+            features.append(feature)
+    geojson: dict[str, Any] = {
+        "type": "FeatureCollection",
+        "crs": {"type": "name", "properties": {"name": "EPSG:4326"}},
+        "features": features,
+        "meta": {
+            "total_results": payload.get("total"),
+            "features_with_bbox": len(features),
+            "start": payload.get("start"),
+            "num": payload.get("num"),
+        },
+    }
+    output.emit(geojson)
 
 
 @app.command()
@@ -194,6 +452,49 @@ def get(
     except httpx.HTTPError as exc:
         _http_error(exc)
     output.emit(payload)
+
+
+@app.command()
+def resources(
+    item_id: str = typer.Argument(..., help="ID del metadato (es. age:D_E973_MARSAGLIA)."),
+    check: bool = typer.Option(
+        True,
+        "--check/--no-check",
+        help="Verifica la raggiungibilità HTTP di ogni endpoint trovato.",
+    ),
+) -> None:
+    """Estrae risorse fruibili (WMS/WFS/download) e, opzionalmente, le verifica."""
+    try:
+        payload = get_item(item_id)
+    except ItemNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    except json.JSONDecodeError:
+        typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
+        raise typer.Exit(1)
+    except httpx.HTTPError as exc:
+        _http_error(exc)
+
+    rows = extract_resources(payload)
+    if check:
+        rows_checked = check_resources(rows)
+    else:
+        rows_checked = rows
+
+    response: dict[str, Any] = {
+        "id": item_id,
+        "count": len(rows_checked),
+        "checked": check,
+        "resources": rows_checked,
+    }
+    mode = output.get_mode()
+    if mode == "json":
+        output.emit(response)
+        return
+    if not rows_checked:
+        typer.echo("Nessuna risorsa fruibile trovata per il metadato.", err=True)
+        return
+    output.emit(response, table_rows=rows_checked, table_title=f"RNDT resources — {item_id}")
 
 
 @app.command()

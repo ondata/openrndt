@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+import re
 from typing import Any, cast
 
 from openrndt.client import rndt_request
@@ -12,6 +14,7 @@ MAX_NUM = 5000
 
 # Link `rel` che NON sono risorse fruibili (rappresentazioni del metadato stesso).
 _NON_RESOURCE_RELS = {"alternate", "icon", "self"}
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _build_category_clause(values: str) -> str:
@@ -29,13 +32,50 @@ def _build_category_clause(values: str) -> str:
     return f"keywords_s:({joined})"
 
 
+def _normalize_bbox_crs(bbox_crs: str | None) -> str | None:
+    if bbox_crs is None:
+        return None
+    norm = bbox_crs.strip().upper().replace(":", "")
+    if norm in {"EPSG4326", "CRS84", "WGS84"}:
+        return "EPSG:4326"
+    raise ValueError(
+        "`bbox_crs` non supportato: usare EPSG:4326 (alias accettati: CRS:84, WGS84)."
+    )
+
+
+def _validate_iso_date(value: str, *, param_name: str) -> None:
+    if not _ISO_DATE_RE.match(value):
+        raise ValueError(f"`{param_name}` deve essere nel formato yyyy-mm-dd.")
+    try:
+        date.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError(f"`{param_name}` non è una data di calendario valida.") from exc
+
+
+def _build_date_range_clause(field: str, start: str | None, end: str | None, *, label: str) -> str | None:
+    if start is None and end is None:
+        return None
+    if start is not None:
+        _validate_iso_date(start, param_name=f"{label}_from")
+    if end is not None:
+        _validate_iso_date(end, param_name=f"{label}_to")
+    lower = f"{start}T00:00:00Z" if start is not None else "*"
+    upper = f"{end}T23:59:59Z" if end is not None else "*"
+    return f"{field}:[{lower} TO {upper}]"
+
+
 def search(
     *,
     q: str | None = None,
     bbox: str | None = None,
+    bbox_crs: str | None = None,
     data_category: str | None = None,
     time: str | None = None,
     modified: str | None = None,
+    updated_from: str | None = None,
+    updated_to: str | None = None,
+    published_from: str | None = None,
+    published_to: str | None = None,
     sort: str | None = None,
     start: int = 1,
     num: int = 10,
@@ -64,15 +104,31 @@ def search(
         raise ValueError(f"`num` non può superare {MAX_NUM} (richiesto: {num}).")
     if start < 1:
         raise ValueError("`start` deve essere ≥ 1.")
+    if bbox_crs is not None and bbox is None:
+        raise ValueError("`bbox_crs` richiede anche `bbox`.")
+    if bbox is not None:
+        _normalize_bbox_crs(bbox_crs)
+    if modified is not None and (updated_from is not None or updated_to is not None):
+        raise ValueError("Usa `modified` oppure `updated_from/updated_to`, non entrambi.")
 
     params: dict[str, Any] = {"f": fmt, "start": start, "num": num}
-    q_parts: list[str] = []
-    if q:
-        q_parts.append(f"({q})" if data_category else q)
+    non_q_clauses: list[str] = []
     if data_category:
         clause = _build_category_clause(data_category)
         if clause:
-            q_parts.append(clause)
+            non_q_clauses.append(clause)
+    updated_clause = _build_date_range_clause("apiso_Modified_dt", updated_from, updated_to, label="updated")
+    if updated_clause:
+        non_q_clauses.append(updated_clause)
+    published_clause = _build_date_range_clause(
+        "apiso_PublicationDate_dt", published_from, published_to, label="published"
+    )
+    if published_clause:
+        non_q_clauses.append(published_clause)
+    q_parts: list[str] = []
+    if q:
+        q_parts.append(f"({q})" if non_q_clauses else q)
+    q_parts.extend(non_q_clauses)
     if q_parts:
         params["q"] = " AND ".join(q_parts) if len(q_parts) > 1 else q_parts[0]
     if bbox:

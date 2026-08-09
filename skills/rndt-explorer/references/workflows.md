@@ -68,29 +68,46 @@ openrndt --format json search \
   --num 30
 ```
 
-> ⚠️ **Limiti API noti**:
-> 1. `--time` combinato con `--data-category` (o con qualsiasi `--q` su un
->    campo specifico tipo `keywords_s:…`) restituisce 0 risultati.
-> 2. Il campo top-level `updated` di ogni risultato riflette la data di
->    reindicizzazione del catalogo (uguale per tutti), non la data del dataset.
->    Per ordinare/filtrare per "data del dataset" usare i campi `_source`:
->    - `apiso_Modified_dt` — dateStamp del metadato (il proxy più affidabile)
->    - `apiso_RevisionDate_dt` — data di revisione della risorsa (spesso null)
->    - `apiso_CreationDate_dt` — data di creazione (spesso null o fittizia)
->    - `timeperiod_nst[].begin_dt`/`end_dt` — copertura temporale dei dati
->      (è il campo su cui agisce il parametro `--time`)
+Filtri data più espliciti (scheda vs pubblicazione):
+
+```bash
+openrndt --format json search \
+  --q "catasto" \
+  --updated-from 2024-01-01 --updated-to 2024-12-31 \
+  --published-from 2020-01-01 \
+  --num 30
+```
+
+> ⚠️ **Due correzioni a note precedenti** (riverificate live il 2026-07-18):
 >
->    Non esiste un campo `apiso_PublicationDate_dt` (verificato live 2026-07-17):
->    la data `publication` sta solo nell'XML ISO, non è indicizzata.
+> 1. **`--time` combina correttamente con gli altri filtri.** Una nota precedente
+>    lo dava per rotto ("in AND con `--data-category` restituisce 0"): era un
+>    falso allarme, nato da uno *zero legittimo*. Verificato:
+>    `--time 2015-01-01/2024-12-31 --data-category inlandWaters` → **42**;
+>    `--time 2024-01-01/2024-12-31 --q 'keywords_s:"open data"'` → **52**
+>    (esattamente i record attesi). Se una combinazione con `--time` dà 0,
+>    prima di gridare al bug allarga l'intervallo: spesso nel periodo scelto
+>    quei record semplicemente non esistono.
+> 2. **`apiso_PublicationDate_dt` esiste**, contrariamente a quanto scritto
+>    prima: è valorizzato su 8.402 dei 23.632 record ed è **filtrabile**
+>    (non ordinabile). Vedi [`search-syntax.md`](./search-syntax.md).
 >
-> Workaround per "inlandWaters revisionati nel 2024":
+> Resta vero invece che il campo top-level `updated` riflette la data di
+> reindicizzazione del catalogo (uguale per tutti), non la data del dataset.
+> Per ragionare sulle date del dato usare i campi `_source`:
 >
-> ```bash
-> openrndt --format json search --data-category inlandWaters --num 500 \
->   | jq '[.results[] | select(._source.apiso_RevisionDate_dt
->           and ._source.apiso_RevisionDate_dt >= "2024-01-01"
->           and ._source.apiso_RevisionDate_dt <  "2025-01-01")] | length'
-> ```
+> - `apiso_Modified_dt` — dateStamp della scheda, unico ordinabile (100% dei record)
+> - `apiso_RevisionDate_dt` — revisione della risorsa (56%)
+> - `apiso_CreationDate_dt` — creazione della risorsa (43%)
+> - `apiso_PublicationDate_dt` — pubblicazione della risorsa (36%)
+> - `timeperiod_nst[].begin_dt`/`end_dt` — copertura temporale dei dati
+>   (è il campo su cui agisce `--time`, e non è interrogabile via `--q`)
+
+"inlandWaters con copertura temporale 2015-2024" — filtro lato server, niente `jq`:
+
+```bash
+openrndt --format json search --time "2015-01-01/2024-12-31" --data-category inlandWaters --num 100
+```
 
 ## 5. Scarica l'XML ISO 19139 di un metadato
 
@@ -105,7 +122,36 @@ xmllint --noout meta.xml && echo "XML valido"
 openrndt --format csv search --q "ortofoto" --num 100 > ortofoto.csv
 ```
 
-## 7. Dati scaricabili, licenza e citazione della fonte (data journalist)
+CSV più adatto a QGIS/script (URL servizi + bbox separata):
+
+```bash
+openrndt --format csv search --q "ortofoto" --profile qgis --num 100 > ortofoto_qgis.csv
+```
+
+## 7. Check rapido endpoint servizi di un metadato
+
+```bash
+# Estrai e verifica URL WMS/WFS/download
+openrndt --format json resources age:D_E973_MARSAGLIA
+
+# Solo estrazione (senza check HTTP)
+openrndt --format json resources age:D_E973_MARSAGLIA --no-check
+```
+
+## 8. Footprint bbox in GeoJSON (QGIS / GeoPandas)
+
+```bash
+# Poligoni bbox per i primi 200 risultati
+openrndt footprints --q "catasto" --num 200 > catasto_footprints.geojson
+
+# Footprint già filtrati su area/tempo
+openrndt footprints \
+  --bbox 11.2,44.4,11.5,44.6 \
+  --updated-from 2024-01-01 \
+  --num 200 > bologna_footprints.geojson
+```
+
+## 9. Dati scaricabili, licenza e citazione della fonte (data journalist)
 
 > "Mi servono i dati sulla popolazione a rischio alluvioni, con licenza che
 > ne permetta il riuso, e devo citare la fonte."

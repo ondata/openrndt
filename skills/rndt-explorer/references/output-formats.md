@@ -15,10 +15,12 @@
 |---------------------------------------------------|---------------------|
 | Pipeline `\| jq`, scripting Python/Bash            | `json` (default)    |
 | Scremare molti risultati a basso costo di token (agenti) | `compact`     |
-| Mostrare risultati in chat all'utente             | `table`             |
-| Esportare in foglio di calcolo                     | `csv`               |
+| Mostrare risultati in chat all'utente             | `table` (`--profile gis` consigliato) |
+| Esportare in foglio di calcolo / QGIS             | `csv` (`--profile qgis`) |
 | Recuperare XML ISO 19139 per validatori INSPIRE   | `openrndt get <id> --xml` |
 | Generare pagina HTML del metadato                  | `openrndt get <id> --html` |
+| Estrarre/check endpoint servizi del record         | `openrndt resources <id>` |
+| Portare footprint bbox in GIS                      | `openrndt footprints ... > file.geojson` |
 
 ## `compact` — NDJSON per agenti (solo `search`)
 
@@ -43,8 +45,20 @@ openrndt --format json search --q catasto > out.json
 # Tabella Rich con colonne id/title/updated/author/bbox
 openrndt --format table search --q catasto --num 10
 
+# Tabella "GIS-friendly"
+openrndt --format table search --q catasto --profile gis --num 10
+
 # CSV con header
 openrndt --format csv search --q catasto --num 50 > catasto.csv
+
+# CSV "QGIS-ready" con URL servizi + xmin/ymin/xmax/ymax
+openrndt --format csv search --q catasto --profile qgis --num 50 > catasto_qgis.csv
+
+# Estrazione + check endpoint WMS/WFS/download
+openrndt resources age:D_E973_MARSAGLIA
+
+# Footprint bbox come poligoni GeoJSON
+openrndt footprints --q catasto --num 100 > footprints.geojson
 
 # XML ISO 19139 di un singolo metadato
 openrndt get age:D_E973_MARSAGLIA --xml > meta.xml

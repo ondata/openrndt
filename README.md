@@ -67,11 +67,26 @@ openrndt search --q "catasto" --num 5
 # Filtro per bounding box (Piemonte sud)
 openrndt search --q "cartografia" --bbox 7,44,8,45 --num 10
 
+# Profilo GIS (table/csv più leggibili con campi essenziali)
+openrndt --format table search --q "catasto" --profile gis --num 10
+
+# Profilo QGIS (CSV con colonne URL servizi + bbox separata)
+openrndt --format csv search --q "catasto" --profile qgis --num 10
+
+# Filtri temporali avanzati (aggiornamento + pubblicazione)
+openrndt search --q "catasto" --updated-from 2024-01-01 --published-from 2020-01-01 --num 10
+
+# Export footprint bbox in GeoJSON (EPSG:4326)
+openrndt footprints --q "catasto" --num 50 > footprints.geojson
+
 # Per categoria tematica ISO 19115
 openrndt search --data-category planningCadastre --num 5
 
 # Singolo metadato
 openrndt get age:D_E973_MARSAGLIA
+
+# Estrai e verifica endpoint WMS/WFS/download di un metadato
+openrndt resources age:D_E973_MARSAGLIA
 
 # XML ISO 19139 grezzo
 openrndt get age:D_E973_MARSAGLIA --xml > meta.xml

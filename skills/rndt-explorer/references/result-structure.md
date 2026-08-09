@@ -37,9 +37,29 @@ significa zero risultati.
 
 | `rel`        | Significato                                          |
 |--------------|------------------------------------------------------|
-| `alternate`  | rappresentazione alternativa del metadato (JSON/HTML/XML) |
+| `alternate`  | rappresentazione alternativa del metadato (JSON/HTML/XML) — ⚠️ **href inutilizzabile**, vedi sotto |
 | `related`    | risorsa correlata; il `dctype` indica il tipo         |
 | `enclosure`  | file scaricabile (di solito ZIP/GeoTIFF/PDF)          |
+
+> ⚠️ **Non seguire gli href di `rel=alternate`.** Puntano a un indirizzo IP privato del server (`http://192.168.3.34:8080/geoportal-catalog/...`), irraggiungibile da qualunque client esterno. Vale per **tutti** i risultati di `search` (bug lato RNDT, issue #2 del repository).
+>
+> Per ottenere JSON, XML o HTML di un metadato usa i comandi dedicati, che costruiscono l'URL corretto:
+>
+> ```bash
+> openrndt --format json get <id>     # JSON (_source completo)
+> openrndt get <id> --xml             # XML ISO 19139
+> openrndt get <id> --html            # HTML
+> ```
+>
+> Se ti serve l'URL diretto (es. per un `curl` in uno script), sostituisci l'host: il percorso è già corretto e pubblicamente servito.
+>
+> ```
+> ✗ http://192.168.3.34:8080/geoportal-catalog/rest/metadata/item/{id}/xml
+> ✓ https://geodati.gov.it/geoportal-catalog/rest/metadata/item/{id}/xml
+> ✓ https://geodati.gov.it/RNDT/rest/metadata/item/{id}/xml            (equivalente, usato dalla CLI)
+> ```
+>
+> I due percorsi `/RNDT/` e `/geoportal-catalog/` sono alias dello stesso backend (verificato 2026-07-18: stessi conteggi, stesso comportamento di `sort`, stessi bug). L'XML ottenuto è **byte-identico** a quello del `GetRecordById` del CSW.
 
 I `dctype` più comuni per `rel=related`:
 
@@ -58,6 +78,12 @@ openrndt --format json search --q "catasto" --num 50 \
   | jq -r '.results[].links[]
             | select(.dctype=="WMS") | .href' \
   | sort -u
+```
+
+Per evitare parsing manuale e fare anche health-check endpoint:
+
+```bash
+openrndt --format json resources <id>
 ```
 
 ## Campi `_source` più utili

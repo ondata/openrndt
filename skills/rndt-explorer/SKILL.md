@@ -14,11 +14,11 @@ description: >
   (WMS, WFS, download diretto).
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt (comandi: search, get, discover).
+  Richiede la CLI openrndt (comandi: search, footprints, get, resources, discover).
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "1.0"
+  version: "1.1"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -41,6 +41,16 @@ campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `
 ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
 Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
 guarda `_source.links_s`.
+
+Per output tabellari/CSV di `search` puoi usare anche preset:
+
+```bash
+openrndt --format table search ... --profile gis
+openrndt --format csv search ... --profile qgis
+```
+
+- `--profile gis`: colonne essenziali per analisi rapida (tipo/categoria/ente/risorse/bbox).
+- `--profile qgis`: colonne pronte per flussi QGIS/script (`wms_url`, `wfs_url`, `download_url`, `xmin..ymax`).
 
 Altre opzioni globali (sempre PRIMA del comando): `--timeout <secondi>` per il
 timeout HTTP per singolo tentativo (default 30s; con i retry il caso peggiore è
@@ -82,12 +92,16 @@ Filtri principali:
 |---------------------|------------------------------------------------------------|
 | `--q`               | testo, sintassi Lucene/Elasticsearch                        |
 | `--bbox`            | bounding box WGS84 `xmin,ymin,xmax,ymax`                    |
+| `--bbox-crs`        | CRS dichiarato bbox: accetta `EPSG:4326`, `CRS:84`, `WGS84` (niente reproiezione) |
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
 | `--time`            | range temporale della **risorsa** `yyyy-mm-dd/yyyy-mm-dd`   |
 | `--modified`        | range modifica del **record nel catalogo** `yyyy-mm-dd/yyyy-mm-dd` |
+| `--updated-from/--updated-to` | range data aggiornamento scheda (`apiso_Modified_dt`) |
+| `--published-from/--published-to` | range data pubblicazione (`apiso_PublicationDate_dt`) |
 | `--sort`            | <code>campo:asc&#124;desc</code> su campo sortable (es. `apiso_Modified_dt:desc`). `dateDescending`/`dateAscending` **non ordinano**. `apiso_Modified_dt` è la data della *scheda*, non dei *dati* — vedi "Quale data stai ordinando" in [`references/search-syntax.md`](./references/search-syntax.md) |
 | `--start --num`     | paginazione (1-based, max `num`=5000)                       |
 | `--id`              | recupera un solo metadato per ID                            |
+| `--profile`         | preset colonne output `table/csv`: `default`, `gis`, `qgis` |
 
 > **Importante**: il parametro `dataCategory` documentato sul RNDT **non
 > filtra**; la CLI traduce internamente `--data-category` in
@@ -168,6 +182,13 @@ I servizi e i file scaricabili stanno in `results[].links[]` (per ogni
 risultato di `search`) o in `_source.links_s` / `_source.webServices_s`
 (per `get`). Filtra per `dctype` (`WMS`, `WFS`, `WCS`, `download`).
 
+Per estrazione e check veloce endpoint usa direttamente:
+
+```bash
+openrndt --format json resources <id>             # include ok/status_code/final_url
+openrndt --format json resources <id> --no-check  # solo estrazione URL
+```
+
 Esempio rapido — tutti i WMS dei primi 50 risultati di una ricerca:
 
 ```bash
@@ -187,6 +208,22 @@ interrogabili con GetFeatureInfo, download vettoriale con `ogr2ogr`. Guida in
 
 ---
 
+## Export footprint GeoJSON (QGIS-ready)
+
+Per portare rapidamente i risultati su mappa (QGIS/GeoPandas), esporta le bbox
+dei metadati come poligoni GeoJSON (EPSG:4326):
+
+```bash
+openrndt footprints --q "catasto" --num 100 > footprints.geojson
+```
+
+Il comando accetta gli stessi filtri principali di `search` (inclusi
+`--bbox-crs`, `--updated-*`, `--published-*`) e restituisce una
+`FeatureCollection` con proprietà essenziali (`id`, `title`, `org`, `type`,
+`updated`, `resources`).
+
+---
+
 ## Workflow pronti
 
 [`references/workflows.md`](./references/workflows.md) raccoglie sequenze
@@ -199,6 +236,15 @@ totali attesi).
 
 Quando usare json/table/csv/xml/html:
 [`references/output-formats.md`](./references/output-formats.md).
+
+## Il catalogo in QGIS / GDAL (CSW)
+
+Il RNDT espone anche un servizio CSW, utile **solo** per portare il catalogo
+dentro un flusso GIS (layer vettoriale con geometria bbox, export `ogr2ogr`,
+QGIS MetaSearch). Per cercare — testo, data, area, ente, licenza — e per
+ordinare, l'API REST è migliore su ogni criterio, filtro spaziale incluso.
+Ricette testate e limiti del servizio in
+[`references/csw.md`](./references/csw.md).
 
 ## Riferimenti esterni
 
