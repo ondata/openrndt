@@ -10,7 +10,7 @@ Esegue una ricerca come [search](/cli/search.md) e converte ogni `results[].bbox
 
 # Opzioni
 
-Le opzioni di filtro sono allineate a `search` (`--q`, `--bbox`, `--bbox-crs`, `--data-category`, `--time`, `--modified`, `--updated-from`, `--updated-to`, `--published-from`, `--published-to`, `--sort`, `--start`, `--num`).
+Le opzioni di filtro sono allineate a `search` (`--q`, `--bbox`, `--bbox-crs`, `--org`, `--org-exact`, `--data-category`, `--time`, `--modified`, `--updated-from`, `--updated-to`, `--published-from`, `--published-to`, `--sort`, `--start`, `--num`).
 
 # Examples
 
@@ -29,5 +29,5 @@ openrndt footprints \
 
 - `type: FeatureCollection`
 - `crs: EPSG:4326`
-- `features[]`: poligono bbox + proprietà essenziali (`id`, `title`, `org`, `type`, `updated`, `resources`)
+- `features[]`: poligono bbox + proprietà essenziali (`id`, `title`, `org`, `type`, `updated` = data della scheda, `indexed` = indicizzazione nel catalogo, `resources`)
 - `meta`: contatori utili (`total_results`, `features_with_bbox`, `start`, `num`)

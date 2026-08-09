@@ -49,8 +49,28 @@ openrndt --format json search \
 
 ```bash
 openrndt --format table search \
-  --q 'contact_organizations_s:"Agenzia delle Entrate"' \
+  --org "agenzia delle entrate" \
   --num 20 --sort 'apiso_Modified_dt:desc'
+```
+
+`--org` cerca la frase sul campo analizzato `apiso_OrganizationName_txt`: non
+conta il maiuscolo né l'ordine dei token. Se conosci la stringa esatta in
+catalogo usa `--org-exact "Agenzia delle Entrate"` (keyword, case-sensitive).
+
+Se il risultato è 0, la CLI sonda il catalogo e stampa i nomi di ente presenti
+che somigliano a quello cercato — molti comuni non pubblicano in proprio:
+
+```bash
+openrndt search --org "comune di bologna"
+# → enti simili presenti in catalogo: Citta' metropolitana di Bologna | Regione Emilia-Romagna
+```
+
+Ripiego per territorio, quando l'ente non c'è (verificato: 15 record contro i
+2.789 della sola bbox):
+
+```bash
+openrndt --format table search \
+  --q 'AmbitoTerritoriale_s:Locale' --bbox 11.2,44.4,11.5,44.6 --num 20
 ```
 
 > ⚠️ Non usare `--sort dateDescending`: documentato sul RNDT ma **ignorato**
@@ -92,9 +112,12 @@ openrndt --format json search \
 >    prima: è valorizzato su 8.402 dei 23.632 record ed è **filtrabile**
 >    (non ordinabile). Vedi [`search-syntax.md`](./search-syntax.md).
 >
-> Resta vero invece che il campo top-level `updated` riflette la data di
-> reindicizzazione del catalogo (uguale per tutti), non la data del dataset.
-> Per ragionare sulle date del dato usare i campi `_source`:
+> Resta vero invece che il campo top-level `updated` del **JSON grezzo** riflette
+> l'istante di indicizzazione nel catalogo (`sys_modified_dt`, raggruppato per
+> batch di reindicizzazione), non la data del dataset. Negli output
+> `compact`/`csv`/`table`/`footprints` di openrndt quel valore si chiama
+> `indexed`, e `updated` è invece `apiso_Modified_dt`. Per ragionare sulle date
+> del dato usare i campi `_source`:
 >
 > - `apiso_Modified_dt` — dateStamp della scheda, unico ordinabile (100% dei record)
 > - `apiso_RevisionDate_dt` — revisione della risorsa (56%)

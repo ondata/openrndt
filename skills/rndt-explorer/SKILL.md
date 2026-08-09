@@ -37,10 +37,18 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 ```
 
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
-campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `resources` —
+campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `indexed`, `resources` —
 ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
 Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
 guarda `_source.links_s`.
+
+**Le due date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
+`footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa
+su cui filtrano `--updated-from/--updated-to` — mentre `indexed` è l'istante di
+indicizzazione nel catalogo (`sys_modified_dt`), che non dice nulla né sul dato né
+sulla scheda. Nel JSON grezzo (`--format json`) vale invece la convenzione
+dell'API: il campo top-level `updated` è quello di **indicizzazione**, la data
+della scheda sta in `_source.apiso_Modified_dt`.
 
 Per output tabellari/CSV di `search` puoi usare anche preset:
 
@@ -96,6 +104,8 @@ Filtri principali:
 | `--bbox`            | bounding box WGS84 `xmin,ymin,xmax,ymax`                    |
 | `--bbox-crs`        | CRS dichiarato bbox: accetta `EPSG:4326`, `CRS:84`, `WGS84` (niente reproiezione) |
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
+| `--org`             | ente responsabile, frase su `apiso_OrganizationName_txt` (analizzato: case-insensitive, ordine dei token irrilevante) |
+| `--org-exact`       | ente responsabile, confronto esatto e case-sensitive su `EnteResponsabile_s` |
 | `--time`            | range temporale della **risorsa** `yyyy-mm-dd/yyyy-mm-dd`   |
 | `--modified`        | range modifica del **record nel catalogo** `yyyy-mm-dd/yyyy-mm-dd` |
 | `--updated-from/--updated-to` | range data aggiornamento scheda (`apiso_Modified_dt`) |
@@ -116,8 +126,8 @@ vedi [`references/search-syntax.md`](./references/search-syntax.md).
 sono visibili con `openrndt discover --what lucene_fields`. Esempi utili:
 
 ```bash
-# Per ente/organizzazione (non esiste flag --organization)
-openrndt search --q "apiso_OrganizationName_txt:\"Regione Siciliana\""
+# Per ente/organizzazione: usa --org, non scrivere la clausola a mano
+openrndt search --org "regione siciliana"
 
 # Solo open data (isOpendata contiene la licenza, non un booleano)
 openrndt search --q "isOpendata:*"                    # qualunque open data
@@ -163,7 +173,7 @@ openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
 **Zero risultati? Leggi i suggerimenti su stderr.** Più spesso di quanto sembri, `0` è un esito legittimo, non un errore tuo. La CLI stampa suggerimenti contestuali: allarga il testo con wildcard, rimuovi `--data-category`/`--time`/`--bbox` uno alla volta, e cerca un ente col nominativo esatto. Tre cause ricorrenti:
 
 - **Periodo senza record**: `--time 2024-01-01/2024-12-31` può restituire 0 perché in quel periodo non c'è nulla — allarga l'intervallo prima di concludere (vedi `workflows.md`).
-- **Ente non indicizzato con quel nome**: `Comune di Bologna` → 0 se l'ente non è registrato col proprio nominativo nel catalogo (pubblica spesso tramite regione o città metropolitana). Percorsi robusti: ricerca per territorio (`--bbox` + `AmbitoTerritoriale_s:Locale`), o wildcard sul campo esatto `contact_organizations_s:*nome*` (case-sensitive).
+- **Ente non presente in catalogo con quel nome**: `--org "comune di bologna"` → 0 perché quell'ente non pubblica in proprio (i suoi dati escono sotto Regione Emilia-Romagna o Città metropolitana). Qui la CLI fa da sola una query esplorativa e stampa i nomi di ente realmente presenti che somigliano a quello cercato: usa quelli. In alternativa cerca per territorio (`--bbox` + `AmbitoTerritoriale_s:Locale`). **Non** usare wildcard su `contact_organizations_s`: sono case-sensitive (`*bologna*` → 0, `*Bologna*` → 112) e pescano ogni record che *nomina* quel territorio, anche di altri enti.
 - **Bbox ampia nei metadati**: molti record dichiarano bbox nazionali, quindi `--bbox` stretto li esclude — se serve «cosa copre la mia area» allarga il riquadro.
 
 **`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
@@ -245,9 +255,9 @@ openrndt footprints --q "catasto" --num 100 > footprints.geojson
 ```
 
 Il comando accetta gli stessi filtri principali di `search` (inclusi
-`--bbox-crs`, `--updated-*`, `--published-*`) e restituisce una
+`--bbox-crs`, `--org`, `--updated-*`, `--published-*`) e restituisce una
 `FeatureCollection` con proprietà essenziali (`id`, `title`, `org`, `type`,
-`updated`, `resources`).
+`updated`, `indexed`, `resources`).
 
 ---
 

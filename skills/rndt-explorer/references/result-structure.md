@@ -26,7 +26,7 @@ significa zero risultati.
 | `title`        | stringa         | titolo del metadato                                         |
 | `description`  | stringa         | descrizione                                                 |
 | `published`    | datetime ISO    | data di pubblicazione                                       |
-| `updated`      | datetime ISO    | data di ultimo aggiornamento                                |
+| `updated`      | datetime ISO    | **indicizzazione nel catalogo** (= `_source.sys_modified_dt`), non la data della scheda: quella è `_source.apiso_Modified_dt`. Negli output `compact`/`csv`/`table` di openrndt i due campi si chiamano rispettivamente `indexed` e `updated` |
 | `author`       | `{name}`        | autore della scheda                                         |
 | `categories`   | `[ {scheme, term} ]` | parole chiave/categorie                              |
 | `bbox`         | `{xmin,ymin,xmax,ymax}` | bounding box WGS84                                 |

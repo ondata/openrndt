@@ -100,7 +100,7 @@ Distinzione fondamentale, verificata live il 2026-07-18: sul RNDT le date si **f
 | `apiso_CreationDate_dt` | creazione della risorsa | 10.138 (43%) | ✅ | ❌ |
 | `apiso_PublicationDate_dt` | pubblicazione della risorsa | 8.402 (36%) | ✅ | ❌ |
 | `timeperiod_nst[].begin_dt`/`end_dt` | copertura temporale del **dato** | parziale | solo via `--time` | ❌ |
-| `updated` (top-level nei risultati) | reindicizzazione del catalogo | — | ❌ | ❌ |
+| `sys_modified_dt` (= `updated` top-level del JSON grezzo, `indexed` negli output openrndt) | indicizzazione nel catalogo | 100% | ✅ | ✅ (inutile) |
 
 > **Correzione**: una nota precedente dava `apiso_PublicationDate_dt` per "non indicizzato / inesistente". È falso: il campo c'è su 8.402 record e come filtro funziona. Quello che manca è solo l'ordinamento.
 
@@ -153,9 +153,11 @@ openrndt --format json search --q 'incendi AND apiso_CreationDate_dt:[2024-01-01
            | .[] | "\(._source.apiso_CreationDate_dt[0:10])  \(.title)"'
 ```
 
-**Trappola di verifica**: dopo un sort per `apiso_Modified_dt`, il campo
-`updated` che vedi nei risultati (e nell'output `compact`) mostra la data di
-reindex, NON quella ordinata. Per vedere la data vera:
+**Trappola di verifica (solo `--format json`)**: dopo un sort per
+`apiso_Modified_dt`, il campo top-level `updated` del JSON grezzo mostra la data
+di indicizzazione, NON quella ordinata. Negli output `compact`/`csv`/`table` la
+colonna `updated` è già `apiso_Modified_dt` (l'indicizzazione sta in `indexed`).
+Sul JSON grezzo, per vedere la data vera:
 
 ```bash
 openrndt search --q "catasto" --sort "apiso_Modified_dt:desc" --num 5 \
