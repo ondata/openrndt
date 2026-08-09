@@ -27,10 +27,13 @@ app = typer.Typer(
 )
 
 
-def _version_callback(value: bool) -> None:
+def _version_callback(value: bool) -> bool:
     if value:
         typer.echo(f"openrndt {__version__}")
         raise typer.Exit(0)
+    # Click usa il valore di ritorno del callback come valore dell'opzione:
+    # restituire None renderebbe `version` None invece che False.
+    return value
 
 
 @app.callback()

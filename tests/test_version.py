@@ -6,7 +6,7 @@ from typer.testing import CliRunner
 
 import openrndt
 from openrndt._version import __version__
-from openrndt.cli import app
+from openrndt.cli import _version_callback, app
 from openrndt.client import USER_AGENT
 
 runner = CliRunner()
@@ -36,3 +36,9 @@ def test_package_exports_same_version():
 
 def test_version_is_resolved_not_placeholder():
     assert __version__ != "0.0.0+unknown"
+
+
+def test_version_callback_returns_the_option_value():
+    # Click usa il ritorno del callback come valore dell'opzione: restituire None
+    # farebbe arrivare `version=None` a fronte di un parametro annotato `bool`.
+    assert _version_callback(False) is False
