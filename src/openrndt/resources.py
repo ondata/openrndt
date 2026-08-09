@@ -164,7 +164,11 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def check_resources(resources: list[dict[str, str]], *, timeout: float | None = None) -> list[dict[str, Any]]:
-    """Controlla raggiungibilità endpoint con probe leggero (HEAD, fallback GET)."""
+    """Controlla raggiungibilità endpoint con probe leggero (HEAD, fallback GET).
+
+    `ok` è True solo per risposte 2xx: i redirect non vengono seguiti, quindi un 3xx
+    significa "non verificato" e la destinazione resta esposta in `redirect_url`.
+    """
     if timeout is None:
         timeout = get_timeout()
 
@@ -206,13 +210,13 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                     if location:
                         row["redirect_url"] = urljoin(resource["url"], location)
                     row["status_code"] = stream_response.status_code
-                    row["ok"] = 200 <= stream_response.status_code < 400
+                    row["ok"] = 200 <= stream_response.status_code < 300
                     row["final_url"] = str(stream_response.url)
                     row["method"] = "GET"
                 checked.append(row)
                 continue
             row["status_code"] = response.status_code
-            row["ok"] = 200 <= response.status_code < 400
+            row["ok"] = 200 <= response.status_code < 300
             row["final_url"] = str(response.url)
         except httpx.HTTPError as exc:
             row["error"] = type(exc).__name__

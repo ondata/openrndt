@@ -30,3 +30,6 @@ openrndt resources age:D_E973_MARSAGLIA --no-check
 - Formati supportati: `json` (default), `table`, `csv`, `compact`.
 - ID inesistente → messaggio leggibile, exit 1.
 - Errori di rete nei check delle singole risorse non interrompono il comando: la riga è marcata con `ok=false` e campo `error`.
+- Il check è un probe leggero: `HEAD`, con fallback a `GET` in streaming solo su `405`/`501`. I body non vengono mai scaricati.
+- I redirect **non** vengono seguiti (evita che un record del catalogo faccia probare reti interne). Un `3xx` dà quindi `ok=false` — destinazione non verificata — con la Location riportata in `redirect_url`. `ok=true` significa risposta `2xx`.
+- Vengono bloccati prima del probe gli URL con schema diverso da `http`/`https` e gli host che puntano (per IP literal o per risoluzione DNS) a loopback, link-local, private, reserved, multicast o unspecified: la riga riporta `error=url-blocked:<motivo>`.

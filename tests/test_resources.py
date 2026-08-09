@@ -165,5 +165,6 @@ def test_check_resources_does_not_follow_redirects():
         timeout=1,
     )
     assert checked[0]["status_code"] == 302
-    assert checked[0]["ok"] is True
+    # 3xx = destinazione non verificata (redirect non seguiti): ok deve restare False.
+    assert checked[0]["ok"] is False
     assert checked[0]["redirect_url"] == "http://169.254.1.10/internal"
