@@ -231,6 +231,8 @@ def test_check_resources_blocks_redirect_to_non_public_host():
     assert checked[0]["redirect_url"] == "http://169.254.1.10/internal"
     assert checked[0]["error"] == "redirect-blocked:link-local-not-allowed"
     assert checked[0]["redirected"] is False
+    # `final_url` è l'ultimo URL davvero probato, non la destinazione rifiutata.
+    assert checked[0]["final_url"] == "https://redir.test/service"
 
 
 @respx.mock

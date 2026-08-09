@@ -260,8 +260,10 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                     row["redirect_url"] = next_url
                 blocked_reason = _validate_check_url(next_url)
                 if blocked_reason is not None:
+                    # `final_url` resta l'ultimo URL davvero contattato: la
+                    # destinazione rifiutata non è stata probata ed è già in
+                    # `redirect_url`.
                     row["error"] = f"redirect-blocked:{blocked_reason}"
-                    row["final_url"] = next_url
                     break
                 row["redirected"] = True
                 row["redirect_count"] += 1
