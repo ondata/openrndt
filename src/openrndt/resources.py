@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import socket
+import time
 from typing import Any
 from urllib.parse import parse_qs, urljoin, urlparse
 
@@ -13,6 +14,8 @@ from openrndt.client import USER_AGENT
 from openrndt.config import get_timeout
 
 _NON_RESOURCE_RELS = {"alternate", "icon", "self"}
+_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
+_MAX_REDIRECTS = 3
 _DOWNLOAD_EXTENSIONS = {
     ".csv",
     ".geojson",
@@ -169,20 +172,47 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _apply_response(row: dict[str, Any], response: httpx.Response, method: str, url: str) -> None:
-    location = response.headers.get("location")
-    if location:
-        row["redirect_url"] = urljoin(url, location)
     row["status_code"] = response.status_code
     row["ok"] = 200 <= response.status_code < 300
     row["final_url"] = str(response.url)
     row["method"] = method
 
 
+def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[httpx.Response, str, float]:
+    """Probe HTTP leggera: HEAD, con fallback GET in streaming sui 4xx/5xx.
+
+    Non segue redirect (li gestisce il chiamante, con validazione per hop).
+    Ritorna (response, metodo usato, millisecondi trascorsi).
+    """
+    start = time.perf_counter()
+    response = httpx.head(url, headers=headers, timeout=timeout, follow_redirects=False)
+    elapsed = time.perf_counter() - start
+    if response.status_code >= 400:
+        # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
+        # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
+        # l'endpoint riproviamo in streaming, senza scaricare il body.
+        with httpx.stream(
+            "GET",
+            url,
+            headers=headers,
+            timeout=timeout,
+            follow_redirects=False,
+        ) as stream_response:
+            elapsed = time.perf_counter() - start
+            return stream_response, "GET", elapsed
+    return response, "HEAD", elapsed
+
+
 def check_resources(resources: list[dict[str, str]], *, timeout: float | None = None) -> list[dict[str, Any]]:
     """Controlla raggiungibilità endpoint con probe leggero (HEAD, fallback GET).
 
-    `ok` è True solo per risposte 2xx: i redirect non vengono seguiti, quindi un 3xx
-    significa "non verificato" e la destinazione resta esposta in `redirect_url`.
+    I redirect (max `_MAX_REDIRECTS`) vengono seguiti solo se la destinazione
+    supera la stessa validazione di sicurezza dell'URL iniziale: un 3xx verso un
+    host non pubblico (loopback, privato, link-local, DNS verso indirizzi
+    riservati, …) non viene seguito e produce `error=redirect-blocked:…`.
+    `ok` è True solo per la risposta finale 2xx. Ogni riga riporta `latency_ms`
+    (durata complessiva della probe) e, se c'è stato un redirect, `redirected`,
+    `redirect_count` e `redirect_url` (prima destinazione).
     """
     if timeout is None:
         timeout = get_timeout()
@@ -197,32 +227,47 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
         row["redirect_url"] = None
         row["error"] = None
         row["method"] = "HEAD"
+        row["latency_ms"] = None
+        row["redirected"] = False
+        row["redirect_count"] = 0
         blocked_reason = _validate_check_url(resource["url"])
         if blocked_reason is not None:
             row["error"] = f"url-blocked:{blocked_reason}"
             checked.append(row)
             continue
-        try:
-            response = httpx.head(
-                resource["url"],
-                headers=headers,
-                timeout=timeout,
-                follow_redirects=False,
-            )
-            _apply_response(row, response, "HEAD", resource["url"])
-            # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
-            # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
-            # l'endpoint riproviamo in streaming, senza scaricare il body.
-            if response.status_code >= 400:
-                with httpx.stream(
-                    "GET",
-                    resource["url"],
-                    headers=headers,
-                    timeout=timeout,
-                    follow_redirects=False,
-                ) as stream_response:
-                    _apply_response(row, stream_response, "GET", resource["url"])
-        except httpx.HTTPError as exc:
-            row["error"] = type(exc).__name__
+        current = resource["url"]
+        total_ms = 0.0
+        for hop in range(_MAX_REDIRECTS + 1):
+            try:
+                response, method, elapsed = _probe_once(current, headers, timeout)
+            except httpx.HTTPError as exc:
+                row["error"] = type(exc).__name__
+                break
+            total_ms += elapsed
+            _apply_response(row, response, method, current)
+            status = response.status_code
+            if status in _REDIRECT_STATUSES:
+                location = response.headers.get("location")
+                if not location:
+                    break
+                next_url = urljoin(current, location)
+                if next_url == current:
+                    break
+                if row["redirect_count"] >= _MAX_REDIRECTS:
+                    row["error"] = "too-many-redirects"
+                    break
+                if row["redirect_url"] is None:
+                    row["redirect_url"] = next_url
+                blocked_reason = _validate_check_url(next_url)
+                if blocked_reason is not None:
+                    row["error"] = f"redirect-blocked:{blocked_reason}"
+                    row["final_url"] = next_url
+                    break
+                row["redirected"] = True
+                row["redirect_count"] += 1
+                current = next_url
+                continue
+            break
+        row["latency_ms"] = round(total_ms) if total_ms else None
         checked.append(row)
     return checked

@@ -1,5 +1,36 @@
 # LOG
 
+## 2026-08-09 (CLI: resources con redirect, latenza e batch)
+
+- **`resources` segue i redirect (max 3) solo verso host pubblici**: validazione per hop con la stessa allowlist dell'URL iniziale. L'endpoint ARPA Veneto (`http://gaia.arpa.veneto.it/…`, 301→https) prima dava `ok=false` — un falso negativo su un servizio funzionante — ora `ok=true, redirected=true`. Un 3xx verso host non pubblico (es. link-local) non viene seguito: `error=redirect-blocked:…`. Mantenuta e rafforzata la postura fail-closed (niente follow cieco).
+- **`latency_ms` per endpoint**: durata complessiva della probe; distingue un 200 veloce da uno lento. Verificato live: WMS/WFS ARPA Veneto 1ms dopo il redirect.
+- **Batch**: `resources <id1> <id2> …` → `{"count": N, "results": [per-id]}`; errori per-record raccolti (metadato inesistente, HTTP, rete) senza fermare il batch. Formato a ID singolo invariato (retro-compatibile). Verificato live su 2 metadati (ARPA Veneto + ISPRA).
+- Campi riga: `redirected`, `redirect_count`, `redirect_url` (prima destinazione) aggiunti all'output del check.
+- Test: +6 (redirect bloccato vs seguito, too-many-redirects, latency, batch 2 id, batch con errore) e aggiornato il test «non segue redirect» → «blocca redirect verso host non pubblico». 106/106 verdi, ruff e mypy puliti.
+- Skill aggiornata (Fase 4: batch, redirect, latency, campi del check) e `references/result-structure.md` con la tabella dei campi del check.
+
+## 2026-08-09 (CLI: zero risultati e sort parlanti)
+
+- **`search`/`footprints` con 0 risultati ora spiegano perché**: su stderr arrivano suggerimenti contestuali — wildcard su `--q` (solo per testo libero; per `campo:valore` ricorda che il valore è esatto e i campi `_s` sono case-sensitive), rimozione di `--data-category`/`--time`/`--bbox` uno alla volta, e per gli enti il nominativo esatto in `contact_organizations_s` oppure la ricerca per territorio (`--bbox` + `AmbitoTerritoriale_s:Locale`). Incentrato sul caso reale verificato: `apiso_OrganizationName_txt:"Comune di Bologna"` → 0.
+- **Errore HTTP con `--sort` attivo → promemoria dei campi ordinabili** (`title`, `apiso_Modified_dt`; `dateAscending`/`dateDescending`/`relevance` ignorati; rimando a `discover --what sort_values`). Verificato live: `--sort title` (senza direzione) → 500 con contesto leggibile.
+- Test: +2 (hint su stderr in json con `total` a oggetto, sort-500 con campi ordinabili), estesi i due zero-results esistenti (csv, compact) con l'assert sui suggerimenti. 101/101 verdi.
+- Skill `rndt-explorer` aggiornata: sezione «Zero risultati? Leggi i suggerimenti» in Fase 2 (cause ricorrenti: periodo vuoto, ente non indicizzato, bbox nazionale), nota sort-500, e sezione dedicata in `references/search-syntax.md`.
+
+## 2026-08-09 (rework esempi README)
+
+- **README riscritto con esempi verificati live** (sezione "Esempi verificati", 11 scenari): ogni comando eseguito contro il catalogo reale il 2026-08-09, URL controllati con HTTP, output citati verbatim. Stato aggiornato a v2.0.
+- **Audit degli esempi precedenti**: 2 URL su 8 morti — WMS ortofoto Provincia di Lodi (`sdi.provincia.lodi.it`, DNS ok ma TCP down a 2 tentativi) e WFS Regione Basilicata (`rsdi.regione.basilicata.it`, idem) → sostituiti con endpoint verificati 200 (Lombardia Ortofoto 2024, Sardegna, Piemonte mapproxy; WFS ARPA Veneto + ISPRA).
+- **Numeri magici invecchiati**: Lombardia 430→438, edificato Bologna 40→44, frane open data 259→268 (catalogo cresce) → nel nuovo README i totali sono quelli del giorno di verifica, con nota esplicita.
+- **Nuovi esempi wow verificati**: record → WFS → `ogr2ogr` GPKG in 2.2s (ARPA Veneto, 585 KB); sweep 108 WMS unici tema Idrografia in 10s; comune → 4 dataset CMBO con email contatto; footprint GeoJSON QGIS-ready.
+- Nota onesta documentata: l'endpoint ARPA Veneto è catalogato in `http` e risponde con redirect a `https` (per questo `resources` senza `--no-check` dà 301, non 200 — `ogr2ogr` lo segue da solo).
+
+## 2026-08-09 (valutazione utilità per figure professionali)
+
+- **Valutazione v2.0.0 con verifica live contro l'API reale** in `docs/evaluation-v2.0.0.md`, scenari per tecnico GIS, analista spaziale e ufficio comunale. Esito: ottimo per GIS e analista, buono con attrito per il comune.
+- Punto debole principale confermato dal vivo: **la ricerca per ente**. `apiso_OrganizationName_txt:"Comune di Bologna"` → 0 (testo analizzato), `EnteResponsabile_s` e prefisso IPA `c_a944` → 0 (comune non indicizzato con quei nomi), wildcard su `contact_organizations_s` → over-match. Percorso robusto per il comune: `AmbitoTerritoriale_s:Locale` + `--bbox` (15 record per l'area di Bologna vs 2789 con solo bbox).
+- Verifiche live di conferma: filtro `--time` combinato (42 = atteso), `resources` con status 200 e probe HEAD, CSV `--profile qgis` pronto per QGIS, `footprints` GeoJSON valido, XML ISO 19139 valido, 5000 record `compact` in 36s, sort invalido → HTTP 500 con messaggio minimo (non traceback). 99/99 test verdi.
+- Nuove proposte in `docs/future-ideas.md`: flag `--org`/`--suggest-org`, zero-risultati e sort invalido parlanti, `resources` in batch con latenza, tabella `--wide`.
+
 ## 2026-08-09 (release 2.0.0)
 
 - **`--profile` era una trappola silenziosa**: `openrndt search --profile gis` stampava JSON, perché il preset di colonne vale solo per `table`/`csv` e `--format` è globale (va prima del sottocomando). Nessun errore, nessun avviso: l'opzione veniva semplicemente ignorata. Ora `--profile` senza `--format` esplicito attiva da solo `table`, e con `--format json|compact` espliciti la CLI dice su stderr che il preset non si applica.
