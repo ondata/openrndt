@@ -85,23 +85,73 @@ openrndt search --q 'EnteResponsabile_s:"Regione Siciliana"' --sort 'apiso_Modif
 # Crescente
 openrndt search --q 'apiso_Type_s:dataset' --sort 'apiso_Modified_dt:asc' --num 5
 
-# Pertinenza (funziona)
-openrndt search --q 'catasto' --sort 'relevance' --num 5
+# Ordinamento per titolo (serve la direzione: `title` da solo dà errore)
+openrndt search --q 'catasto' --sort 'title:asc' --num 5
 ```
 
-### Quale data stai ordinando (importante)
+## Cercare per data — si può, su tutti i campi
 
-Sul RNDT convivono più date, e quella "giusta" per l'utente spesso non esiste:
+Distinzione fondamentale, verificata live il 2026-07-18: sul RNDT le date si **filtrano quasi sempre** e si **ordinano quasi mai**.
 
-| Campo | Cosa è | Ordinabile? |
-|---|---|---|
-| `_source.apiso_Modified_dt` | dateStamp della **scheda di metadati** | ✅ — il miglior proxy per "più recenti" |
-| data di pubblicazione dei dati | solo nell'XML ISO (`dateType=publication`), **non indicizzata** | ❌ non esiste come campo |
-| `_source.apiso_CreationDate_dt` | creazione della risorsa | spesso `null` o fittizia (`2012-01-01`): inaffidabile |
-| `updated` (top-level nei risultati) | **reindicizzazione del catalogo** | non è il campo su cui ordini |
+| Campo | Cosa è | Valorizzato | Filtrabile | Ordinabile |
+|---|---|---|---|---|
+| `apiso_Modified_dt` | dateStamp della **scheda** di metadati | 23.632 (100%) | ✅ | ✅ |
+| `apiso_RevisionDate_dt` | revisione della risorsa | 13.276 (56%) | ✅ | ❌ |
+| `apiso_CreationDate_dt` | creazione della risorsa | 10.138 (43%) | ✅ | ❌ |
+| `apiso_PublicationDate_dt` | pubblicazione della risorsa | 8.402 (36%) | ✅ | ❌ |
+| `timeperiod_nst[].begin_dt`/`end_dt` | copertura temporale del **dato** | parziale | solo via `--time` | ❌ |
+| `updated` (top-level nei risultati) | reindicizzazione del catalogo | — | ❌ | ❌ |
 
-Quindi: `apiso_Modified_dt:desc` ordina per data di modifica della *scheda*,
-non dei *dati* — dillo all'utente quando presenti i risultati come "più recenti".
+> **Correzione**: una nota precedente dava `apiso_PublicationDate_dt` per "non indicizzato / inesistente". È falso: il campo c'è su 8.402 record e come filtro funziona. Quello che manca è solo l'ordinamento.
+
+Il filtro si scrive come range Lucene dentro `--q` (timestamp completo, `Z` finale):
+
+```bash
+# Dataset sugli incendi creati dal 2024 a oggi
+openrndt search --q 'incendi AND apiso_CreationDate_dt:[2024-01-01T00:00:00Z TO 2026-07-18T23:59:59Z]' --num 50
+
+# Tutto ciò che è stato pubblicato nel 2024 (335 record)
+openrndt search --q 'apiso_PublicationDate_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z]' --num 1
+
+# Aperto a destra
+openrndt search --q 'apiso_RevisionDate_dt:[2024-01-01T00:00:00Z TO *]' --num 10
+```
+
+### La trappola della copertura parziale
+
+Poiché i tre campi della risorsa sono compilati solo dal 36% al 56% dei record, **filtrare su un campo scarta in silenzio chi non ce l'ha**. Stessa ricerca "incendi" dal 2024 a oggi, al variare del campo:
+
+| Filtro | Record |
+|---|---|
+| solo `apiso_CreationDate_dt` | 15 |
+| solo `apiso_PublicationDate_dt` | 4 |
+| solo `apiso_RevisionDate_dt` | 28 |
+| **OR fra i tre** | **35** |
+| `apiso_Modified_dt` (100% di copertura) | 63 |
+
+Regola pratica: se la domanda è precisa ("creati nel 2024") filtra il campo giusto; se è larga ("cosa si è mosso dal 2024") usa l'OR:
+
+```bash
+Y='[2024-01-01T00:00:00Z TO 2026-07-18T23:59:59Z]'
+openrndt search --num 50 \
+  --q "incendi AND (apiso_CreationDate_dt:$Y OR apiso_PublicationDate_dt:$Y OR apiso_RevisionDate_dt:$Y)"
+```
+
+`apiso_Modified_dt` dà sempre il numero più alto perché è l'unico compilato ovunque, ma è la data della **scheda**: dice quando qualcuno ha toccato il record, non quando il dato è stato prodotto o pubblicato. Usalo come rete di sicurezza, non come misura della freschezza del dato.
+
+> Lo stesso meccanismo, sbagliato, è il bug della Ricerca Dettagliata del portale web: mettendo in AND tutti e tre i campi data tiene solo i record che le hanno **tutte e tre** compilate, e arriva a mostrare 0 risultati dove ce ne sono 15.
+
+### Ordinare per data: solo `apiso_Modified_dt`
+
+Nessuno degli altri campi data è ordinabile: `sort=apiso_PublicationDate_dt:desc` e `:asc` restituiscono lo **stesso ordine** che si ottiene senza chiedere alcun ordinamento (parametro ignorato, non "ordine ascendente"). Idem per `apiso_RevisionDate_dt`.
+
+Per ordinare per una data diversa da `apiso_Modified_dt`: filtra lato server e ordina lato client.
+
+```bash
+openrndt --format json search --q 'incendi AND apiso_CreationDate_dt:[2024-01-01T00:00:00Z TO *]' --num 50 \
+  | jq -r '.results | sort_by(._source.apiso_CreationDate_dt) | reverse
+           | .[] | "\(._source.apiso_CreationDate_dt[0:10])  \(.title)"'
+```
 
 **Trappola di verifica**: dopo un sort per `apiso_Modified_dt`, il campo
 `updated` che vedi nei risultati (e nell'output `compact`) mostra la data di
@@ -112,15 +162,22 @@ openrndt search --q "catasto" --sort "apiso_Modified_dt:desc" --num 5 \
   | jq -r '.results[] | "\(._source.apiso_Modified_dt)  \(.title)"'
 ```
 
-Limiti noti:
+### Cosa ordina davvero — quadro completo (verificato 2026-07-18)
 
-- Il sort su `title` (campo text) in passato dava errore Elasticsearch
-  *"Fielddata is disabled"*; **riverificato il 2026-07-17: ora funziona**
-  (`title:asc` ordina alfabeticamente — il comportamento dell'API è cambiato).
-  I campi *garantiti* sortable restano comunque quelli `_s`/`_dt`/`_i`:
-  su altri campi text non c'è garanzia.
-- Il servizio **CSW** (`/csw`) ignora del tutto `<ogc:SortBy>`: non ordina per
-  nessuna proprietà. Dettagli e implicazioni INSPIRE in `ref/rest-api-rndt.md`.
+| `--sort` | Esito |
+|---|---|
+| `apiso_Modified_dt:asc\|desc` | ✅ ordina |
+| `title:asc\|desc` | ✅ ordina alfabeticamente |
+| `title` (senza direzione) | ❌ **errore** Elasticsearch *"Fielddata is disabled on [title]"* |
+| `apiso_PublicationDate_dt:*`, `apiso_RevisionDate_dt:*` | ❌ ignorati (ordine = default) |
+| `dateDescending`, `dateAscending`, `relevance` | ❌ ignorati (ordine = default) |
+
+> Attenzione: `relevance` e `title` (nudo) sono elencati come validi nella [documentazione ufficiale](https://geodati.gov.it/geoportale/strumenti/api-rest), ma il primo non ha effetto e il secondo dà errore. La forma funzionante `campo:asc|desc` non è invece documentata. Il menu "ORDINA PER" del portale offre esattamente le due sole coppie che funzionano (`title` e `apiso_Modified_dt`).
+
+Altri limiti:
+
+- Il servizio **CSW** (`/csw`) ignora del tutto `<ogc:SortBy>` pur dichiarando `CoreSortables: Title, Modified` nel GetCapabilities: non ordina per nessuna proprietà. Dettagli e implicazioni INSPIRE in [`csw.md`](./csw.md) e `ref/csw-rndt.md`.
+- I campi *garantiti* sortable restano quelli `_s`/`_dt`/`_i`: su altri campi text non c'è garanzia.
 
 ## Filtrare per ente — usa la forma stabile
 

@@ -1,5 +1,18 @@
 # LOG
 
+## 2026-07-27 (verifica post-email RNDT)
+
+- **Riverificati live i 6 punti dell'email a info@rndt.gov.it (18/07): nessuno risolto.** (1) checkbox «Considera valori vuoti»: stesso JS inline (AND dei 3 range 1900–2100), ancora spuntata di default; (2) `sort=apiso_PublicationDate_dt:desc|asc` ancora ignorato (`apiso_Modified_dt` ok); (3) CSW: esempio §2.2.1 → 0 record e `numberOfRecordsMatched="[object Object]"`, GetDomain ancora `false`; (4) link `alternate` ancora su `192.168.3.34:8080` (anche OpenSearch nel GetCapabilities); (5) `dataCategory` ancora no-op (23.650 = totale); (6) nessun campo licenza normalizzato, conteggi CC invariati a meno dei nuovi record.
+- Catalogo cresciuto da 23.632 a 23.650 record.
+
+- **Ispezione del frontend ufficiale** (Ricerca Dettagliata) con `agent-browser` (cattura network/HAR headed). Riscritti `tmp/bugs-incoerenze.md` e `tmp/proposte-rndt.md` con le prove di oggi.
+- **Correzione importante**: `apiso_PublicationDate_dt` **esiste** (8.402/23.632 record) ed è **filtrabile** via `q=…:[range]`, ma **non ordinabile**. Contraddice la nota precedente ("campo inesistente"): corretti `knowledge/api/known-issues.md` e issue #4. Il *filtro* per data di pubblicazione del metadato si può; l'*ordinamento* no.
+- **Solo `title` e `apiso_Modified_dt` sono ordinabili** (confermato indipendentemente dal menu "ORDINA PER" del portale, che offre solo quei due). Ignorati `orderBy=`, `searchText=`, `after/before` (parametri nativi Esri che il frontend costruisce ma l'endpoint pubblico non onora).
+- **Bug nuovo → issue #9**: la Ricerca Dettagliata mette in AND tutti e 3 i campi data quando ne filtri uno solo; "Considera valori vuoti" non funziona (campo assente non matcha `[1900 TO 2100]`). "incendi creati dal 2024 a oggi" → portale 0, reali 15.
+- **Campo licenza incoerente**: `isOpendata` a volte `null` con la licenza solo in `apiso_OtherConstraints_s` (tutti i dataset AIB del MASE) → `isOpendata:*` perde open data reali. Aggiunto a issue #8.
+- Riconfermati live #2 (IP interno 192.168.3.34, anche nei link export della UI ufficiale), #5 (CSW SortBy ignorato).
+- Contatti supporto RNDT trovati: `info@rndt.gov.it`, Skype `rndt.help`.
+
 ## 2026-07-17 (skill audit)
 
 - **Audit live della skill `rndt-explorer`** (comandi eseguiti contro l'API reale). Esito: struttura a 4 fasi solida, 4 punti stale corretti:

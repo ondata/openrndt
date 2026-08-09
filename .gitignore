@@ -21,6 +21,9 @@ tasks/
 tmp/
 tmp.md
 
+# Documenti ufficiali mirrorati in originale: in repo teniamo la conversione .md
+ref/*.pdf
+
 # Local outputs
 *.out
 out.txt
