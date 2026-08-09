@@ -83,8 +83,34 @@ openrndt --format json search --q "catasto" --num 50 \
 Per evitare parsing manuale e fare anche health-check endpoint:
 
 ```bash
-openrndt --format json resources <id>
+openrndt --format json resources <id>              # check singolo
+openrndt --format json resources <id1> <id2>       # batch: {"count": N, "results": [per-id]}
+openrndt --format json resources <id> --no-check   # solo estrazione URL
 ```
+
+Campi del check per ogni endpoint (`resources --check`, default):
+
+| Campo            | Contenuto                                                   |
+|------------------|-------------------------------------------------------------|
+| `type`           | WMS/WFS/WCS/WMTS/download dedotto dal link                  |
+| `url`            | URL come da metadato                                        |
+| `source`         | provenienza (`links`, `links_s`, `webServices_s`)           |
+| `ok`             | True solo per la risposta **finale** 2xx                    |
+| `status_code`    | status HTTP finale (es. 200)                                |
+| `method`         | probe usata: `HEAD` o `GET` (fallback su 4xx/5xx a HEAD)    |
+| `final_url`      | URL finale (dopo eventuali redirect)                        |
+| `redirected`     | True se il probe ha seguito almeno un redirect              |
+| `redirect_count` | numero di redirect seguiti (max 3)                          |
+| `redirect_url`   | prima destinazione di redirect incontrata                   |
+| `latency_ms`     | durata complessiva della probe (millisecondi)               |
+| `error`          | motivo di fallimento: `url-blocked:…`, `redirect-blocked:…`, `too-many-redirects`, eccezione di rete |
+
+Comportamenti verificati live: i redirect vengono seguiti **solo verso host
+pubblici** — l'endpoint ARPA Veneto catalogato in `http` (301 verso `https`)
+risulta `ok=true, redirected=true`; un 3xx verso un host non pubblico non viene
+seguito ed espone `error=redirect-blocked:…`. In batch, un metadato
+inesistente o irraggiungibile produce una voce con `error` senza fermare gli
+altri.
 
 ## Campi `_source` più utili
 
