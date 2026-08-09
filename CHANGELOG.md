@@ -4,6 +4,28 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.1.0] - 2026-08-09
+
+### Added
+
+- Comando `resources`: estrae gli endpoint WMS/WFS/download di un metadato e ne verifica la raggiungibilità con un probe leggero (`HEAD`, fallback `GET` in streaming, senza mai scaricare il body). Blocca gli URL che non puntano a indirizzi pubblici e non segue i redirect.
+- Comando `footprints`: esporta le bounding box dei risultati come GeoJSON FeatureCollection, pronto per QGIS.
+- `search --profile gis` e `search --profile qgis`: preset di colonne per analisi rapida e per flussi QGIS/script (`wms_url`, `wfs_url`, `download_url`, `xmin..ymax`).
+- Filtri temporali in `search`: `--updated-from`/`--updated-to` (su `apiso_Modified_dt`) e `--published-from`/`--published-to` (su `apiso_PublicationDate_dt`).
+- `search --bbox-crs` accetta gli alias `EPSG:4326`, `CRS:84` e `WGS84`.
+- Flag globale `--version` / `-V`, prima assente.
+- Riferimento sul catalogo via CSW nella skill `rndt-explorer`, per flussi GDAL/OGR e QGIS.
+
+### Fixed
+
+- La versione del pacchetto ora ha una fonte unica (`pyproject.toml`, letta via `importlib.metadata`). Prima viveva in tre punti allineati a mano e uno era rimasto indietro: la CLI si annunciava a RNDT come `openrndt/0.1` pur essendo alla 1.0.0.
+- Le date passate ai filtri sono validate anche sul calendario: `2024-13-40` viene rifiutata invece di finire nella query.
+- La query utente `-q` viene racchiusa tra parentesi quando è combinata con altri filtri, così un `OR` non cambia significato per la precedenza di `AND`.
+
+### Changed
+
+- Documentazione allineata alle verifiche live sull'API: solo `title` e `apiso_Modified_dt` sono ordinabili; `apiso_PublicationDate_dt` esiste ed è filtrabile ma non ordinabile.
+
 ## [1.0.0] - 2026-07-17
 
 ### Added

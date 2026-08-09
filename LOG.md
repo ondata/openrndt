@@ -1,5 +1,14 @@
 # LOG
 
+## 2026-08-09 (release 1.1.0)
+
+- **Rilasciata la 1.1.0**: comandi `resources` e `footprints`, profili `--profile gis|qgis`, filtri temporali `--updated-*`/`--published-*`, alias CRS per la bbox, flag `--version`. PR #12 e #13.
+- **`resources` dichiarava rotti endpoint funzionanti**, sul suo stesso esempio di documentazione: il fallback a `GET` era limitato a `405/501`, ma i WMS/WFS reali rifiutano `HEAD` con 403/500 pur rispondendo 200 a `GET` (verificato su `age:D_E973_MARSAGLIA`, entrambe le risorse davano `ok=false`). Ora qualunque `4xx/5xx` viene riverificato in streaming senza scaricare il body. Difetto trovato da noi, non dai reviewer.
+- **La versione aveva tre punti allineati a mano e uno era già disallineato**: pacchetto a 1.0.0, `USER_AGENT` fermo a `openrndt/0.1` dalla release precedente. Ora `_version.py` legge i metadati della distribuzione: `pyproject.toml` è l'unico punto da alzare, e `tests/test_version.py` impedisce il ritorno della deriva.
+- **Hardening del check risorse** dopo sei giri di review automatica: allowlist di schema, blocco degli indirizzi non pubblicamente instradabili (incluso il CGNAT `100.64.0.0/10`, che sfuggiva a `is_private`/`is_reserved`), fail-closed quando il DNS non risolve, redirect non seguiti. **Declinato il pinning DNS**: chiude una finestra TOCTOU reale ma romperebbe il routing per nome sugli endpoint che lo strumento esiste per verificare — il reviewer ha ritirato il rilievo.
+- **Un test faceva risoluzione DNS reale** (`test_cli_resources_json_with_check` verso `*.agenziaentrate.gov.it`), contro la regola «nessuna chiamata di rete nei test». Ora `conftest.py` stubba `getaddrinfo` per tutta la suite.
+- Aggiunti in locale (non versionati, `.claude/` è gitignored): hook di lint+mypy sugli edit, hook che avvisa quando `src/` cambia senza `knowledge/` e `LOG.md`, skill `/release`, subagent `rndt-api-verifier`.
+
 ## 2026-07-27 (verifica post-email RNDT)
 
 - **Riverificati live i 6 punti dell'email a info@rndt.gov.it (18/07): nessuno risolto.** (1) checkbox «Considera valori vuoti»: stesso JS inline (AND dei 3 range 1900–2100), ancora spuntata di default; (2) `sort=apiso_PublicationDate_dt:desc|asc` ancora ignorato (`apiso_Modified_dt` ok); (3) CSW: esempio §2.2.1 → 0 record e `numberOfRecordsMatched="[object Object]"`, GetDomain ancora `false`; (4) link `alternate` ancora su `192.168.3.34:8080` (anche OpenSearch nel GetCapabilities); (5) `dataCategory` ancora no-op (23.650 = totale); (6) nessun campo licenza normalizzato, conteggi CC invariati a meno dei nuovi record.
