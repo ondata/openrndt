@@ -102,6 +102,12 @@ con i retry su timeout/5xx (3 tentativi) il caso peggiore è ~3x questo valore:
 openrndt --timeout 5 search --q "catasto" --num 5
 ```
 
+Per sapere quale versione è installata:
+
+```bash
+openrndt --version
+```
+
 Tutti i comandi accettano `--format json` (default), `--format table`, `--format csv`.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
