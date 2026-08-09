@@ -67,8 +67,8 @@ openrndt search --q "catasto" --num 5
 # Filtro per bounding box (Piemonte sud)
 openrndt search --q "cartografia" --bbox 7,44,8,45 --num 10
 
-# Profilo GIS (table/csv più leggibili con campi essenziali)
-openrndt --format table search --q "catasto" --profile gis --num 10
+# Profilo GIS (campi essenziali). Senza --format l'output diventa una tabella
+openrndt search --q "catasto" --profile gis --num 10
 
 # Profilo QGIS (CSV con colonne URL servizi + bbox separata)
 openrndt --format csv search --q "catasto" --profile qgis --num 10
@@ -109,6 +109,8 @@ openrndt --version
 ```
 
 Tutti i comandi accettano `--format json` (default), `--format table`, `--format csv`.
+Unica eccezione al default: `search --profile ...` senza `--format` esplicito esce
+in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
 `resources`), pensata per agenti AI e pipe a basso consumo di token.

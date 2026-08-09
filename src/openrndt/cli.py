@@ -57,21 +57,27 @@ def _root(
         help=f"Timeout HTTP in secondi per singolo tentativo (default: {config.DEFAULT_TIMEOUT}). "
         "Con i retry su timeout/5xx (3 tentativi), il caso peggiore è ~3x questo valore.",
     ),
-    fmt: str = typer.Option(
-        "json",
+    fmt: str | None = typer.Option(
+        None,
         "--format",
         "-F",
-        help="Formato di output: json (default), table, csv, compact (NDJSON per agenti, solo per search).",
+        help=(
+            "Formato di output: json (default), table, csv, compact (NDJSON per agenti, solo per search). "
+            "Se omesso, `search --profile` passa automaticamente a table."
+        ),
         case_sensitive=False,
     ),
 ) -> None:
     config.set_base_url(base_url)
     config.set_timeout(timeout)
-    try:
-        output.set_mode(fmt.lower())
-    except ValueError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(2)
+    if fmt is None:
+        output.set_mode("json", explicit=False)
+    else:
+        try:
+            output.set_mode(fmt.lower())
+        except ValueError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(2)
 
 
 def _http_error(exc: httpx.HTTPError) -> NoReturn:
@@ -273,18 +279,31 @@ def search(
     start: int = typer.Option(1, "--start", help="Indice 1-based del primo record."),
     num: int = typer.Option(10, "--num", "-n", help="Numero massimo di record (max 5000)."),
     item_id: str | None = typer.Option(None, "--id", help="ID metadato specifico."),
-    profile: str = typer.Option(
-        "default",
+    profile: str | None = typer.Option(
+        None,
         "--profile",
-        help="Preset colonne per output table/csv: default | gis | qgis.",
+        help=(
+            "Preset colonne per output table/csv: default | gis | qgis. "
+            "Se `--format` non è indicato, attiva da solo l'output table."
+        ),
         case_sensitive=False,
     ),
 ) -> None:
     """Cerca metadati nel RNDT."""
-    profile = profile.lower()
+    profile_given = profile is not None
+    profile = (profile or "default").lower()
     if profile not in {"default", "gis", "qgis"}:
         typer.echo("Profilo non supportato: usare `default`, `gis` oppure `qgis`.", err=True)
         raise typer.Exit(2)
+    if profile_given:
+        if not output.is_mode_explicit():
+            output.set_mode("table")
+        elif output.get_mode() in {"json", "compact"}:
+            typer.echo(
+                f"Avviso: --profile è ignorato con --format {output.get_mode()} "
+                "(i preset di colonne valgono solo per table e csv).",
+                err=True,
+            )
     try:
         payload = do_search(
             q=q,

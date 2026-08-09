@@ -95,6 +95,60 @@ def test_cli_search_csv_qgis_profile(search_response_json):
     assert "id,title,type,category,org,updated,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
 
 
+@respx.mock
+def test_cli_search_profile_implies_table(search_response_json):
+    """Senza --format, --profile porta da solo all'output tabellare."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["search", "--profile", "gis", "--num", "2"], env={"COLUMNS": "300"})
+    assert result.exit_code == 0, result.output
+    assert "RNDT" in result.output
+    for header in ("type", "category", "org", "resources"):
+        assert header in result.output
+
+
+@respx.mock
+def test_cli_search_without_profile_stays_json(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["search", "--q", "catasto", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["total"] == 23580
+
+
+@respx.mock
+def test_cli_search_profile_with_explicit_json_warns(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "json", "search", "--profile", "gis", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "--profile è ignorato con --format json" in result.output
+    assert json.loads(result.stdout)["total"] == 23580
+
+
+@respx.mock
+def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "compact", "search", "--profile", "gis", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "--profile è ignorato con --format compact" in result.output
+
+
+@respx.mock
+def test_cli_search_profile_with_explicit_csv_does_not_warn(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "Avviso" not in result.output
+
+
 def test_cli_search_rejects_unknown_profile():
     result = runner.invoke(app, ["search", "--profile", "foo"])
     assert result.exit_code == 2

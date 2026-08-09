@@ -5,6 +5,9 @@
 1. **Formato del comando CLI** (`--format` globale): `json` (default), `table`,
    `csv`, `compact` (NDJSON, solo per `search`).
    Controlla come la CLI stampa il risultato.
+   Eccezione: `search --profile ...` senza `--format` esplicito passa da solo a
+   `table`; con `--format json`/`compact` espliciti il preset non si applica e
+   la CLI avvisa su stderr.
 2. **Formato della risposta API** (`-f` interno, gestito automaticamente):
    `json`, `atom`, `csv`, `kml`, ecc. Non esposto direttamente nella CLI MVP —
    tutte le ricerche chiedono `json` all'API per garantire parsing affidabile.
@@ -45,8 +48,8 @@ openrndt --format json search --q catasto > out.json
 # Tabella Rich con colonne id/title/updated/author/bbox
 openrndt --format table search --q catasto --num 10
 
-# Tabella "GIS-friendly"
-openrndt --format table search --q catasto --profile gis --num 10
+# Tabella "GIS-friendly" (il profilo implica già --format table)
+openrndt search --q catasto --profile gis --num 10
 
 # CSV con header
 openrndt --format csv search --q catasto --num 50 > catasto.csv

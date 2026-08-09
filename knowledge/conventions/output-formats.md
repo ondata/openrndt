@@ -19,6 +19,7 @@ Il formato si sceglie con l'opzione globale `--format`/`-F`, **prima** del coman
 
 # Regole
 
+- Il default `json` cede a un preset: `search --profile gis|qgis|default` **senza** `--format` esplicito passa da solo a `table`, perché i preset di colonne hanno senso solo per output tabellari. Con `--format json` o `compact` espliciti il preset non si applica e la CLI avvisa su stderr (output e exit code invariati). Meccanismo: `output.set_mode(mode, explicit=...)` marca il default come non-esplicito, così una scelta dell'utente non viene mai sovrascritta.
 - `get` con `csv`/`compact` è rifiutato (il dettaglio non è tabellare) — vedi [gestione errori](/conventions/error-handling.md).
 - `--xml`/`--html` di `get` bypassano il dispatcher: testo grezzo su stdout.
 - Il campo `resources` di `compact` elenca i tipi di risorsa fruibile (WMS, WFS, download, …) dedotti dai `links` del record, escludendo le rappresentazioni del metadato stesso (rel `alternate`/`icon`/`self`).
