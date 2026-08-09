@@ -6,7 +6,7 @@
 
 # openrndt
 
-> **Nota:** strumento giovane — aiutaci a migliorarlo [aprendo issue](https://github.com/ondata/openrndt/issues) o condividendo feedback.
+> **Nota:** strumento in evoluzione — aiutaci a migliorarlo [aprendo issue](https://github.com/ondata/openrndt/issues) o condividendo feedback.
 
 CLI Python e libreria per accedere al **Repertorio Nazionale dei Dati Territoriali (RNDT)** —
 pensata per essere orchestrata da un'AI.
@@ -15,7 +15,7 @@ pensata per essere orchestrata da un'AI.
 
 > **Al meglio con un'AI.** openrndt funziona benissimo da solo, ma **dà il massimo se guidato da un agente AI**: la CLI è progettata per essere composta, interrogata e orchestrata passo passo. Per un'esperienza guidata — scoperta delle codelist, ricerca con filtri progressivi, dettaglio del metadato, risorse scaricabili — abbinala alla Agent Skill [`rndt-explorer`](https://github.com/ondata/openrndt/blob/main/skills/rndt-explorer/SKILL.md) inclusa in questo repo. I principi di design sono nella sezione [Per agenti AI](#per-agenti-ai).
 
-> Stato: v1.0 — read-only.
+> Stato: v2.0 — read-only.
 
 ## Cos'è il RNDT
 
@@ -113,153 +113,213 @@ Unica eccezione al default: `search --profile ...` senza `--format` esplicito es
 in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
-`resources`), pensata per agenti AI e pipe a basso consumo di token.
+`resources`), pensata per agenti AI e pipe a basso consumo di token:
 
 ```bash
-openrndt --format compact search --q "catasto" --num 3
-# {"id":"…","title":"…","org":"Comune di Torino","type":"service","category":null,"updated":"…","resources":["WMS"]}
+openrndt --format compact search --q "stato chimico dei fiumi" --num 3
+```
+
+Ecco una riga reale (uno dei tre record):
+
+```
+{"id": "arpa_ve:Stato_Chimico_Fiumi_DGR_3_2022", "title": "Stato chimico dei fiumi 2014-2019 (DGR 3-2022)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2026-04-25T15:53:34.675Z", "resources": ["WFS", "WMS"]}
 ```
 
 Se `resources` è `[]` il record non linka servizi fruibili: recupera il
 dettaglio con `get <id>` e guarda `_source.links_s` (spesso il download è
 dietro un portale dell'ente, non un link diretto).
 
-## Esempi di conversazione con un'AI
+## Esempi verificati
 
-openrndt è pensato per essere **pilotato da un assistente AI**. Non devi imparare la
-sintassi: descrivi a parole quello che ti serve e l'AI compone i comandi, legge i
-risultati e ti restituisce ciò che conta — di solito **un URL WMS/WFS da incollare in
-QGIS** o un dato da scaricare. Tutti gli esempi qui sotto usano risposte reali del
-catalogo RNDT.
+Tutti gli esempi qui sotto sono stati **eseguiti live contro il catalogo reale** il
+2026-08-09: i comandi riportano output veri, gli URL rispondono 200, i layer
+esistono. I totali cambiano perché il catalogo cresce — sono il conteggio di quel
+giorno, non una promessa.
 
-> Per provarli serve un assistente (es. Claude) a cui è stata installata la skill
-> `skills/rndt-explorer/` o che può eseguire `openrndt` da terminale.
+### 1. Dal tema al GeoPackage: dati vettoriali scaricati in ~5 secondi
 
-### «Mi serve l'uso del suolo dell'Emilia-Romagna da caricare in QGIS»
+> Il caso più comune per un tecnico GIS: serve il dato, non il metadato.
 
-> **Tu:** Sto lavorando su un progetto QGIS in Emilia-Romagna. Mi trovi un servizio
-> con l'uso del suolo regionale, così lo aggiungo come layer?
+```bash
+# 1. trova il record con un servizio WFS (la colonna resources lo dice subito)
+openrndt --format compact search --q "stato chimico dei fiumi" --num 3
+# → arpa_ve:Stato_Chimico_Fiumi_DGR_3_2022 … resources: ["WFS", "WMS"]
 
-L'AI cerca i servizi pubblicati sul tema:
+# 2. estrai gli endpoint del record
+openrndt --format json resources arpa_ve:Stato_Chimico_Fiumi_DGR_3_2022 --no-check
+# WFS  http://gaia.arpa.veneto.it/geoserver/ows?service=WFS&version=1.0.0&request=GetCapabilities
+# WMS  http://gaia.arpa.veneto.it/geoserver/ows?service=wms&version=1.3.0&request=GetCapabilities
+
+# 3. scarica il layer vettoriale in GeoPackage (open source, apribile in QGIS)
+ogr2ogr -f GPKG stato_fiumi.gpkg \
+  "WFS:https://gaia.arpa.veneto.it/geoserver/ows?service=WFS&version=1.0.0&request=GetCapabilities" \
+  geonode:Stato_Chimico_Fiumi_DGR_3_2022 -nlt PROMOTE_TO_MULTI
+# → stato_fiumi.gpkg (585 KB) pronto per QGIS, in ~2 secondi
+```
+
+Nota onesta: la scheda cataloga l'endpoint in `http`, il servizio risponde con un
+redirect a `https` che `ogr2ogr` segue da solo (per questo `resources` senza
+`--no-check` segnala `301`, non `200`).
+
+### 2. L'uso del suolo in QGIS: un WMS con 7 annate (più il 1853)
+
+> Un solo URL da incollare in QGIS per avere l'uso del suolo dell'Emilia-Romagna
+> dal 1976 a oggi, e in più l'uso storico del 1853.
 
 ```bash
 openrndt search --q "uso del suolo WMS" --num 20
 ```
 
-> **AI:** Trovato. La **Regione Emilia-Romagna** pubblica un WMS *Uso del Suolo* che
-> copre più annate (2020, 2017, 2014, 2008, 2003, 1994, 1976) più l'uso storico dal
-> 1853. In QGIS aggiungi un nuovo layer **WMS/WMTS** con questo URL:
->
-> ```
-> http://servizigis.regione.emilia-romagna.it/wms/uso_del_suolo?request=GetCapabilities&service=WMS
-> ```
->
-> Scegli poi l'annata che ti interessa fra i layer offerti dal servizio.
+Il record `r_emiro:2016-04-01T154419` ("Uso del Suolo (WMS)") pubblica:
 
-### «Voglio il catasto di un comune piemontese»
+```
+http://servizigis.regione.emilia-romagna.it/wms/uso_del_suolo?request=GetCapabilities&service=WMS
+```
 
-> **Tu:** Mi serve il catasto urbano per un'analisi in Piemonte.
+In QGIS: *Aggiungi layer WMS/WMTS* → questo URL. I layer coprono le annate
+2020, 2017, 2014, 2008, 2003, 1994, 1976 più l'uso storico 1853 (punti e
+poligoni) — confermato dal GetCapabilities del servizio.
+
+### 3. Il catasto urbano come layer: WMS del Comune di Torino
 
 ```bash
 openrndt search --q "catasto" --num 10
 ```
 
-> **AI:** C'è il **Catasto Urbano 1:1500** come geo-servizio WMS della Regione
-> Piemonte. URL per QGIS:
->
-> ```
-> https://geomap.reteunitaria.piemonte.it/ws/siccms/coto-01/wmsg01/wms_sicc17bis_catasto_urbano?service=WMS&version=1.1.1&request=getCapabilities
-> ```
+Tra i risultati c'è il *Catasto Urbano 1:1500 - Geo-servizio WMS* con URL
+verificato (HTTP 200):
 
-### «Cerco ortofoto da usare come base»
-
-> **Tu:** Mi servono delle ortofoto come sfondo per la mia mappa. Cosa c'è disponibile?
-
-```bash
-openrndt search --q "ortofoto" --num 50
+```
+https://geomap.reteunitaria.piemonte.it/ws/siccms/coto-01/wmsg01/wms_sicc17bis_catasto_urbano?service=WMS&version=1.1.1&request=getCapabilities
 ```
 
-> **AI:** Diverse amministrazioni espongono ortofoto via WMS, pronte da usare come
-> base in QGIS. Per esempio:
->
-> - **Regione Sardegna** — `https://webgis.regione.sardegna.it/geoserverraster/ows?service=wms&version=1.3.0&request=GetCapabilities`
-> - **Provincia di Lodi** — `http://sdi.provincia.lodi.it/arcgis/services/DBTL/dbtl_ortofoto_digitali/MapServer/WMSServer?request=GetCapabilities&service=WMS`
-> - **Regione Piemonte** — `https://geomap.reteunitaria.piemonte.it/mapproxy/service?service=WMS&version=1.3.0&request=getCapabilities`
-
-### «Il reticolo idrografico, ma vettoriale (per editing)»
-
-> **Tu:** Non voglio un'immagine: mi serve il reticolo idrografico come vettoriale,
-> così posso interrogarlo e modificarlo.
+### 4. Le ortofoto più fresche d'Italia: la 2024 di Regione Lombardia
 
 ```bash
-openrndt search --q "reticolo idrografico" --num 50
+openrndt --format csv search --q "ortofoto" --profile qgis --num 100
 ```
 
-> **AI:** Per i vettoriali ti serve un **WFS** (in QGIS: *Aggiungi layer WFS*). Alcuni
-> servizi disponibili:
->
-> - **ISPRA** — `http://sdi.isprambiente.it/geoserver/hy/wfs?service=wfs&version=2.0.0&request=GetCapabilities`
-> - **ARPA Veneto** — `http://gaia.arpa.veneto.it/geoserver/ows?service=WFS&version=1.0.0&request=GetCapabilities`
-> - **Regione Basilicata** — `http://rsdi.regione.basilicata.it/rbgeoserver2016/dbgt_0404/nd_idr/wfs?request=GetCapabilities&service=WFS&version=2.0.0`
+Il profilo `qgis` produce un CSV con la colonna `wms_url` già pronta: qui sotto
+tre servizi verificati (HTTP 200) da incollare in QGIS:
 
-### «Tutto quello che pubblica un certo ente»
+| Ente | Dato | URL WMS |
+|---|---|---|
+| Regione Lombardia | Ortofoto 2024 | `https://www.cartografia.servizirl.it/arcgis5/services/BaseMap/Ortofoto2024/ImageServer/WMSServer?request=GetCapabilities&service=WMS` |
+| Regione Sardegna | Ortofoto | `https://webgis.regione.sardegna.it/geoserverraster/ows?service=wms&version=1.3.0&request=GetCapabilities` |
+| Regione Piemonte | Ortofoto (mapproxy) | `https://geomap.reteunitaria.piemonte.it/mapproxy/service?service=WMS&version=1.3.0&request=getCapabilities` |
 
-> **Tu:** Quanti e quali dataset ha pubblicato la Regione Lombardia?
+### 5. Il reticolo idrografico in vettoriale (non un'immagine)
+
+> Per interrogare e modificare i dati serve un WFS, non un WMS.
 
 ```bash
-openrndt search --q 'apiso_OrganizationName_txt:"Regione Lombardia"' \
-  --sort "apiso_Modified_dt:desc" --num 10
+openrndt --format compact search --q "reticolo idrografico" --num 50
 ```
 
-> **AI:** La **Regione Lombardia** ha **430 dataset** nel RNDT. Ecco i 10 aggiornati
-> più di recente… (l'AI elenca titoli e date). Posso filtrarli per tema — uso del
-> suolo, idrografia, trasporti — o mostrarti solo quelli con un servizio WMS/WFS.
+Due servizi verificati (HTTP 200, risposta in ~3s):
 
-### «Cosa copre la mia area di studio»
+- **ARPA Veneto** — `http://gaia.arpa.veneto.it/geoserver/ows?service=WFS&version=1.0.0&request=GetCapabilities`
+- **ISPRA** — `http://sdi.isprambiente.it/geoserver/hy/wfs?service=wfs&version=2.0.0&request=GetCapabilities`
 
-> **Tu:** Sto studiando l'area attorno a Bologna. Quali dataset la coprono?
+In QGIS: *Aggiungi layer WFS* → URL → scegli il feature type. Da CLI, lo stesso
+flusso dell'esempio 1 (`ogr2ogr`) scarica il layer in GeoPackage.
+
+### 6. Tutti i WMS di un tema INSPIRE in 10 secondi
+
+> Quanti servizi WMS pubblicano gli enti italiani su un tema? Un one-liner.
 
 ```bash
-openrndt search --q "edificato" --bbox "11.2,44.4,11.5,44.6" --num 10
+openrndt --format json search --q 'INSPIRETheme_s:Idrografia' --num 862 \
+  | jq -r '.results[].links[]? | select(.dctype=="WMS") | .href' | sort -u > wms_idrografia.txt
+wc -l wms_idrografia.txt
+# 108 endpoint WMS unici, estratti in ~10 secondi
 ```
 
-> **AI:** Nel riquadro che copre l'area bolognese ci sono **40 dataset** che la
-> intersecano: il Database Topografico Regionale (edifici, unità volumetriche, falde)
-> e anche cartografie storiche (Ducato di Modena 1821, territorio ferrarese 1814)
-> disponibili come WMS. Nota: il filtro è per *sovrapposizione* al riquadro, quindi
-> include dataset a copertura regionale che toccano l'area.
+### 7. Cosa copre la mia area di studio
 
-### «Solo dati con licenza aperta»
-
-> **Tu:** Mi servono dati sulle frane, ma solo open data che posso riusare liberamente.
+> Bounding box + parola chiave: dalla cartografia odierna al Ducato di Modena 1821.
 
 ```bash
-openrndt search --q "frane AND isOpendata:*" --num 10
+openrndt --format json search --q "edificato" --bbox "11.2,44.4,11.5,44.6" --num 10
+# total: 44 (2026-08-09)
 ```
 
-> **AI:** Ci sono **259 dataset open data** sulle frane — dall'inventario IFFI della
-> Regione Toscana ai rilievi con drone dell'emergenza alluvione 2023 in
-> Emilia-Romagna. Te li elenco con la licenza di ciascuno?
+Nel riquadro bolognese ci sono il Database Topografico Regionale (edifici,
+unità volumetriche, falde) **e** cartografie storiche esposte come WMS,
+per esempio:
 
-### «Devo scaricare i dati e citare la fonte in un articolo»
+```
+Carta storica del Ducato di Modena - 1821 (WMS)
+→ https://servizigis.regione.emilia-romagna.it/wms/Ducato_modena_1821?request=GetCapabilities&service=WMS   (HTTP 200)
+```
 
-> **Tu:** Sto scrivendo un articolo sul rischio alluvioni. Mi servono i dati,
-> la licenza d'uso e come citare la fonte.
+Nota: il filtro bbox è per *sovrapposizione*: include i dataset a copertura
+regionale che toccano l'area (per questo il totale è 44, non "quelli di Bologna").
 
-L'AI cerca fra gli open data e recupera licenza ed ente dal dettaglio:
+### 8. I dati del mio comune: 4 dataset, con il contatto per il riuso
+
+> Il caso dell'ufficio comunale: cosa pubblica chi gestisce il mio territorio,
+> e a chi scrivere per il riuso.
 
 ```bash
-openrndt --format compact search --q "alluvioni AND isOpendata:*" --num 30
-openrndt search --id "ispra_rm:01IdroHazard_DT" \
-  | jq -r '.results[0].links[] | select(.dctype != null) | "\(.dctype)\t\(.href)"'
-openrndt get "ispra_rm:01IdroHazard_DT" \
-  | jq '{licenza: ._source.isOpendata, ente: ._source.EnteResponsabile_s}'
+openrndt --format compact search \
+  --q "(Bologna OR bolognese) AND AmbitoTerritoriale_s:Locale" \
+  --bbox 11.2,44.4,11.5,44.6 --num 10
+# total: 4 — tutti della Città metropolitana di Bologna:
+#   Infrastrutture CMBO · Fermate SFM CMBO · Tracciato linee ferroviarie CMBO · Tracciato strade provinciali CMBO
 ```
 
-> **AI:** **ISPRA** pubblica *Popolazione a rischio alluvioni* con licenza
-> **CC-BY-4.0**: puoi riusarlo citando la fonte (es. "Fonte: ISPRA — Popolazione
-> a rischio alluvioni, CC-BY 4.0"). I dati sono esposti come WFS: te li scarico
-> in GeoPackage con `ogr2ogr`, pronti per QGIS o per un'analisi tabellare.
+Il dettaglio di un record dà anche il punto di contatto per chiedere aggiornamenti
+o il riuso:
+
+```bash
+openrndt get <id> | jq -r '._source | "\(.EnteResponsabile_s) | \(.PuntoDiContattoEmail_s)"'
+# Citta' metropolitana di Bologna | segreteria.pianificazione@cittametropolitana.bo.it
+```
+
+Trucco che fa la differenza: col solo bbox si prendono 2.789 record (molti
+dichiarano una bbox nazionale, rumore); aggiungendo `AmbitoTerritoriale_s:Locale`
+e una parola chiave del territorio si arriva a 4 record precisi.
+
+### 9. Solo open data: 268 dataset sulle frane, con licenza
+
+```bash
+openrndt --format compact search --q "frane AND isOpendata:*" --num 10
+# total: 268 (2026-08-09) — inventari IFFI, rilievi post-alluvione 2023, pericolosità…
+```
+
+Per una licenza specifica si filtra sul valore: `--q 'frane AND isOpendata:"CC BY 4.0"'`.
+Il dettaglio del record riporta la licenza esatta in `isOpendata` e
+`apiso_AccessConstraints_s`.
+
+### 10. Dati, licenza e citazione della fonte per un articolo
+
+> ISPRA pubblica "Popolazione a rischio alluvioni" con licenza CC-BY-4.0:
+> riutilizzabile citando la fonte.
+
+```bash
+openrndt get ispra_rm:01IdroHazard_DT | jq \
+  '{licenza: ._source.isOpendata, ente: ._source.EnteResponsabile_s, email: ._source.PuntoDiContattoEmail_s}'
+# licenza: "Dato concesso con licenza CC-BY-4.0"
+# ente:    Istituto Superiore per la Protezione e la Ricerca Ambientale
+# email:   sinaservice@isprambiente.it
+```
+
+Citazione d'esempio: *"Fonte: ISPRA — Popolazione a rischio alluvioni, CC-BY 4.0"*.
+I dati sono esposti come WFS su `sdi.isprambiente.it` e si scaricano con
+`ogr2ogr` come nell'esempio 1.
+
+### 11. Il catalogo sulla mappa: footprint in GeoJSON
+
+> Vedi a colpo d'occhio quali dataset coprono la tua area, direttamente in QGIS.
+
+```bash
+openrndt footprints --q "frane AND isOpendata:*" --num 268 > frane_footprints.geojson
+```
+
+`footprints` esporta una `FeatureCollection` EPSG:4326 con le bbox dei record
+(id, title, org, type, resources): trascina il file in QGIS e ogni poligono è
+un dataset, con i dati essenziali negli attributi.
 
 ## Uso come libreria Python
 
