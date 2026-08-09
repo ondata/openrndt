@@ -73,6 +73,9 @@ openrndt search --q "catasto" --profile gis --num 10
 # Profilo QGIS (CSV con colonne URL servizi + bbox separata)
 openrndt --format csv search --q "catasto" --profile qgis --num 10
 
+# Cosa pubblica un ente (campo analizzato: case-insensitive)
+openrndt search --org "comune di torino" --num 10
+
 # Filtri temporali avanzati (aggiornamento + pubblicazione)
 openrndt search --q "catasto" --updated-from 2024-01-01 --published-from 2020-01-01 --num 10
 
@@ -113,7 +116,7 @@ Unica eccezione al default: `search --profile ...` senza `--format` esplicito es
 in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
-`resources`), pensata per agenti AI e pipe a basso consumo di token:
+`indexed`, `resources`), pensata per agenti AI e pipe a basso consumo di token:
 
 ```bash
 openrndt --format compact search --q "stato chimico dei fiumi" --num 3
@@ -122,7 +125,39 @@ openrndt --format compact search --q "stato chimico dei fiumi" --num 3
 Ecco una riga reale (uno dei tre record):
 
 ```
-{"id": "arpa_ve:Stato_Chimico_Fiumi_DGR_3_2022", "title": "Stato chimico dei fiumi 2014-2019 (DGR 3-2022)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2026-04-25T15:53:34.675Z", "resources": ["WFS", "WMS"]}
+{"id": "arpa_ve:StatoChimicoFiumi_DGR1856", "title": "Stato chimico fiumi 2010-2013 (DGR 1856/2015)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2017-12-20T00:00:00Z", "indexed": "2026-04-25T15:55:59.587Z", "resources": ["WFS", "WMS"]}
+```
+
+`updated` è la data della **scheda di metadato** (`apiso_Modified_dt`), la stessa
+su cui filtrano `--updated-from/--updated-to`; `indexed` è l'istante in cui il
+catalogo ha indicizzato il record (`sys_modified_dt`) e non dice nulla né sul dato
+né sulla scheda. Attenzione se leggi il JSON grezzo dell'API (`--format json`):
+lì il campo top-level `updated` è quello di indicizzazione, mentre la data della
+scheda sta in `_source.apiso_Modified_dt`.
+
+### Ricerca per ente
+
+`--org` cerca la frase su `apiso_OrganizationName_txt`, campo analizzato: non
+conta il maiuscolo, né l'ordine dei token, né gli apostrofi.
+
+```bash
+openrndt search --org "comune di torino" --num 5      # 269 record, solo Comune di Torino
+openrndt search --org-exact "Comune di Torino"        # confronto esatto su EnteResponsabile_s
+```
+
+Evita le wildcard su `contact_organizations_s`: sono case-sensitive
+(`*bologna*` → 0, `*Bologna*` → 112) e pescano ogni record che *nomina* quel
+territorio, anche di altri enti.
+
+Se `--org` non trova nulla, la CLI interroga il catalogo e ti mostra i nomi di
+ente realmente presenti che somigliano a quello cercato — utile perché molti
+comuni non pubblicano in proprio e i loro dati stanno sotto un ente
+sovraordinato:
+
+```
+$ openrndt search --org "comune di bologna"
+Nessun risultato per la ricerca.
+Suggerimenti: enti simili presenti in catalogo: Citta' metropolitana di Bologna | Regione Emilia-Romagna
 ```
 
 Se `resources` è `[]` il record non linka servizi fruibili: recupera il
@@ -280,6 +315,12 @@ openrndt get <id> | jq -r '._source | "\(.EnteResponsabile_s) | \(.PuntoDiContat
 Trucco che fa la differenza: col solo bbox si prendono 2.789 record (molti
 dichiarano una bbox nazionale, rumore); aggiungendo `AmbitoTerritoriale_s:Locale`
 e una parola chiave del territorio si arriva a 4 record precisi.
+
+Qui la ricerca è per territorio e non per ente perché il Comune di Bologna non
+pubblica in proprio: `openrndt search --org "comune di bologna"` dà 0 e ti indica
+chi pubblica davvero (`Citta' metropolitana di Bologna`, `Regione
+Emilia-Romagna`). Dove l'ente c'è, `--org` è la via diretta: `openrndt search
+--org "comune di torino"` → 269 record.
 
 ### 9. Solo open data: 268 dataset sulle frane, con licenza
 

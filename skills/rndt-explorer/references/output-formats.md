@@ -28,7 +28,8 @@
 ## `compact` — NDJSON per agenti (solo `search`)
 
 Una riga JSON per record con i soli campi ad alto segnale: `id`, `title`,
-`org`, `type`, `category`, `updated`, `resources`.
+`org`, `type`, `category`, `updated` (data della scheda, `apiso_Modified_dt`),
+`indexed` (indicizzazione nel catalogo, `sys_modified_dt`), `resources`.
 
 ```bash
 openrndt --format compact search --q "frane AND isOpendata:*" --num 30
@@ -45,7 +46,7 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
 # JSON puro su stdout, errori su stderr
 openrndt --format json search --q catasto > out.json
 
-# Tabella Rich con colonne id/title/updated/author/bbox
+# Tabella Rich con colonne id/title/updated/org/author/bbox
 openrndt --format table search --q catasto --num 10
 
 # Tabella "GIS-friendly" (il profilo implica già --format table)

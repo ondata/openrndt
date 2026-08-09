@@ -12,16 +12,18 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 
 | Simbolo | Firma / significato |
 |---------|---------------------|
-| `search(*, q, bbox, data_category, time, modified, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
+| `search(*, q, bbox, bbox_crs, org, org_exact, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
 | `get_item(item_id)` | `dict` Elasticsearch del metadato (`_source` + flag). |
 | `get_item_xml(item_id)` | `str` XML ISO 19139. |
 | `get_item_html(item_id)` | `str` HTML. |
 | `ItemNotFoundError` | Sollevata da `get_item` se l'ID non esiste; espone `.item_id`. |
-| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated`, `resources`). |
+| `record_dates(result)` | In `openrndt.search`: tupla `(updated, indexed)` di un singolo risultato — `apiso_Modified_dt` e `sys_modified_dt`. |
+| `organization_names(payload)` | In `openrndt.search`: nomi di ente distinti nei risultati, ordinati per frequenza. L'API ignora `facet`: è l'unico modo di scoprire come un ente è scritto in catalogo. |
+| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated` = `apiso_Modified_dt`, `indexed` = `sys_modified_dt`, `resources`). |
 
 # Eccezioni propagate
 
-- `ValueError` — parametri non validi (`num` > 5000, `start` < 1).
+- `ValueError` — parametri non validi (`num` > 5000, `start` < 1, `org` e `org_exact` insieme, date non ISO).
 - `httpx.HTTPError` — include `httpx.HTTPStatusError` (risposte 4xx/5xx) e `httpx.ConnectError`/`httpx.TimeoutException` (rete).
 - `json.JSONDecodeError` (sottoclasse di `ValueError`) — risposta 2xx con body non-JSON.
 - `ItemNotFoundError` — solo da `get_item`.
@@ -34,6 +36,11 @@ import openrndt
 payload = openrndt.search(q="uso del suolo", data_category="environment", num=5)
 for r in payload["results"]:
     print(r["id"], r["title"])
+
+# Cosa pubblica un ente, con le date separate
+payload = openrndt.search(org="comune di torino", num=20)
+for rec in openrndt.compact_results(payload):
+    print(rec["updated"], rec["indexed"], rec["title"])
 
 try:
     item = openrndt.get_item("age:D_E973_MARSAGLIA")

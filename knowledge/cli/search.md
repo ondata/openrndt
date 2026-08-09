@@ -3,7 +3,7 @@ type: CLI Command
 title: openrndt search
 description: Cerca metadati nel RNDT con testo Lucene, bbox, categoria ISO 19115, intervalli temporali e ordinamento.
 tags: [cli, search, lucene]
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-08-09T00:00:00Z
 ---
 
 Interroga l'endpoint [/rest/metadata/search](/api/rndt-rest-api.md) del RNDT.
@@ -15,6 +15,8 @@ Interroga l'endpoint [/rest/metadata/search](/api/rndt-rest-api.md) del RNDT.
 | `--q`, `-q` | Testo di ricerca, sintassi Lucene/Elasticsearch (AND implicito, `-termine`, `"frase"`, wildcard `*`/`?`, `campo:valore`, range su `_dt`/`_i`). |
 | `--bbox` | Bounding box WGS84 `xmin,ymin,xmax,ymax`, semantica *overlaps*. |
 | `--bbox-crs` | CRS esplicito della bbox. Supportati: `EPSG:4326` (default implicito), `CRS:84`, `WGS84`. |
+| `--org` | Ente responsabile: frase su `apiso_OrganizationName_txt` (campo analizzato, quindi case-insensitive e insensibile all'ordine dei token). In AND con gli altri filtri. Su zero risultati la CLI fa una query esplorativa e stampa i nomi di ente presenti in catalogo che somigliano a quello cercato. |
+| `--org-exact` | Ente responsabile in forma esatta e case-sensitive su `EnteResponsabile_s`. Alternativo a `--org`. |
 | `--data-category`, `-c` | Una o più categorie ISO 19115 separate da virgola (es. `planningCadastre`). Tradotta internamente in `keywords_s:VAL` perché il parametro ufficiale `dataCategory` [non filtra](/api/known-issues.md). |
 | `--time` | Intervallo temporale della risorsa `yyyy-mm-dd/yyyy-mm-dd`. |
 | `--modified` | Intervallo di modifica del record nel catalogo (diverso da `--time`). |
@@ -47,9 +49,21 @@ openrndt search --q "catasto" --profile gis -n 20
 # Profilo QGIS per CSV pronto a join/uso in plugin o script
 openrndt --format csv search --q "catasto" --profile qgis -n 20
 
+# Cosa pubblica un ente
+openrndt search --org "comune di torino" -n 20
+
 # Query Lucene su campo specifico
 openrndt search -q 'apiso_OrganizationName_txt:ispra AND isOpendata:*'
 ```
+
+# Campi data negli output
+
+Negli output `table`, `csv` e `compact`:
+
+- `updated` = `_source.apiso_Modified_dt`, la data della **scheda di metadato**: lo stesso campo su cui filtrano `--updated-from`/`--updated-to` e l'unico valorizzato sul 100% del catalogo;
+- `indexed` = `_source.sys_modified_dt`, l'istante di **indicizzazione nel catalogo**: è il valore che l'API espone come campo top-level `updated`, raggruppato per batch di reindicizzazione.
+
+Con `--format json` l'output è il payload grezzo dell'API e vale la convenzione dell'API: `updated` top-level è l'indicizzazione. La CLI lo ricorda su stderr quando la ricerca usa un filtro o un ordinamento sulle date.
 
 # Comportamento ed errori
 
