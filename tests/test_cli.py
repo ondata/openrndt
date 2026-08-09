@@ -58,7 +58,7 @@ def test_cli_search_csv_gis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,resources,bbox" in result.output
+    assert "id,title,type,category,org,updated,indexed,resources,bbox" in result.output
 
 
 @respx.mock
@@ -92,7 +92,7 @@ def test_cli_search_csv_qgis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "qgis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
+    assert "id,title,type,category,org,updated,indexed,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
 
 
 @respx.mock
@@ -142,7 +142,7 @@ def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
     assert lines
     for line in lines:
         row = json.loads(line)
-        assert set(row) == {"id", "title", "org", "type", "category", "updated", "resources"}
+        assert set(row) == {"id", "title", "org", "type", "category", "updated", "indexed", "resources"}
 
 
 @respx.mock
@@ -550,3 +550,119 @@ def test_cli_footprints_invalid_bbox_crs():
     result = runner.invoke(app, ["footprints", "--bbox", "7,44,8,45", "--bbox-crs", "EPSG:3857"])
     assert result.exit_code == 2
     assert "non supportato" in result.output
+
+
+@respx.mock
+def test_cli_search_org_builds_analyzed_field_clause(search_response_json):
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["search", "--org", "comune di torino", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune di torino"'
+
+
+@respx.mock
+def test_cli_search_org_and_org_exact_together_exit_2(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["search", "--org", "a", "--org-exact", "b"])
+    assert result.exit_code == 2
+    assert "non entrambi" in result.output
+
+
+@respx.mock
+def test_cli_search_org_zero_results_suggests_catalog_names():
+    """Su zero risultati con --org la CLI sonda il catalogo e mostra i nomi reali."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    probe = {
+        "total": 25,
+        "results": [
+            {"_source": {"EnteResponsabile_s": "Citta' metropolitana di Bologna"}},
+            {"_source": {"EnteResponsabile_s": "Regione Emilia-Romagna"}},
+        ],
+    }
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe)]
+    )
+    result = runner.invoke(app, ["search", "--org", "comune di bologna", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "enti simili presenti in catalogo" in result.output
+    assert "Citta' metropolitana di Bologna" in result.output
+
+
+@respx.mock
+def test_cli_search_org_zero_results_without_matches_suggests_territory():
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
+    )
+    result = runner.invoke(app, ["search", "--org", "ente inesistente", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "AmbitoTerritoriale_s:Locale" in result.output
+
+
+@respx.mock
+def test_cli_search_compact_separates_updated_and_indexed(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "compact", "search", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    first = json.loads(result.stdout.splitlines()[0])
+    assert first["updated"] == "2025-02-11T00:00:00Z"
+    assert first["indexed"] == "2026-04-25T15:37:01.891Z"
+
+
+@respx.mock
+def test_cli_search_table_explains_date_columns(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "table", "search", "--num", "2"], env={"COLUMNS": "300"})
+    assert result.exit_code == 0, result.output
+    assert "apiso_Modified_dt" in result.output
+
+
+@respx.mock
+def test_cli_search_json_notes_raw_date_field_with_date_filters(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(
+        app, ["--format", "json", "search", "--updated-from", "2024-01-01", "--num", "2"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "Nota sulle date" in result.output
+    # senza filtri data la nota non compare
+    plain = runner.invoke(app, ["--format", "json", "search", "--num", "2"])
+    assert "Nota sulle date" not in plain.output
+
+
+@respx.mock
+def test_cli_footprints_org_filter(search_response_json):
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["footprints", "--org", "agenzia delle entrate", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"agenzia delle entrate"'
+    geojson = json.loads(result.stdout)
+    assert "indexed" in geojson["features"][0]["properties"]
+
+
+@respx.mock
+def test_cli_search_org_zero_results_when_org_exists_blames_other_filters():
+    """Se l'ente c'è in catalogo, lo zero viene da un altro filtro: dirlo."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    probe = {"total": 7131, "results": [{"_source": {"EnteResponsabile_s": "Regione Siciliana"}}]}
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe)]
+    )
+    result = runner.invoke(
+        app, ["search", "--org", "regione siciliana", "--data-category", "inlandWaters"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "esiste in catalogo" in result.output
+    assert "rimuovi --data-category" in result.output

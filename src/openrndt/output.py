@@ -38,7 +38,13 @@ def is_mode_explicit() -> bool:
     return _mode_explicit
 
 
-def emit(data: Any, *, table_rows: Iterable[dict[str, Any]] | None = None, table_title: str | None = None) -> None:
+def emit(
+    data: Any,
+    *,
+    table_rows: Iterable[dict[str, Any]] | None = None,
+    table_title: str | None = None,
+    table_caption: str | None = None,
+) -> None:
     """Stampa `data` rispettando il formato corrente.
 
     - `json`: serializza `data` con indentazione.
@@ -64,7 +70,7 @@ def emit(data: Any, *, table_rows: Iterable[dict[str, Any]] | None = None, table
         if not rows:
             _console.print("[dim]nessun risultato[/dim]")
             return
-        table = Table(title=table_title, show_lines=False)
+        table = Table(title=table_title, caption=table_caption, show_lines=False)
         for key in rows[0].keys():
             table.add_column(key, overflow="fold")
         for row in rows:

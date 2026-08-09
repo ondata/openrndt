@@ -12,6 +12,15 @@ from openrndt.codelists import DATA_CATEGORIES
 SEARCH_PATH = "/rest/metadata/search"
 MAX_NUM = 5000
 
+# Campo dell'ente su cui cerca `org`: analizzato, quindi case-insensitive e
+# insensibile all'ordine dei token. Verificato live: la frase esatta funziona
+# (`"comune di torino"` → 269 record, un solo ente), mentre la wildcard su
+# `contact_organizations_s` è case-sensitive e prende ogni record che *nomina*
+# quel territorio, anche di altri enti.
+ORG_FIELD = "apiso_OrganizationName_txt"
+# Campo dell'ente in forma keyword: confronto esatto, case-sensitive.
+ORG_EXACT_FIELD = "EnteResponsabile_s"
+
 # Link `rel` che NON sono risorse fruibili (rappresentazioni del metadato stesso).
 _NON_RESOURCE_RELS = {"alternate", "icon", "self"}
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -64,11 +73,41 @@ def _build_date_range_clause(field: str, start: str | None, end: str | None, *, 
     return f"{field}:[{lower} TO {upper}]"
 
 
+def _escape_phrase(value: str) -> str:
+    """Prepara un valore per una clausola Lucene tra virgolette."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
+    """Clausola Lucene per la ricerca per ente.
+
+    ``org`` cerca la frase sul campo analizzato (``apiso_OrganizationName_txt``):
+    case-insensitive, robusta rispetto a maiuscole e apostrofi. ``org_exact``
+    confronta il valore esatto sul campo keyword (``EnteResponsabile_s``), utile
+    quando si conosce già la stringa memorizzata in catalogo.
+    """
+    if org is not None and org_exact is not None:
+        raise ValueError("Usa `org` oppure `org_exact`, non entrambi.")
+    if org is not None:
+        value = org.strip()
+        if not value:
+            raise ValueError("`org` non può essere vuoto.")
+        return f'{ORG_FIELD}:"{_escape_phrase(value)}"'
+    if org_exact is not None:
+        value = org_exact.strip()
+        if not value:
+            raise ValueError("`org_exact` non può essere vuoto.")
+        return f'{ORG_EXACT_FIELD}:"{_escape_phrase(value)}"'
+    return None
+
+
 def search(
     *,
     q: str | None = None,
     bbox: str | None = None,
     bbox_crs: str | None = None,
+    org: str | None = None,
+    org_exact: str | None = None,
     data_category: str | None = None,
     time: str | None = None,
     modified: str | None = None,
@@ -86,6 +125,11 @@ def search(
 
     Ritorna un dict (parsed JSON) se `fmt` è `json` o `json-source`,
     altrimenti la stringa con il body grezzo (XML, CSV, KML, …).
+
+    ``org`` e ``org_exact`` (mutuamente esclusivi) filtrano per ente: il primo
+    sul campo analizzato ``apiso_OrganizationName_txt`` (case-insensitive), il
+    secondo sul keyword ``EnteResponsabile_s`` (esatto). Entrambi si combinano
+    in AND con gli altri filtri.
 
     Nota su `sort` (verificato live): l'ordinamento reale usa la sintassi
     `campo:asc|desc` su un campo sortable (keyword `_s`, data `_dt`, intero `_i`),
@@ -113,6 +157,9 @@ def search(
 
     params: dict[str, Any] = {"f": fmt, "start": start, "num": num}
     non_q_clauses: list[str] = []
+    org_clause = _build_org_clause(org, org_exact)
+    if org_clause:
+        non_q_clauses.append(org_clause)
     if data_category:
         clause = _build_category_clause(data_category)
         if clause:
@@ -186,13 +233,32 @@ def _topic_category(source: dict[str, Any], categories: list[dict[str, Any]]) ->
     return next((k for k in candidates if k in DATA_CATEGORIES), None)
 
 
+def record_dates(result: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Date di un risultato: ``(updated, indexed)``.
+
+    ``updated`` è la data della scheda di metadato (``apiso_Modified_dt``): è la
+    stessa su cui filtrano ``updated_from``/``updated_to`` ed è l'unico campo
+    data valorizzato su tutto il catalogo. ``indexed`` è l'istante in cui il
+    record è stato indicizzato dal catalogo (``sys_modified_dt``, esposto
+    dall'API come campo top-level ``updated``): non dice nulla né sul dato né
+    sulla scheda, e varia a blocchi con le reindicizzazioni.
+    """
+    source = result.get("_source") or {}
+    updated = source.get("apiso_Modified_dt")
+    if isinstance(updated, list):
+        updated = updated[0] if updated else None
+    indexed = source.get("sys_modified_dt") or result.get("updated")
+    return (cast("str | None", updated), cast("str | None", indexed))
+
+
 def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Riduce la risposta di :func:`search` a record sintetici per agenti/pipe.
 
     Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
     ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
-    di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` e
-    ``resources`` (tipi di servizio/download fruibili). Pensata per l'output
+    di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
+    della scheda), ``indexed`` (indicizzazione nel catalogo) e ``resources``
+    (tipi di servizio/download fruibili). Pensata per l'output
     ``--format compact`` (NDJSON), ma utilizzabile direttamente come libreria.
     """
     records: list[dict[str, Any]] = []
@@ -200,6 +266,7 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
         source = r.get("_source") or {}
         categories = r.get("categories") or []
         org = source.get("apiso_OrganizationName_txt") or (r.get("author") or {}).get("name")
+        updated, indexed = record_dates(r)
         records.append(
             {
                 "id": r.get("id"),
@@ -207,8 +274,26 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "org": org,
                 "type": source.get("apiso_Type_s"),
                 "category": _topic_category(source, categories),
-                "updated": r.get("updated"),
+                "updated": updated,
+                "indexed": indexed,
                 "resources": _resource_types(r.get("links") or []),
             }
         )
     return records
+
+
+def organization_names(payload: dict[str, Any]) -> list[str]:
+    """Nomi di ente distinti presenti nei risultati, in ordine di frequenza.
+
+    L'API RNDT ignora il parametro ``facet``: l'unico modo per scoprire come un
+    ente è scritto in catalogo è aggregare a valle un campione di risultati.
+    """
+    counts: dict[str, int] = {}
+    for r in payload.get("results", []) or []:
+        source = r.get("_source") or {}
+        for field in (ORG_EXACT_FIELD, "apiso_OrganizationName_txt"):
+            value = source.get(field)
+            if isinstance(value, str) and value.strip():
+                counts[value] = counts.get(value, 0) + 1
+                break
+    return [name for name, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
