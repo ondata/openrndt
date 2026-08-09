@@ -12,7 +12,13 @@ from openrndt import codelists, config, output
 from openrndt._version import __version__
 from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
 from openrndt.resources import check_resources, extract_resources
-from openrndt.search import compact_results
+from openrndt.search import (
+    ORG_EXACT_FIELD,
+    ORG_FIELD,
+    compact_results,
+    organization_names,
+    record_dates,
+)
 from openrndt.search import search as do_search
 
 app = typer.Typer(
@@ -106,6 +112,31 @@ def _http_error(exc: httpx.HTTPError, *, sort: str | None = None) -> NoReturn:
     raise typer.Exit(1)
 
 
+_RAW_DATE_NOTE = (
+    "Nota sulle date: nel JSON grezzo dell'API il campo top-level `updated` è "
+    "l'istante di indicizzazione nel catalogo (`_source.sys_modified_dt`), non la "
+    "data della scheda. La data della scheda — quella su cui filtrano "
+    "--updated-from/--updated-to — è `_source.apiso_Modified_dt`. Negli output "
+    "table/csv/compact i due campi si chiamano `updated` e `indexed`."
+)
+
+
+def _table_date_caption(row: dict[str, Any]) -> str | None:
+    """Legenda sotto la tabella: quale data è quale."""
+    if "updated" not in row:
+        return None
+    caption = "updated = data della scheda (apiso_Modified_dt)"
+    if "indexed" in row:
+        caption += " · indexed = indicizzazione nel catalogo"
+    return caption
+
+
+def _uses_date_filters(sort: str | None, *filters: str | None) -> bool:
+    """True se la ricerca usa un filtro data o un ordinamento su un campo data."""
+    sorts_by_date = sort is not None and ("Modified" in sort or "Date" in sort)
+    return sorts_by_date or any(v is not None for v in filters)
+
+
 def _total_count(payload: dict[str, Any]) -> int:
     """Conteggio totale dalla risposta, gestendo il tipo variabile di `total`."""
     total = payload.get("total")
@@ -114,14 +145,69 @@ def _total_count(payload: dict[str, Any]) -> int:
     return int(total or 0)
 
 
+_ORG_STOPWORDS = {"di", "del", "della", "dei", "delle", "dell", "de", "la", "il", "lo", "e", "d"}
+
+
+def _org_probe_token(value: str) -> str | None:
+    """Token più distintivo di un nome di ente, per la ricerca esplorativa."""
+    tokens = [t.strip("'\"()") for t in value.replace("'", " ").split()]
+    candidates = [t for t in tokens if len(t) >= 4 and t.lower() not in _ORG_STOPWORDS]
+    if not candidates:
+        return None
+    return max(candidates, key=len)
+
+
+def _suggest_orgs(org: str) -> list[str]:
+    """Nomi di ente in catalogo che assomigliano a `org` (una sola chiamata).
+
+    L'API ignora `facet`: l'unico modo di scoprire come un ente è scritto in
+    catalogo è aggregare a valle un campione di risultati sul token più
+    distintivo del nome cercato.
+    """
+    token = _org_probe_token(org)
+    if token is None:
+        return []
+    try:
+        payload = do_search(q=f"{ORG_FIELD}:{token}", num=200, fmt="json")
+    except (httpx.HTTPError, ValueError):
+        return []
+    if not isinstance(payload, dict):
+        return []
+    return organization_names(payload)[:8]
+
+
 def _no_results_hint(
     q: str | None,
     bbox: str | None,
     data_category: str | None,
     time: str | None,
+    org: str | None = None,
+    org_exact: str | None = None,
 ) -> None:
     """Avviso su stderr per ricerca senza risultati, con suggerimenti contestuali."""
     hints: list[str] = []
+    if org_exact:
+        hints.append(
+            f"--org-exact è un confronto esatto e case-sensitive su {ORG_EXACT_FIELD}: "
+            "prova --org, che cerca sul campo analizzato"
+        )
+    if org:
+        suggestions = _suggest_orgs(org)
+        exact = next((s for s in suggestions if s.lower() == org.strip().lower()), None)
+        if exact is not None:
+            hints.append(
+                f"l'ente '{exact}' esiste in catalogo: a dare zero è un altro filtro, "
+                "rimuovili uno alla volta"
+            )
+        elif suggestions:
+            hints.append("enti simili presenti in catalogo: " + " | ".join(suggestions))
+        else:
+            hints.append(
+                f"nessun ente in catalogo somiglia a '{org}': l'ente potrebbe non "
+                "pubblicare sul RNDT (i suoi dati possono essere pubblicati da un "
+                "ente sovraordinato). Cerca per territorio con --bbox e "
+                "AmbitoTerritoriale_s:Locale"
+            )
     if q:
         if ":" in q:
             hints.append(
@@ -141,9 +227,9 @@ def _no_results_hint(
         )
     if q and ":" not in q:
         hints.append(
-            "se cercavi un ente: il nominativo in contact_organizations_s è esatto e "
-            "case-sensitive (prova --q 'contact_organizations_s:*nome*'), oppure cerca "
-            "per territorio con --bbox e AmbitoTerritoriale_s:Locale"
+            "se cercavi un ente: usa --org (cerca su apiso_OrganizationName_txt, "
+            "case-insensitive), oppure cerca per territorio con --bbox e "
+            "AmbitoTerritoriale_s:Locale"
         )
     typer.echo("Nessun risultato per la ricerca.", err=True)
     if hints:
@@ -154,11 +240,14 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for r in payload.get("results", []) or []:
         bbox = r.get("bbox") or {}
+        source = r.get("_source") or {}
+        updated, _indexed = record_dates(r)
         rows.append(
             {
                 "id": r.get("id"),
                 "title": r.get("title"),
-                "updated": r.get("updated"),
+                "updated": updated,
+                "org": source.get("apiso_OrganizationName_txt"),
                 "author": (r.get("author") or {}).get("name"),
                 "bbox": (
                     f"{bbox.get('xmin')},{bbox.get('ymin')},{bbox.get('xmax')},{bbox.get('ymax')}"
@@ -196,6 +285,7 @@ def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "category": compact.get("category"),
                 "org": compact.get("org"),
                 "updated": compact.get("updated"),
+                "indexed": compact.get("indexed"),
                 "resources": ",".join(compact.get("resources") or []),
                 "bbox": _bbox_text(bbox),
             }
@@ -235,6 +325,7 @@ def _qgis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "category": compact.get("category"),
                 "org": compact.get("org"),
                 "updated": compact.get("updated"),
+                "indexed": compact.get("indexed"),
                 "wms_url": links.get("WMS"),
                 "wfs_url": links.get("WFS"),
                 "download_url": links.get("DOWNLOAD"),
@@ -256,12 +347,14 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
     if not all(isinstance(v, (int, float)) for v in (xmin, ymin, xmax, ymax)):
         return None
     source = result.get("_source") or {}
+    updated, indexed = record_dates(result)
     compact = {
         "id": result.get("id"),
         "title": result.get("title"),
         "org": source.get("apiso_OrganizationName_txt") or (result.get("author") or {}).get("name"),
         "type": source.get("apiso_Type_s"),
-        "updated": result.get("updated"),
+        "updated": updated,
+        "indexed": indexed,
         "resources": sorted(_resource_url_map(result).keys()),
     }
     return {
@@ -290,6 +383,22 @@ def search(
         None,
         "--bbox-crs",
         help="CRS della bbox. Supportati: EPSG:4326 (default implicito), CRS:84, WGS84.",
+    ),
+    org: str | None = typer.Option(
+        None,
+        "--org",
+        help=(
+            "Ente responsabile: frase su apiso_OrganizationName_txt (case-insensitive, "
+            'es. --org "comune di torino"). In AND con gli altri filtri.'
+        ),
+    ),
+    org_exact: str | None = typer.Option(
+        None,
+        "--org-exact",
+        help=(
+            "Ente responsabile in forma esatta e case-sensitive su EnteResponsabile_s "
+            '(es. --org-exact "Comune di Torino"). Alternativo a --org.'
+        ),
     ),
     data_category: str | None = typer.Option(
         None,
@@ -361,6 +470,8 @@ def search(
             q=q,
             bbox=bbox,
             bbox_crs=bbox_crs,
+            org=org,
+            org_exact=org_exact,
             data_category=data_category,
             time=time,
             modified=modified,
@@ -390,12 +501,14 @@ def search(
     if mode == "json":
         output.emit(payload)
         if zero:
-            _no_results_hint(q, bbox, data_category, time)
+            _no_results_hint(q, bbox, data_category, time, org, org_exact)
+        elif _uses_date_filters(sort, modified, updated_from, updated_to, published_from, published_to, time):
+            typer.echo(_RAW_DATE_NOTE, err=True)
         return
     if mode == "compact":
         rows = compact_results(payload)
         if not rows:
-            _no_results_hint(q, bbox, data_category, time)
+            _no_results_hint(q, bbox, data_category, time, org, org_exact)
             return
         output.emit(payload, table_rows=rows)
         return
@@ -406,10 +519,11 @@ def search(
     else:
         rows = _result_rows(payload)
     if not rows:
-        _no_results_hint(q, bbox, data_category, time)
+        _no_results_hint(q, bbox, data_category, time, org, org_exact)
         return
     title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
-    output.emit(payload, table_rows=rows, table_title=title)
+    caption = _table_date_caption(rows[0])
+    output.emit(payload, table_rows=rows, table_title=title, table_caption=caption)
 
 
 @app.command()
@@ -420,6 +534,22 @@ def footprints(
         None,
         "--bbox-crs",
         help="CRS della bbox. Supportati: EPSG:4326 (default implicito), CRS:84, WGS84.",
+    ),
+    org: str | None = typer.Option(
+        None,
+        "--org",
+        help=(
+            "Ente responsabile: frase su apiso_OrganizationName_txt (case-insensitive, "
+            'es. --org "comune di torino"). In AND con gli altri filtri.'
+        ),
+    ),
+    org_exact: str | None = typer.Option(
+        None,
+        "--org-exact",
+        help=(
+            "Ente responsabile in forma esatta e case-sensitive su EnteResponsabile_s "
+            '(es. --org-exact "Comune di Torino"). Alternativo a --org.'
+        ),
     ),
     data_category: str | None = typer.Option(
         None,
@@ -467,6 +597,8 @@ def footprints(
             q=q,
             bbox=bbox,
             bbox_crs=bbox_crs,
+            org=org,
+            org_exact=org_exact,
             data_category=data_category,
             time=time,
             modified=modified,
@@ -511,7 +643,7 @@ def footprints(
     }
     output.emit(geojson)
     if _total_count(payload) == 0:
-        _no_results_hint(q, bbox, data_category, time)
+        _no_results_hint(q, bbox, data_category, time, org, org_exact)
 
 
 @app.command()

@@ -78,6 +78,17 @@ SEARCH_PARAMS: dict[str, str] = {
     "dataCategory": "Una o più categorie ISO 19115 separate da virgola.",
     "time": "Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
+    "org": (
+        "Parametro CLI (non API): ente responsabile, tradotto in frase Lucene su "
+        "apiso_OrganizationName_txt (campo analizzato: case-insensitive, insensibile "
+        "all'ordine dei token). Preferirlo alle wildcard su contact_organizations_s, "
+        "che sono case-sensitive e prendono anche i record di altri enti che nominano "
+        "quel territorio."
+    ),
+    "org_exact": (
+        "Parametro CLI (non API): ente responsabile in forma esatta e case-sensitive, "
+        "tradotto in clausola su EnteResponsabile_s. Alternativo a `org`."
+    ),
     "updated_from/updated_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_Modified_dt.",
     "published_from/published_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_PublicationDate_dt.",
     "profile": (
@@ -116,8 +127,8 @@ LUCENE_FIELDS: dict[str, str] = {
     "keywords_s": "Parole chiave (flat)",
     "apiso_Lineage_txt": "Genealogia / provenienza del dato",
     # Organizzazione e contatti
-    "apiso_OrganizationName_txt": "Nome ente responsabile",
-    "EnteResponsabile_s": "Ente responsabile (campo RNDT)",
+    "apiso_OrganizationName_txt": "Nome ente responsabile (analizzato: la ricerca per frase è case-insensitive). Campo usato da --org.",
+    "EnteResponsabile_s": "Ente responsabile (campo RNDT, keyword: confronto esatto e case-sensitive). Campo usato da --org-exact.",
     "PuntoDiContatto_s": "Punto di contatto",
     "PuntoDiContattoEmail_s": "Email punto di contatto",
     "contact_organizations_s": "Organizzazioni di contatto (array)",
@@ -131,7 +142,7 @@ LUCENE_FIELDS: dict[str, str] = {
     "apiso_RevisionDate_dt": "Data revisione risorsa = ISO dateType 'revision' (sortable).",
     "apiso_CreationDate_dt": "Data creazione risorsa. Spesso null/fittizia (es. 2012-01-01): inaffidabile per sort.",
     "sys_created_dt": "Data creazione record nel catalogo (reindex).",
-    "sys_modified_dt": "Data ultima modifica record nel catalogo = reindex (sortable, ma poco informativa).",
+    "sys_modified_dt": "Istante di indicizzazione nel catalogo (sortable, ma poco informativa). È il campo top-level `updated` del JSON grezzo dell'API; negli output openrndt si chiama `indexed`.",
     # Accesso e licenze
     "apiso_AccessConstraints_s": "Vincoli di accesso / licenza (es. CC BY 4.0)",
     "apiso_OtherConstraints_s": "Altri vincoli",

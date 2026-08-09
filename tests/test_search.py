@@ -7,7 +7,13 @@ import pytest
 import respx
 
 from openrndt.config import DEFAULT_BASE_URL
-from openrndt.search import MAX_NUM, compact_results, search
+from openrndt.search import (
+    MAX_NUM,
+    compact_results,
+    organization_names,
+    record_dates,
+    search,
+)
 
 
 @respx.mock
@@ -174,7 +180,7 @@ def test_compact_results_extracts_high_signal_fields(search_response_json):
     assert first["type"] == "dataset"
     assert first["category"] == "planningCadastre"  # da apiso_TopicCategory_s
     assert first["resources"] == ["WFS", "WMS"]  # dedup + sort dai links
-    assert set(first) == {"id", "title", "org", "type", "category", "updated", "resources"}
+    assert set(first) == {"id", "title", "org", "type", "category", "updated", "indexed", "resources"}
 
 
 def test_compact_results_resources_dedup_and_skip_metadata_links(search_response_json):
@@ -237,3 +243,88 @@ def test_compact_results_category_from_categories_when_keywords_unhelpful():
         ]
     }
     assert compact_results(payload)[0]["category"] == "planningCadastre"
+
+
+def test_compact_results_separates_record_and_index_dates(search_response_json):
+    """`updated` è la data della scheda, `indexed` quella di indicizzazione.
+
+    Il campo top-level `updated` dell'API è `sys_modified_dt`: l'istante in cui
+    il catalogo ha reindicizzato il record. La data su cui filtrano
+    `updated_from`/`updated_to` è invece `apiso_Modified_dt`.
+    """
+    first = compact_results(search_response_json)[0]
+    assert first["updated"] == "2025-02-11T00:00:00Z"  # _source.apiso_Modified_dt
+    assert first["indexed"] == "2026-04-25T15:37:01.891Z"  # top-level updated
+
+
+def test_record_dates_falls_back_to_top_level_updated():
+    result = {"updated": "2026-04-25T00:00:00Z", "_source": {}}
+    assert record_dates(result) == (None, "2026-04-25T00:00:00Z")
+
+
+@respx.mock
+def test_search_org_uses_analyzed_field_phrase():
+    """`org` cerca la frase sul campo analizzato: case-insensitive, niente wildcard."""
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(org="comune di torino", num=1)
+    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune di torino"'
+
+
+@respx.mock
+def test_search_org_exact_uses_keyword_field():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(org_exact="Comune di Torino", num=1)
+    assert route.calls.last.request.url.params["q"] == 'EnteResponsabile_s:"Comune di Torino"'
+
+
+@respx.mock
+def test_search_org_combines_in_and_with_other_filters():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="ortofoto", org="comune di torino", data_category="imageryBaseMapsEarthCover", num=1)
+    q = route.calls.last.request.url.params["q"]
+    assert q == (
+        '(ortofoto) AND apiso_OrganizationName_txt:"comune di torino" '
+        "AND keywords_s:imageryBaseMapsEarthCover"
+    )
+
+
+def test_search_rejects_org_and_org_exact_together():
+    with pytest.raises(ValueError, match="`org` oppure `org_exact`"):
+        search(org="x", org_exact="y")
+
+
+def test_search_rejects_empty_org():
+    with pytest.raises(ValueError, match="`org` non può essere vuoto"):
+        search(org="   ")
+
+
+@respx.mock
+def test_search_org_escapes_quotes():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(org='comune "x"', num=1)
+    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune \\"x\\""'
+
+
+def test_organization_names_ranks_by_frequency():
+    payload = {
+        "results": [
+            {"_source": {"EnteResponsabile_s": "Regione Emilia-Romagna"}},
+            {"_source": {"EnteResponsabile_s": "Citta' metropolitana di Bologna"}},
+            {"_source": {"EnteResponsabile_s": "Regione Emilia-Romagna"}},
+            {"_source": {"apiso_OrganizationName_txt": "ARPAE"}},
+            {"_source": {}},
+        ]
+    }
+    assert organization_names(payload) == [
+        "Regione Emilia-Romagna",
+        "ARPAE",
+        "Citta' metropolitana di Bologna",
+    ]
