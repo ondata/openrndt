@@ -37,6 +37,47 @@ def test_cli_search_table(search_response_json):
 
 
 @respx.mock
+def test_cli_search_table_gis_profile(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(
+        app,
+        ["--format", "table", "search", "--profile", "gis", "--num", "2"],
+        env={"COLUMNS": "300"},
+    )
+    assert result.exit_code == 0, result.output
+    for header in ("type", "category", "org", "resources"):
+        assert header in result.output
+
+
+@respx.mock
+def test_cli_search_csv_gis_profile(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "id,title,type,category,org,updated,resources,bbox" in result.output
+
+
+@respx.mock
+def test_cli_search_csv_qgis_profile(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--profile", "qgis", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "id,title,type,category,org,updated,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
+
+
+def test_cli_search_rejects_unknown_profile():
+    result = runner.invoke(app, ["search", "--profile", "foo"])
+    assert result.exit_code == 2
+    assert "profilo non supportato" in result.output.lower()
+
+
+@respx.mock
 def test_cli_search_compact_ndjson(search_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json=search_response_json)
@@ -235,6 +276,46 @@ def test_cli_search_non_dict_payload_no_traceback():
     assert "Traceback" not in result.output
 
 
+@respx.mock
+def test_cli_search_advanced_filters_build_expected_query():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "num": 0, "start": 1, "results": []})
+    )
+    result = runner.invoke(
+        app,
+        [
+            "search",
+            "--q",
+            "catasto",
+            "--bbox",
+            "7,44,8,45",
+            "--bbox-crs",
+            "CRS:84",
+            "--updated-from",
+            "2024-01-01",
+            "--updated-to",
+            "2024-12-31",
+            "--published-from",
+            "2020-01-01",
+            "--published-to",
+            "2020-12-31",
+            "--num",
+            "1",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    params = dict(route.calls.last.request.url.params)
+    assert params["bbox"] == "7,44,8,45"
+    assert "apiso_Modified_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z]" in params["q"]
+    assert "apiso_PublicationDate_dt:[2020-01-01T00:00:00Z TO 2020-12-31T23:59:59Z]" in params["q"]
+
+
+def test_cli_search_rejects_unsupported_bbox_crs():
+    result = runner.invoke(app, ["search", "--bbox", "7,44,8,45", "--bbox-crs", "EPSG:3857"])
+    assert result.exit_code == 2
+    assert "non supportato" in result.output
+
+
 def test_cli_base_url_override(monkeypatch):
     """Verifica che --base-url venga rispettato."""
     custom = "https://example.invalid/rndt"
@@ -246,3 +327,72 @@ def test_cli_base_url_override(monkeypatch):
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     assert payload["total"] == 0
+
+
+@respx.mock
+def test_cli_resources_json_with_check(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(
+        "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"
+    ).mock(return_value=httpx.Response(200))
+    respx.get(
+        "https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0"
+    ).mock(return_value=httpx.Response(503))
+    result = runner.invoke(app, ["resources", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["id"] == "age:D_E973_MARSAGLIA"
+    assert payload["checked"] is True
+    assert payload["count"] == 2
+    assert payload["resources"][0]["type"] == "WMS"
+    assert payload["resources"][0]["ok"] is True
+    assert payload["resources"][1]["type"] == "WFS"
+    assert payload["resources"][1]["ok"] is False
+
+
+@respx.mock
+def test_cli_resources_no_check(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["resources", "age:D_E973_MARSAGLIA", "--no-check"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["checked"] is False
+    assert payload["count"] == 2
+    assert "ok" not in payload["resources"][0]
+
+
+@respx.mock
+def test_cli_resources_not_found():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
+        return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
+    )
+    result = runner.invoke(app, ["resources", "inesistente"])
+    assert result.exit_code == 1
+    assert "non trovato" in result.output.lower()
+
+
+@respx.mock
+def test_cli_footprints_geojson(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["footprints", "--q", "catasto", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["type"] == "FeatureCollection"
+    assert payload["crs"]["properties"]["name"] == "EPSG:4326"
+    assert len(payload["features"]) == 2
+    first = payload["features"][0]
+    assert first["geometry"]["type"] == "Polygon"
+    assert first["properties"]["id"] == "age:D_E973_MARSAGLIA"
+
+
+@respx.mock
+def test_cli_footprints_invalid_bbox_crs():
+    result = runner.invoke(app, ["footprints", "--bbox", "7,44,8,45", "--bbox-crs", "EPSG:3857"])
+    assert result.exit_code == 2
+    assert "non supportato" in result.output

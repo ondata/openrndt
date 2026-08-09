@@ -74,9 +74,13 @@ SEARCH_PARAMS: dict[str, str] = {
         "Vedi `discover --what lucene_fields` per i campi disponibili."
     ),
     "bbox": "Bounding box WGS84 nel formato xmin,ymin,xmax,ymax.",
+    "bbox_crs": "Parametro CLI (non API): CRS esplicito della bbox. Supportati EPSG:4326, CRS:84, WGS84.",
     "dataCategory": "Una o più categorie ISO 19115 separate da virgola.",
     "time": "Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
+    "updated_from/updated_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_Modified_dt.",
+    "published_from/published_to": "Parametro CLI (non API): range date yyyy-mm-dd tradotto in clausola Lucene su apiso_PublicationDate_dt.",
+    "profile": "Parametro CLI (non API): preset colonne output per table/csv (`default`, `gis`, `qgis`).",
     "sort": "Ordinamento 'campo:asc|desc' su campo sortable (es. apiso_Modified_dt:desc). ⚠️ 'dateDescending'/'dateAscending' NON ordinano su RNDT. Vedi SORT_VALUES.",
     "start": "Posizione del primo record (1-based, default 1).",
     "num": "Numero massimo di risultati (default 10, max 5000).",

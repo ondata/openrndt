@@ -1,7 +1,9 @@
 # Comandi CLI
 
 * [search](search.md) - cerca metadati nel catalogo RNDT con filtri progressivi.
+* [footprints](footprints.md) - esporta le bbox dei risultati come GeoJSON.
 * [get](get.md) - dettaglio di un singolo metadato (JSON, XML ISO 19139, HTML).
+* [resources](resources.md) - estrae risorse fruibili (WMS/WFS/download) e verifica endpoint.
 * [discover](discover.md) - codelist e parametri validi, completamente offline.
 
 # Opzioni globali

@@ -29,6 +29,7 @@ def test_search_passes_all_params():
     search(
         q="suolo",
         bbox="7,44,8,45",
+        bbox_crs="EPSG:4326",
         data_category="planningCadastre",
         time="2024-01-01/2024-12-31",
         sort="title:desc",
@@ -87,6 +88,46 @@ def test_search_passes_modified_param():
     search(modified="2024-01-01/2024-12-31", num=1)
     params = dict(route.calls.last.request.url.params)
     assert params["modified"] == "2024-01-01/2024-12-31"
+
+
+@respx.mock
+def test_search_builds_updated_and_published_lucene_clauses():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(
+        q="catasto",
+        updated_from="2024-01-01",
+        updated_to="2024-12-31",
+        published_from="2020-01-01",
+        published_to="2020-12-31",
+        num=1,
+    )
+    params = dict(route.calls.last.request.url.params)
+    assert params["q"] == (
+        "catasto AND apiso_Modified_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z] "
+        "AND apiso_PublicationDate_dt:[2020-01-01T00:00:00Z TO 2020-12-31T23:59:59Z]"
+    )
+
+
+def test_search_rejects_bbox_crs_without_bbox():
+    with pytest.raises(ValueError, match="bbox_crs"):
+        search(bbox_crs="EPSG:4326")
+
+
+def test_search_rejects_unsupported_bbox_crs():
+    with pytest.raises(ValueError, match="non supportato"):
+        search(bbox="7,44,8,45", bbox_crs="EPSG:3857")
+
+
+def test_search_rejects_modified_and_updated_range_together():
+    with pytest.raises(ValueError, match="Usa `modified` oppure `updated_from/updated_to`"):
+        search(modified="2024-01-01/2024-12-31", updated_from="2024-01-01")
+
+
+def test_search_rejects_invalid_date_format():
+    with pytest.raises(ValueError, match="yyyy-mm-dd"):
+        search(updated_from="2024/01/01")
 
 
 @respx.mock
