@@ -136,7 +136,7 @@ LUCENE_FIELDS: dict[str, str] = {
     "apiso_TopicCategory_s": "Categoria ISO 19115 (es. planningCadastre)",
     "INSPIRETheme_s": "Tema INSPIRE",
     "OpenDataTheme_s": "Tema open data",
-    "AmbitoTerritoriale_s": "Ambito: Nazionale | Regionale | Provinciale | Comunale",
+    "AmbitoTerritoriale_s": "Ambito: Regionale | Nazionale | Locale (anche Regional/Local in inglese; il campo manca su ~28% dei record)",
     # Date (sortable: usabili sia in range [da TO a] sia come `sort=campo:desc`)
     "apiso_Modified_dt": "dateStamp del metadato (sortable). Miglior proxy per 'ultimi aggiornati'.",
     "apiso_RevisionDate_dt": "Data revisione risorsa = ISO dateType 'revision' (sortable).",
