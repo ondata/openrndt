@@ -12,6 +12,8 @@ from openrndt.search import (
     compact_results,
     organization_names,
     record_dates,
+    record_license,
+    record_url,
     search,
 )
 
@@ -180,7 +182,19 @@ def test_compact_results_extracts_high_signal_fields(search_response_json):
     assert first["type"] == "dataset"
     assert first["category"] == "planningCadastre"  # da apiso_TopicCategory_s
     assert first["resources"] == ["WFS", "WMS"]  # dedup + sort dai links
-    assert set(first) == {"id", "title", "org", "type", "category", "updated", "indexed", "resources"}
+    assert set(first) == {
+        "id",
+        "title",
+        "org",
+        "type",
+        "category",
+        "updated",
+        "indexed",
+        "open",
+        "license",
+        "url",
+        "resources",
+    }
 
 
 def test_compact_results_resources_dedup_and_skip_metadata_links(search_response_json):
@@ -328,3 +342,78 @@ def test_organization_names_ranks_by_frequency():
         "ARPAE",
         "Citta' metropolitana di Bologna",
     ]
+
+
+@pytest.mark.parametrize(
+    "bbox, atteso",
+    [
+        ("non,valido", "quattro valori"),
+        ("12,45,11", "quattro valori"),
+        ("a,b,c,d", "solo numeri"),
+        ("12,45,11,44", "xmin"),
+        ("12,44,13,43", "ymin"),
+        ("200,44,201,45", "longitudini"),
+        ("12,200,13,201", "latitudini"),
+    ],
+)
+@respx.mock
+def test_search_rejects_malformed_bbox(bbox, atteso):
+    """Una bbox malformata non deve arrivare all'API.
+
+    Il RNDT la ignora e risponde con il catalogo intero: senza questo controllo
+    l'esito è un falso successo (23.738 record, exit 0) per chi ha chiesto una
+    provincia. `assert_all_called=False` non serve: nessuna route registrata,
+    quindi una chiamata di rete farebbe fallire il test.
+    """
+    with pytest.raises(ValueError, match=atteso):
+        search(bbox=bbox)
+
+
+@respx.mock
+def test_search_accepts_valid_bbox():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(bbox="11.25,44.44,11.42,44.55")
+    assert route.call_count == 1
+
+
+def test_record_license_reads_name_without_marker():
+    assert record_license({"isOpendata": ["opendata", "CC BY 4.0"]}) == (True, "CC BY 4.0")
+    assert record_license({"isOpendata": "CC BY 4.0"}) == (True, "CC BY 4.0")
+
+
+def test_record_license_marker_only_has_no_license():
+    assert record_license({"isOpendata": ["opendata"]}) == (True, None)
+    assert record_license({"isOpendata": ["open data"]}) == (True, None)
+
+
+def test_record_license_absent_field_is_not_open():
+    assert record_license({}) == (False, None)
+    assert record_license({"isOpendata": []}) == (False, None)
+    assert record_license({"isOpendata": ["  "]}) == (False, None)
+
+
+def test_record_url_takes_html_alternate():
+    result = {
+        "links": [
+            {"rel": "alternate", "type": "application/json", "href": "https://esempio/json"},
+            {"rel": "alternate", "type": "text/html", "href": "https://esempio/html"},
+            {"rel": "related", "dctype": "WMS", "href": "https://esempio/wms"},
+        ]
+    }
+    assert record_url(result) == "https://esempio/html"
+
+
+def test_record_url_missing_link_is_none():
+    assert record_url({"links": [{"rel": "related", "dctype": "WMS", "href": "https://esempio/wms"}]}) is None
+    assert record_url({}) is None
+
+
+def test_compact_results_carries_license_and_url(search_response_json):
+    records = compact_results(search_response_json)
+    assert records
+    for record in records:
+        assert "open" in record and isinstance(record["open"], bool)
+        assert "license" in record
+        assert "url" in record

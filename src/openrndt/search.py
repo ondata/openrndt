@@ -52,6 +52,33 @@ def _normalize_bbox_crs(bbox_crs: str | None) -> str | None:
     )
 
 
+def _validate_bbox(bbox: str) -> None:
+    """Verifica la forma di `bbox` prima di interrogare l'API.
+
+    Serve perché il RNDT ignora in silenzio una bbox malformata e risponde con
+    l'intero catalogo: `bbox="non,valido"` e `bbox="12,45,11"` restituivano
+    23.738 record con exit code 0, cioè un falso successo per chi controlla solo
+    il numero di risultati. Una bbox invertita fa invece rispondere 500.
+    """
+    parts = [p.strip() for p in bbox.split(",")]
+    if len(parts) != 4:
+        raise ValueError(f"`bbox` richiede quattro valori xmin,ymin,xmax,ymax (ricevuti {len(parts)}: {bbox!r}).")
+    try:
+        xmin, ymin, xmax, ymax = (float(p) for p in parts)
+    except ValueError:
+        raise ValueError(f"`bbox` accetta solo numeri: {bbox!r}.") from None
+    for name, value in (("xmin", xmin), ("xmax", xmax)):
+        if not -180 <= value <= 180:
+            raise ValueError(f"`bbox`: {name}={value} fuori dall'intervallo delle longitudini (-180..180).")
+    for name, value in (("ymin", ymin), ("ymax", ymax)):
+        if not -90 <= value <= 90:
+            raise ValueError(f"`bbox`: {name}={value} fuori dall'intervallo delle latitudini (-90..90).")
+    if xmin >= xmax:
+        raise ValueError(f"`bbox`: xmin ({xmin}) deve essere minore di xmax ({xmax}).")
+    if ymin >= ymax:
+        raise ValueError(f"`bbox`: ymin ({ymin}) deve essere minore di ymax ({ymax}).")
+
+
 def _validate_iso_date(value: str, *, param_name: str) -> None:
     if not _ISO_DATE_RE.match(value):
         raise ValueError(f"`{param_name}` deve essere nel formato yyyy-mm-dd.")
@@ -151,6 +178,7 @@ def search(
     if bbox_crs is not None and bbox is None:
         raise ValueError("`bbox_crs` richiede anche `bbox`.")
     if bbox is not None:
+        _validate_bbox(bbox)
         _normalize_bbox_crs(bbox_crs)
     if modified is not None and (updated_from is not None or updated_to is not None):
         raise ValueError("Usa `modified` oppure `updated_from/updated_to`, non entrambi.")
@@ -257,14 +285,64 @@ def record_dates(result: dict[str, Any]) -> tuple[str | None, str | None]:
     )
 
 
+# Valori di `isOpendata` che dichiarano soltanto "questo è un open data" senza
+# nominare una licenza. Vanno tolti perché altrimenti il campo `license` degli
+# output riporterebbe il marcatore al posto della licenza.
+_OPENDATA_MARKERS = {"opendata", "open data"}
+
+
+def record_license(source: dict[str, Any]) -> tuple[bool, str | None]:
+    """Licenza dichiarata da un record: ``(open, license)``.
+
+    ``open`` è vero quando ``isOpendata`` è presente e non vuoto, cioè quando la
+    scheda si dichiara open data. ``license`` sono i valori dello stesso campo
+    diversi dal marcatore, uniti da ``; ``, riportati **come sono**: il RNDT non
+    li normalizza e nello stesso campo convivono ``CC BY 4.0``, ``CCBY``, URL e
+    interi paragrafi di disclaimer. ``None`` se resta solo il marcatore.
+
+    Misurato su 3000 record (2026-08-29): ``isOpendata`` è presente sul 72%, ma
+    1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
+    copertura scende al 55%; in un terzo dei casi contiene il solo marcatore.
+    Alcuni dataset aperti dichiarano la licenza soltanto in
+    ``apiso_OtherConstraints_s`` o ``apiso_ConditionApplyingToAccessAndUse_txt``
+    e qui risultano ``open=False``: il campo dice cosa ha dichiarato l'ente, non
+    se il dato sia riusabile.
+    """
+    raw = source.get("isOpendata")
+    values = raw if isinstance(raw, list) else [raw] if raw is not None else []
+    texts = [v.strip() for v in values if isinstance(v, str) and v.strip()]
+    if not texts:
+        return (False, None)
+    named = [v for v in texts if v.lower() not in _OPENDATA_MARKERS]
+    return (True, "; ".join(named) if named else None)
+
+
+def record_url(result: dict[str, Any]) -> str | None:
+    """Permalink della scheda sul portale, dai link del record.
+
+    È il link ``rel="alternate"`` di tipo ``text/html``, cioè la pagina pubblica
+    citabile del metadato (presente su 200 record su 200 in un campione del
+    2026-08-29). ``None`` se il record non lo espone.
+    """
+    for link in result.get("links") or []:
+        if not isinstance(link, dict):
+            continue
+        if link.get("rel") == "alternate" and link.get("type") == "text/html":
+            href = link.get("href")
+            if isinstance(href, str) and href:
+                return href
+    return None
+
+
 def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Riduce la risposta di :func:`search` a record sintetici per agenti/pipe.
 
     Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
     ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
     di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
-    della scheda), ``indexed`` (indicizzazione nel catalogo) e ``resources``
-    (tipi di servizio/download fruibili). Pensata per l'output
+    della scheda), ``indexed`` (indicizzazione nel catalogo), ``open`` e
+    ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda)
+    e ``resources`` (tipi di servizio/download fruibili). Pensata per l'output
     ``--format compact`` (NDJSON), ma utilizzabile direttamente come libreria.
     """
     records: list[dict[str, Any]] = []
@@ -273,6 +351,7 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
         categories = r.get("categories") or []
         org = source.get("apiso_OrganizationName_txt") or (r.get("author") or {}).get("name")
         updated, indexed = record_dates(r)
+        is_open, license_text = record_license(source)
         records.append(
             {
                 "id": r.get("id"),
@@ -282,6 +361,9 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "category": _topic_category(source, categories),
                 "updated": updated,
                 "indexed": indexed,
+                "open": is_open,
+                "license": license_text,
+                "url": record_url(r),
                 "resources": _resource_types(r.get("links") or []),
             }
         )
