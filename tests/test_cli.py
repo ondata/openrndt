@@ -58,7 +58,7 @@ def test_cli_search_csv_gis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,indexed,resources,bbox" in result.output
+    assert "id,title,type,category,org,updated,indexed,open,license,url,resources,bbox" in result.output
 
 
 @respx.mock
@@ -92,7 +92,7 @@ def test_cli_search_csv_qgis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "qgis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,indexed,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
+    assert "id,title,type,category,org,updated,indexed,open,license,url,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
 
 
 @respx.mock
@@ -142,7 +142,19 @@ def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
     assert lines
     for line in lines:
         row = json.loads(line)
-        assert set(row) == {"id", "title", "org", "type", "category", "updated", "indexed", "resources"}
+        assert set(row) == {
+                "id",
+                "title",
+                "org",
+                "type",
+                "category",
+                "updated",
+                "indexed",
+                "open",
+                "license",
+                "url",
+                "resources",
+            }
 
 
 @respx.mock
@@ -700,3 +712,65 @@ def test_record_dates_ignores_non_string_values():
 
     result = {"updated": 1234567890, "_source": {"apiso_Modified_dt": {"x": 1}}}
     assert record_dates(result) == (None, None)
+
+
+def test_cli_search_rejects_malformed_bbox_without_network():
+    """Nessuna route respx registrata: se partisse una richiesta, il test fallirebbe."""
+    result = runner.invoke(app, ["search", "--bbox", "non,valido"])
+    assert result.exit_code == 2
+    assert "quattro valori" in result.output
+
+
+def test_cli_footprints_rejects_malformed_bbox_without_network():
+    result = runner.invoke(app, ["footprints", "--bbox", "12,45,11,44"])
+    assert result.exit_code == 2
+    assert "xmin" in result.output
+
+
+@respx.mock
+def test_cli_search_table_hides_url_and_renders_open(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "table", "search", "--num", "2"], env={"COLUMNS": "400"})
+    assert result.exit_code == 0, result.output
+    assert "open" in result.output
+    assert "license" in result.output
+    # il permalink resta fuori dalla tabella: intestazione e valori
+    assert "url" not in result.output.split("\n")[2]
+    assert "geoportal-catalog" not in result.output
+
+
+@respx.mock
+def test_cli_search_csv_keeps_url(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    assert "url" in result.output.split("\n")[0]
+    assert "geoportal-catalog" in result.output
+
+
+@respx.mock
+def test_cli_footprints_properties_carry_license_and_url(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["footprints", "--num", "2"])
+    assert result.exit_code == 0, result.output
+    props = json.loads(result.stdout)["features"][0]["properties"]
+    assert "open" in props and "license" in props and "url" in props
+
+
+@respx.mock
+def test_cli_search_table_truncates_long_license(search_response_json):
+    """Il campo del RNDT contiene spesso paragrafi interi: in tabella vanno tagliati."""
+    payload = json.loads(json.dumps(search_response_json))
+    lunga = "Dato concesso con licenza CC-BY-4.0 " + "con obbligo di citazione della fonte " * 5
+    payload["results"][0]["_source"]["isOpendata"] = ["opendata", lunga]
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json=payload))
+    result = runner.invoke(app, ["--format", "table", "search", "--num", "1"], env={"COLUMNS": "400"})
+    assert result.exit_code == 0, result.output
+    assert "…" in result.output
+    assert lunga not in result.output.replace("\n", "")

@@ -17,6 +17,8 @@ from openrndt.search import (
     compact_results,
     organization_names,
     record_dates,
+    record_license,
+    record_url,
 )
 from openrndt.search import search as do_search
 
@@ -249,6 +251,7 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
         bbox = r.get("bbox") or {}
         source = r.get("_source") or {}
         updated, _indexed = record_dates(r)
+        is_open, license_text = record_license(source)
         rows.append(
             {
                 "id": r.get("id"),
@@ -256,6 +259,9 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "updated": updated,
                 "org": source.get("apiso_OrganizationName_txt"),
                 "author": (r.get("author") or {}).get("name"),
+                "open": is_open,
+                "license": license_text,
+                "url": record_url(r),
                 "bbox": (
                     f"{bbox.get('xmin')},{bbox.get('ymin')},{bbox.get('xmax')},{bbox.get('ymax')}"
                     if bbox
@@ -293,6 +299,9 @@ def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "org": compact.get("org"),
                 "updated": compact.get("updated"),
                 "indexed": compact.get("indexed"),
+                "open": compact.get("open"),
+                "license": compact.get("license"),
+                "url": compact.get("url"),
                 "resources": ",".join(compact.get("resources") or []),
                 "bbox": _bbox_text(bbox),
             }
@@ -333,6 +342,9 @@ def _qgis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "org": compact.get("org"),
                 "updated": compact.get("updated"),
                 "indexed": compact.get("indexed"),
+                "open": compact.get("open"),
+                "license": compact.get("license"),
+                "url": compact.get("url"),
                 "wms_url": links.get("WMS"),
                 "wfs_url": links.get("WFS"),
                 "download_url": links.get("DOWNLOAD"),
@@ -345,6 +357,29 @@ def _qgis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+_TABLE_LICENSE_MAX = 60
+
+
+def _rows_for_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Adatta le righe alla lettura a terminale.
+
+    Solo per `--format table`: `url` esce (un permalink lungo rende illeggibile
+    la tabella), `open` diventa sì/no e `license` viene troncata, perché il
+    campo del RNDT contiene spesso interi paragrafi di disclaimer. In `csv`,
+    `compact` e `footprints` i valori restano interi.
+    """
+    adapted: list[dict[str, Any]] = []
+    for row in rows:
+        new_row = {k: v for k, v in row.items() if k != "url"}
+        if isinstance(new_row.get("open"), bool):
+            new_row["open"] = "sì" if new_row["open"] else "no"
+        license_text = new_row.get("license")
+        if isinstance(license_text, str) and len(license_text) > _TABLE_LICENSE_MAX:
+            new_row["license"] = license_text[: _TABLE_LICENSE_MAX - 1] + "…"
+        adapted.append(new_row)
+    return adapted
+
+
 def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
     bbox = result.get("bbox") or {}
     xmin = bbox.get("xmin")
@@ -355,6 +390,7 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
         return None
     source = result.get("_source") or {}
     updated, indexed = record_dates(result)
+    is_open, license_text = record_license(source)
     compact = {
         "id": result.get("id"),
         "title": result.get("title"),
@@ -362,6 +398,9 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
         "type": source.get("apiso_Type_s"),
         "updated": updated,
         "indexed": indexed,
+        "open": is_open,
+        "license": license_text,
+        "url": record_url(result),
         "resources": sorted(_resource_url_map(result).keys()),
     }
     return {
@@ -530,6 +569,8 @@ def search(
         return
     title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
     caption = _table_date_caption(rows[0])
+    if mode == "table":
+        rows = _rows_for_table(rows)
     output.emit(payload, table_rows=rows, table_title=title, table_caption=caption)
 
 
