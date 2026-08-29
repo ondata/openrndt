@@ -29,7 +29,8 @@
 
 Una riga JSON per record con i soli campi ad alto segnale: `id`, `title`,
 `org`, `type`, `category`, `updated` (data della scheda, `apiso_Modified_dt`),
-`indexed` (indicizzazione nel catalogo, `sys_modified_dt`), `resources`.
+`indexed` (indicizzazione nel catalogo, `sys_modified_dt`), `open`, `license`,
+`url`, `resources`.
 
 ```bash
 openrndt --format compact search --q "frane AND isOpendata:*" --num 30
@@ -38,6 +39,13 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
 - `resources` elenca i tipi di servizio/download fruibili (`WMS`, `WFS`,
   `download`, …). Se è `[]` il record non linka servizi: per i dettagli fai
   `get <id>` e guarda `_source.links_s`.
+- `open` e `license` vengono da `isOpendata`, non normalizzato: `license` può
+  essere `CC BY 4.0` come un intero paragrafo di disclaimer, e `open=false`
+  significa «l'ente non l'ha dichiarato lì», non «dato chiuso» (alcune schede
+  aperte hanno la licenza solo in `apiso_OtherConstraints_s`).
+- `url` è il permalink della scheda sul portale: usalo per citare la fonte.
+- In `--format table` `url` non viene stampata, `open` esce come `sì`/`no` e
+  `license` è troncata a 60 caratteri; in `csv` e `compact` i valori sono interi.
 - `get --format compact` (come `csv`) è rifiutato: il dettaglio non è tabellare.
 
 ## Esempi

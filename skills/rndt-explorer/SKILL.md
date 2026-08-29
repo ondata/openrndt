@@ -18,7 +18,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "2.0"
+  version: "3.1.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -37,8 +37,11 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 ```
 
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
-campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `indexed`, `resources` —
-ideale per individuare il record giusto prima di chiedere il dettaglio con `get`.
+campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `indexed`,
+`open`, `license`, `url`, `resources` — ideale per individuare il record giusto prima
+di chiedere il dettaglio con `get`. `open` e `license` sono ciò che l'ente ha dichiarato
+in `isOpendata` (non normalizzato, e assente su una scheda su tre: vedi la nota più sotto),
+`url` è il permalink citabile della scheda sul portale.
 Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
 guarda `_source.links_s`.
 
@@ -130,8 +133,8 @@ sono visibili con `openrndt discover --what lucene_fields`. Esempi utili:
 openrndt search --org "regione siciliana"
 
 # Solo open data (isOpendata contiene la licenza, non un booleano)
-openrndt search --q "isOpendata:*"                    # qualunque open data
-openrndt search --q "isOpendata:\"CC BY 4.0\""        # licenza specifica
+openrndt search --q "isOpendata:*"                    # dichiarati open data: 16.759
+openrndt search --q "isOpendata:\"CC BY 4.0\""        # licenza specifica: 10.534
 
 # Per tema INSPIRE
 openrndt search --q "INSPIRETheme_s:\"Parcelle catastali\""
@@ -142,6 +145,15 @@ openrndt search --q "apiso_RevisionDate_dt:[2024-01-01T00:00:00Z TO *]"
 # Per tipo risorsa
 openrndt search --q "apiso_Type_s:service"
 ```
+
+> **`isOpendata` non è l'elenco completo dei dati aperti.** Misurato su 3000 record il 2026-08-29: il
+> campo è presente sul 72%, ma 1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
+> copertura scende al 55%; in un terzo dei casi contiene solo il marcatore `opendata`, senza il nome
+> della licenza. Alcuni dataset aperti hanno la licenza solo in `apiso_OtherConstraints_s` o in
+> `apiso_ConditionApplyingToAccessAndUse_txt` e con `isOpendata:*` non si vedono. I valori inoltre non
+> sono normalizzati: `CC BY 4.0`, `CCBY`, `Licenza CC-BY 4.0`, URL e interi paragrafi di disclaimer
+> convivono nello stesso campo. Un conteggio dei dati aperti fatto su un solo campo non è difendibile:
+> dichiara sempre quale campo hai usato.
 
 **Operatori disponibili nel testo libero:**
 
@@ -157,24 +169,62 @@ openrndt search --q "(na??ra)"          # matcha "natura", "navara", …
 openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
 ```
 
-**Regole wildcard per suffisso** (verificate su API reale):
+**Regole wildcard per suffisso** (riverificate su API reale il 2026-08-29):
 
 | Contesto | Wildcard trailing | Leading wildcard |
 |---|---|---|
 | Testo libero (senza `campo:`) | ✅ `palerm*` | ✅ `*palerm*` |
-| Campo `_txt` (analizzato) | ✅ `palerm*` | ❌ bloccato |
-| Campo `_s` (keyword, case-sensitive) | ✅ `Palerm*` | ❌ bloccato |
+| Campo `_txt` (analizzato, case-insensitive) | ✅ `regione*` | ✅ `*egione*`, `*SICILIANA` |
+| Campo `_s` (keyword, **case-sensitive**) | ✅ `Regione*` | ✅ `*Regione*`, `*Siciliana` |
 | Campo `_dt` (data) | — | `[2024-01-01T00:00:00Z TO *]` |
 | Campo `_i` (intero) | — | `[1 TO 10000]` |
 | Campo `_b` (booleano) | — | `true` \| `false` |
 
-> Il leading wildcard è bloccato solo quando si specifica un campo esplicito (`campo:*valore*`). Sul testo libero funziona.
+> **Correzione**: una versione precedente di questa tabella dava il leading wildcard per bloccato sui
+> campi con nome esplicito. Non lo è. Prova decisiva: `EnteResponsabile_s:*Siciliana` → 62, lo stesso
+> totale della frase esatta `EnteResponsabile_s:"Regione Siciliana"`, mentre `EnteResponsabile_s:Siciliana`
+> senza asterisco → 0. Se il `*` iniziale venisse scartato, la prima query varrebbe la terza e darebbe 0.
+>
+> Quando una wildcard su un campo `_s` dà 0, la causa quasi sempre è un'altra: quei campi sono
+> case-sensitive. `EnteResponsabile_s:*siciliana` → 0, `EnteResponsabile_s:*Siciliana` → 62. Sui campi
+> `_txt` la maiuscola è irrilevante: `apiso_OrganizationName_txt:*SICILIANA` → 62.
 
 **Zero risultati? Leggi i suggerimenti su stderr.** Più spesso di quanto sembri, `0` è un esito legittimo, non un errore tuo. La CLI stampa suggerimenti contestuali: allarga il testo con wildcard, rimuovi `--data-category`/`--time`/`--bbox` uno alla volta, e cerca un ente col nominativo esatto. Tre cause ricorrenti:
 
 - **Periodo senza record**: `--time 2024-01-01/2024-12-31` può restituire 0 perché in quel periodo non c'è nulla — allarga l'intervallo prima di concludere (vedi `workflows.md`).
-- **Ente non presente in catalogo con quel nome**: `--org "comune di bologna"` → 0 perché quell'ente non pubblica in proprio (i suoi dati escono sotto Regione Emilia-Romagna o Città metropolitana). Qui la CLI fa da sola una query esplorativa e stampa i nomi di ente realmente presenti che somigliano a quello cercato: usa quelli. In alternativa cerca per territorio (`--bbox` + `AmbitoTerritoriale_s:Locale`). **Non** usare wildcard su `contact_organizations_s`: sono case-sensitive (`*bologna*` → 0, `*Bologna*` → 112) e pescano ogni record che *nomina* quel territorio, anche di altri enti.
+- **Ente non presente in catalogo con quel nome**: `--org "comune di bologna"` → 0 perché quell'ente non pubblica in proprio (i suoi dati escono sotto Regione Emilia-Romagna o Città metropolitana). È il caso più frequente dopo i comuni capoluogo, e ha una sequenza sua: vedi «Cercare i dati di un ente che non pubblica in proprio» qui sotto.
 - **Bbox ampia nei metadati**: molti record dichiarano bbox nazionali, quindi `--bbox` stretto li esclude — se serve «cosa copre la mia area» allarga il riquadro.
+
+### Cercare i dati di un ente che non pubblica in proprio
+
+Quando un comune non è in catalogo con il proprio nome, i suoi dati spesso ci sono lo stesso, caricati
+dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul caso Bologna il 2026-08-29:
+
+1. **Gli enti che la CLI suggerisce.** Su zero risultati `--org` stampa i nomi realmente presenti che
+   somigliano a quello cercato (`Citta' metropolitana di Bologna | Agenzia Regionale per La Sicurezza
+   Territoriale | Regione Emilia-Romagna`). Rilancia `--org` su quelli: è la via più pulita, perché
+   filtra per ente e non per testo.
+
+2. **Il nome del territorio come frase esatta.** `--q '"Comune di Bologna"'` → 13 record, tutti
+   pertinenti: sono i dati *di* quel territorio pubblicati da altri, e il nome compare nel titolo o
+   nell'abstract. Poche righe, alta precisione: è il modo più rapido per capire se i dati esistono.
+
+3. **Il nome del territorio più la sua bbox.** `--q "bologna" --bbox 11.25,44.44,11.42,44.55` → 1512
+   record, i primi 20 tutti pertinenti. Serve quando il passo 2 è troppo stretto. In alternativa alla
+   bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1381.
+
+**Due strade da non prendere**, entrambe verificate:
+
+- `--bbox` più `AmbitoTerritoriale_s:Locale` non funziona come sembra. Il valore `Locale` copre 41
+  record su un campione di 3000, e il filtro bbox è per sovrapposizione: i record a estensione
+  nazionale passano comunque. Sulla bbox di Bologna quella query restituisce fogli geologici ISPRA
+  del Monte Etna e di Caltanissetta.
+- `contact_organizations_s:*Bologna*` → 110 record, e nessuno è del Comune: sono di Regione
+  Emilia-Romagna, Città metropolitana, ARSTPC e ARPAE, cioè chi *nomina* quel territorio, spesso
+  soltanto perché ci ha la sede legale. È anche case-sensitive: `*bologna*` → 0.
+
+Se nessuna strada dà risultati, l'ente potrebbe davvero non avere dati in catalogo: è un esito
+legittimo, non un errore della query.
 
 **`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
 
@@ -257,7 +307,7 @@ openrndt footprints --q "catasto" --num 100 > footprints.geojson
 Il comando accetta gli stessi filtri principali di `search` (inclusi
 `--bbox-crs`, `--org`, `--updated-*`, `--published-*`) e restituisce una
 `FeatureCollection` con proprietà essenziali (`id`, `title`, `org`, `type`,
-`updated`, `indexed`, `resources`).
+`updated`, `indexed`, `open`, `license`, `url`, `resources`).
 
 ---
 
