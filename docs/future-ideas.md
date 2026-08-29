@@ -3,6 +3,44 @@
 Spunti raccolti per evoluzioni di openrndt. Non sono impegni: vanno valutati
 caso per caso rispetto al design (CLI snella, read-only, niente cache locale).
 
+## Ponte verso la visualizzazione: openrndt + GeoLibre (2026-08-29)
+
+Test riuscito: dal record RNDT `r_emiro:2016-04-01T154419` a due layer WMS visibili in GeoLibre Desktop,
+con `openrndt` per la ricerca e il server MCP `geolibre-mcp` per scrivere il `.geolibre.json`. Quattro
+chiamate MCP: `create_project`, due `add_ogc_layer`, `describe_project`.
+
+Sei cose che il ponte deve fare da solo, tutte verificate sul campo:
+
+1. **Ricavare il nome del layer.** `add_ogc_layer` richiede `layers`, che RNDT non fornisce: il record dà
+   il `GetCapabilities` dell'intero server. Su quel WMS ci sono sei annate (1853, 1976, 1994, 2003, 2008,
+   2011) dietro un solo record di catalogo. Il nome però è ricavabile dal primo link del metadato, nella
+   forma GeoNode `/layers/<workspace>:<layer>`. Senza questo passaggio il percorso resta manuale, e sul
+   server ARPA Veneto ha richiesto due tentativi e un timeout prima di trovare il layer giusto.
+
+2. **Promuovere l'endpoint a https.** RNDT cataloga molti servizi in `http` (ARPA Veneto risponde 301
+   verso `https`). Le tile in `http` non arrivano nemmeno a partire: la webview di GeoLibre le blocca in
+   1-4 millisecondi, con `status 0` e un messaggio generico su CORS/TLS che manda fuori strada. Il server
+   in questo caso mandava header CORS corretti in entrambi gli schemi: la causa è solo lo schema. Con
+   `https` gli stessi due layer si vedono.
+
+3. **Provare una GetMap prima di aprire la mappa.** Un `GetCapabilities` che risponde 200 non garantisce
+   che il server disegni. Serve una tile vera su un bbox del dato, e va guardata: su un catalogo dove il
+   63% dei record non linka nulla e alcuni endpoint rispondono 500, una mappa bianca senza spiegazione
+   costa più del controllo.
+
+4. **Scrivere i bounds di ogni layer.** `wms_layer` di GeoLibre non popola mai `source.bounds` (lo fa solo `tile_layer`), quindi il layer WMS arriva nel progetto senza estensione dichiarata e lo «zoom to fit» dell'app non ha su cosa inquadrare: non succede nulla. L'estensione c'è in due posti - il `BoundingBox CRS:84` di ciascun layer nel `GetCapabilities`, e la bbox del record RNDT - e va copiata nel progetto come `source.bounds = [west, south, east, north]`. Attenzione: su un source raster MapLibre `bounds` limita anche le richieste di tile, quindi un `GetCapabilities` che dichiara un'estensione più stretta del dato reale fa sparire ciò che sta fuori. Meglio la bbox dichiarata dal servizio per quel layer che quella del record, che copre l'intero servizio.
+
+5. **Leggere i metadati della risorsa con GDAL prima di aggiungerla.** GeoLibre legge le risorse con GDAL (in-browser, via duckdb-wasm), quindi lo stesso `ogrinfo`/`gdalinfo` che gira in locale è il controllo preventivo che dice se la risorsa sarà leggibile, e vale per i file come per i servizi. Un caso reale: uno shapefile zippato di Citta Metropolitana di Firenze risponde 200 in https con CORS `*`, e in locale `ogrinfo /vsizip/file.zip` lo legge - ma da URL fallisce, perché il server risponde 200 all'intero file anche a una richiesta `Range` e `/vsizip//vsicurl/` ha bisogno delle range request per leggere la coda dell'archivio. In GeoLibre l'errore arriva come «GDAL Error (4): ... does not exist in the file system», che non dice nulla della causa; `ogrinfo "/vsizip//vsicurl/<url>"` in locale dà invece «Range downloading not supported by this server!». Stesso comando, stessa risposta del browser, prima di scrivere il progetto. Sul PPR della Regione Piemonte (206, `Accept-Ranges`, CORS `*`) lo stesso controllo passa e restituisce 189 punti in EPSG:32632. Quando il controllo fallisce, la risorsa va scaricata e servita in altro modo, non puntata per URL.
+
+6. **Scrivere lo swipe con quattro voci, non due.** Il tool `add_swipe` del server MCP registra su ogni lato l'id del layer di progetto, e per due layer WMS non basta: lo swipe che ne esce mostra lo stesso layer su entrambe le meta'. Un layer WMS esiste con due identificatori - l'uuid del layer e l'id dello style MapLibre `layer-<uuid>-raster` - e una configurazione che funziona li tiene incrociati: a sinistra l'uuid del layer di sinistra piu' lo style-id di quello di destra, a destra l'uuid del layer di destra piu' lo style-id di quello di sinistra. Ricavato da un progetto salvato dall'app dopo aver configurato lo swipe a mano, non dedotto: leggere il file salvato dall'app resta il modo piu' affidabile di scoprire come si scrive una parte di progetto che il server MCP non copre.
+
+Il progetto scritto porta in `metadata` la provenienza: id del record, link alla scheda, ente, servizio.
+Con i campi `url` e `org` aggiunti alla CLI nella 3.1.0 viene gratis, ed è ciò che rende una mappa citabile.
+
+Forma da decidere: una «Fase 5 - visualizza» dentro `rndt-explorer`, oppure una skill a sé che faccia da
+ponte fra le due. La prima tiene insieme il percorso di chi cerca dati; la seconda non obbliga chi usa
+`rndt-explorer` ad avere GeoLibre.
+
 ## Comando `which`: dall'intento al comando (2026-08-29)
 
 Preso da `ars-sicilia-pp-cli which "cerca un atto per numero" --json`, che restituisce i comandi

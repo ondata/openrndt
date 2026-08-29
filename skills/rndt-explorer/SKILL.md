@@ -311,6 +311,21 @@ Il comando accetta gli stessi filtri principali di `search` (inclusi
 
 ---
 
+## Fase 5 — Visualizza (opzionale)
+
+Il RNDT dice dove stanno i dati, non li mostra. Per guardarli senza aprire QGIS
+si può usare [GeoLibre](https://geolibre.app), che ha una propria skill e un
+proprio server MCP per scrivere progetti `.geolibre.json`: un WMS del record
+diventa un layer, due annate dello stesso tema diventano uno swipe, e
+`export_html` produce una pagina apribile in un browser.
+
+Il passaggio non è automatico: il nome del layer non sta nel metadato, molti
+endpoint sono catalogati in `http` e non tutte le risorse scaricabili sono
+leggibili da URL. Le regole verificate, il pre-check con GDAL e i limiti noti
+sono in [`references/geolibre.md`](./references/geolibre.md).
+
+---
+
 ## Workflow pronti
 
 [`references/workflows.md`](./references/workflows.md) raccoglie sequenze
