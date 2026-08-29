@@ -65,13 +65,25 @@ openrndt search --org "comune di bologna"
 # → enti simili presenti in catalogo: Citta' metropolitana di Bologna | Regione Emilia-Romagna
 ```
 
-Ripiego per territorio, quando l'ente non c'è (verificato: 15 record contro i
-2.789 della sola bbox):
+Ripiego quando l'ente non c'è. Il nome del territorio come frase esatta è la via
+più precisa (13 record, tutti pertinenti, verificato 2026-08-29):
 
 ```bash
-openrndt --format table search \
-  --q 'AmbitoTerritoriale_s:Locale' --bbox 11.2,44.4,11.5,44.6 --num 20
+openrndt --format table search --q '"Comune di Bologna"' --num 20
 ```
+
+Se serve più materiale, il nome del territorio con la sua bbox oppure con l'ente
+sovraordinato:
+
+```bash
+openrndt --format table search --q "bologna" --bbox 11.25,44.44,11.42,44.55 --num 20
+openrndt --format table search --q "bologna" --org "Regione Emilia-Romagna" --num 20
+```
+
+> Non usare `AmbitoTerritoriale_s:Locale` come filtro territoriale: copre 41
+> record su un campione di 3000, e la bbox è per sovrapposizione, quindi i record
+> a estensione nazionale passano lo stesso. Sulla bbox di Bologna quella query
+> restituisce fogli geologici del Monte Etna.
 
 > ⚠️ Non usare `--sort dateDescending`: documentato sul RNDT ma **ignorato**
 > dall'API (verificato live, riconfermato 2026-07-17). Il sort reale è

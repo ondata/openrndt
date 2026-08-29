@@ -211,12 +211,19 @@ Tre casi ricorrenti, tutti verificati live:
    record non esistono. Allarga l'intervallo prima di sospettare un bug.
 2. **Ente non indicizzato col proprio nominativo.** Il Comune di Bologna dà 0
    sia con `apiso_OrganizationName_txt:"Comune di Bologna"` sia con
-   `EnteResponsabile_s:"Comune di Bologna"` e il prefisso IPA `c_a944*`: i suoi
-   prodotti entrano in catalogo tramite regione o città metropolitana. Percorsi
-   robusti: `--bbox` del territorio + `AmbitoTerritoriale_s:Locale` (e una
-   parola chiave), oppure wildcard sul campo esatto
-   `contact_organizations_s:*Bologna*` (case-sensitive, matcha qualunque record
-   che nomina l'ente).
+   `EnteResponsabile_s:"Comune di Bologna"` e il prefisso IPA `c_a944*`
+   (riverificato 2026-08-29: ancora 0 su tutte e tre le forme): i suoi prodotti
+   entrano in catalogo tramite regione o città metropolitana. La sequenza da
+   seguire è in «Cercare i dati di un ente che non pubblica in proprio» nella
+   SKILL: gli enti suggeriti dalla CLI, poi il nome del territorio come frase
+   esatta (`--q '"Comune di Bologna"'` → 13 record, tutti pertinenti), poi il
+   nome del territorio con la bbox o con l'ente sovraordinato.
+   **Da evitare** `contact_organizations_s:*Bologna*`: dà 110 record e nessuno è
+   del Comune (sono di Regione Emilia-Romagna, Città metropolitana, ARSTPC e
+   ARPAE, che spesso quel territorio lo nominano solo perché ci hanno sede), ed
+   è case-sensitive (`*bologna*` → 0). **Da evitare** anche
+   `AmbitoTerritoriale_s:Locale` con la bbox: `Locale` copre 41 record su 3000 e
+   la bbox lascia passare i record a estensione nazionale.
 3. **Bbox ristretta.** Il filtro è per sovrapposizione, ma molti record
    dichiarano bbox nazionali/globali: con un riquadro stretto si escludono in
    silenzio. Se la domanda è «cosa copre la mia area», allarga il riquadro e
