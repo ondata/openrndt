@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-08-29 (release 3.1.0)
+
+- **Rilasciata la 3.1.0**: bbox validata lato client, campi `open`/`license`/`url` negli output sintetici, codelist `AmbitoTerritoriale_s` corretta, skill `rndt-explorer` riverificata comando per comando. PR #16, mergiata in rebase.
+
 ## 2026-08-29 (bbox validata, licenza e permalink negli output, skill riverificata)
 
 - **`--bbox` è validata prima della chiamata**: quattro valori numerici, longitudini in -180..180, latitudini in -90..90, `xmin < xmax`, `ymin < ymax`; `ValueError` che la CLI traduce in exit 2. Chiude un falso successo verificato: `--bbox "non,valido"` e `--bbox "12,45,11"` restituivano 23.738 record con exit 0, cioè il catalogo intero a chi aveva chiesto una provincia, perché l'API ignora in silenzio una bbox malformata. Era la raccomandazione 2 di `docs/evaluation-v3.0.0.md` del 9 agosto, rimasta aperta.

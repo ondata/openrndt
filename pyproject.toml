@@ -1,6 +1,6 @@
 [project]
 name = "openrndt"
-version = "3.0.0"
+version = "3.1.0"
 description = "CLI Python per il Repertorio Nazionale dei Dati Territoriali (RNDT) — pensata per essere orchestrata da un'AI"
 readme = "README.md"
 authors = [
