@@ -13,7 +13,7 @@ Il package `src/openrndt/` è composto da 8 moduli piccoli e a responsabilità s
 | Modulo | Responsabilità |
 |--------|----------------|
 | `cli.py` | Entrypoint Typer: comandi `search`, `footprints`, `get`, `resources`, `discover`; traduzione eccezioni → messaggi ed exit code. |
-| `search.py` | Chiamata e parsing di `/rest/metadata/search`; validazione parametri; `compact_results()` per l'output NDJSON. |
+| `search.py` | Chiamata e parsing di `/rest/metadata/search`; validazione parametri (inclusa la `bbox`, che l'API ignorerebbe in silenzio); `compact_results()` per l'output NDJSON, `record_dates()`, `record_license()`, `record_url()` per i campi derivati. |
 | `item.py` | Dettaglio singolo metadato (`/rest/metadata/item/{id}`) in JSON, XML ISO 19139, HTML; `ItemNotFoundError`. |
 | `resources.py` | Estrazione risorse fruibili (WMS/WFS/download) da `links`/`links_s` e check opzionale endpoint HTTP. |
 | `client.py` | `rndt_request()`: GET httpx con retry esponenziale tenacity (3 tentativi su timeout e 5xx), timeout default 30 s, `USER_AGENT` derivato da `_version`. |
@@ -25,7 +25,7 @@ Il package `src/openrndt/` è composto da 8 moduli piccoli e a responsabilità s
 # Flusso di una ricerca
 
 1. `cli.py` riceve le opzioni e chiama `search.search()`.
-2. `search.py` valida i parametri (`num` ≤ 5000, `start` ≥ 1), costruisce la query — traducendo `--data-category` nella clausola Lucene `keywords_s:VAL` perché il parametro ufficiale `dataCategory` [non filtra](/api/known-issues.md) — e chiama `client.rndt_request()`.
+2. `search.py` valida i parametri (`num` ≤ 5000, `start` ≥ 1, forma e intervalli della `bbox`, date ISO), costruisce la query — traducendo `--data-category` nella clausola Lucene `keywords_s:VAL` perché il parametro ufficiale `dataCategory` [non filtra](/api/known-issues.md) — e chiama `client.rndt_request()`.
 3. `client.py` esegue il GET con retry; `search.py` fa `raise_for_status()` e parsa il JSON.
 4. `cli.py` passa il payload a `output.emit()` secondo il [formato scelto](/conventions/output-formats.md).
 

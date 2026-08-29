@@ -98,6 +98,16 @@ openrndt get age:D_E973_MARSAGLIA --xml > meta.xml
 openrndt discover
 ```
 
+La bbox viene controllata prima della chiamata: quattro valori numerici, longitudini
+fra -180 e 180, latitudini fra -90 e 90, `xmin < xmax` e `ymin < ymax`. Una bbox
+malformata esce con codice 2 e un messaggio esplicito, invece di essere ignorata
+dall'API e restituire l'intero catalogo:
+
+```bash
+openrndt search --bbox "11.2,44.4,11.5"
+# `bbox` richiede quattro valori xmin,ymin,xmax,ymax (ricevuti 3: '11.2,44.4,11.5').
+```
+
 Il timeout HTTP per singolo tentativo è configurabile con `--timeout` (default 30s);
 con i retry su timeout/5xx (3 tentativi) il caso peggiore è ~3x questo valore:
 
@@ -116,7 +126,8 @@ Unica eccezione al default: `search --profile ...` senza `--format` esplicito es
 in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
-`indexed`, `resources`), pensata per agenti AI e pipe a basso consumo di token:
+`indexed`, `open`, `license`, `url`, `resources`), pensata per agenti AI e pipe a
+basso consumo di token:
 
 ```bash
 openrndt --format compact search --q "stato chimico dei fiumi" --num 3
@@ -125,8 +136,19 @@ openrndt --format compact search --q "stato chimico dei fiumi" --num 3
 Ecco una riga reale (uno dei tre record):
 
 ```
-{"id": "arpa_ve:StatoChimicoFiumi_DGR1856", "title": "Stato chimico fiumi 2010-2013 (DGR 1856/2015)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2017-12-20T00:00:00Z", "indexed": "2026-04-25T15:55:59.587Z", "resources": ["WFS", "WMS"]}
+{"id": "arpa_ve:StatoChimicoFiumi_DGR1856", "title": "Stato chimico fiumi 2010-2013 (DGR 1856/2015)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2017-12-20T00:00:00Z", "indexed": "2026-04-25T15:55:59.587Z", "open": false, "license": null, "url": "https://geodati.gov.it/geoportal-catalog/rest/metadata/item/arpa_ve%3AStatoChimicoFiumi_DGR1856/html", "resources": ["WFS", "WMS"]}
 ```
+
+`open`, `license` e `url` servono a chi deve riusare o citare il dato. `open` e
+`license` riportano quello che l'ente ha dichiarato nel campo `isOpendata`, senza
+normalizzarlo: `license` può essere `CC BY 4.0` come un intero paragrafo di
+disclaimer, e `open: false` significa che l'ente non l'ha dichiarato lì, non che
+il dato sia chiuso (misurato su 3000 record: il campo è presente sul 72%, che
+scende al 55% escludendo l'Agenzia delle Entrate, e in un terzo dei casi contiene
+il solo marcatore `opendata`). `url` è il permalink della scheda sul portale, da
+mettere in nota quando si cita la fonte. In `--format table` `url` non viene
+stampata, `open` esce come sì/no e `license` è troncata: in `csv` e `compact`
+restano intere.
 
 `updated` è la data della **scheda di metadato** (`apiso_Modified_dt`), la stessa
 su cui filtrano `--updated-from/--updated-to`; `indexed` è l'istante in cui il
