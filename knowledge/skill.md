@@ -17,6 +17,15 @@ La skill `rndt-explorer` (in `skills/rndt-explorer/` nel repository) insegna a u
 4. **Fruizione** — segnalare all'utente le risorse scaricabili (WMS, WFS, download diretto); per l'ispezione dei servizi OGC la skill rimanda a GDAL/OGR con output JSON (`gdalinfo`/`ogrinfo -json`).
 5. **Visualizzazione (opzionale)** — portare il dato trovato su una mappa [GeoLibre](https://geolibre.app), con la skill e il server MCP di quel progetto.
 
+# Versionamento
+
+`metadata.version` nel frontmatter è la versione **della skill**, e si
+incrementa quando cambia il contenuto della skill, anche senza una release
+della CLI: le due cose evolvono a ritmi diversi (una correzione a una reference
+non tocca il codice). La versione minima di CLI richiesta si dichiara invece in
+`compatibility`. Fino alla 3.1.0 i due numeri coincidevano perché la skill era
+sempre cambiata insieme al codice.
+
 # Riferimenti inclusi nella skill
 
 | File | Contenuto |

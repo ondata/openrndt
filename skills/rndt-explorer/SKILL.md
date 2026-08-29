@@ -14,11 +14,12 @@ description: >
   (WMS, WFS, download diretto).
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt (comandi: search, footprints, get, resources, discover).
+  Richiede la CLI openrndt >= 3.1.0 (comandi: search, footprints, get,
+  resources, discover).
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.1.0"
+  version: "3.2.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
