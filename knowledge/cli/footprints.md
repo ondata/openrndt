@@ -29,5 +29,5 @@ openrndt footprints \
 
 - `type: FeatureCollection`
 - `crs: EPSG:4326`
-- `features[]`: poligono bbox + proprietà essenziali (`id`, `title`, `org`, `type`, `updated` = data della scheda, `indexed` = indicizzazione nel catalogo, `resources`)
+- `features[]`: poligono bbox + proprietà essenziali (`id`, `title`, `org`, `type`, `updated` = data della scheda, `indexed` = indicizzazione nel catalogo, `open` e `license` dichiarati dall'ente, `url` = permalink della scheda, `resources`). Su `open`/`license` valgono i limiti di copertura descritti nei [formati di output](/conventions/output-formats.md).
 - `meta`: contatori utili (`total_results`, `features_with_bbox`, `start`, `num`)

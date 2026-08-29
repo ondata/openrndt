@@ -4,6 +4,23 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.1.0] - non ancora rilasciata
+
+### Added
+
+- **`open`, `license` e `url` negli output sintetici**: `compact`, i tre profili di `table`/`csv` e le proprietà del GeoJSON di `footprints`. `open` è vero quando il record dichiara `isOpendata`, `license` sono i valori di quel campo diversi dai marcatori `opendata`/`open data`, riportati **come sono**: il RNDT non li normalizza e nello stesso campo convivono `CC BY 4.0`, `CCBY`, URL e paragrafi di disclaimer. Misurato su 3000 record: il campo è presente sul 72%, che scende al 55% escludendo l'Agenzia delle Entrate (1177 record da sola), e in un terzo dei casi contiene il solo marcatore, quindi `open: false` significa «l'ente non l'ha dichiarato lì», non «dato chiuso». `url` è il permalink `rel="alternate"` di tipo `text/html` della scheda sul portale, per citare la fonte senza ricostruire l'URL.
+- `openrndt.record_license()` e `openrndt.record_url()` esposti come API di libreria.
+- In `--format table` le tre colonne sono adattate alla lettura: `url` non viene stampata, `open` esce come sì/no e `license` è troncata a 60 caratteri. In `csv`, `compact` e `footprints` i valori restano interi.
+
+### Fixed
+
+- **`--bbox` è validata prima della chiamata di rete**: quattro valori numerici, longitudini fra -180 e 180, latitudini fra -90 e 90, `xmin < xmax`, `ymin < ymax`; in caso contrario uscita con codice 2 e messaggio esplicito. Il RNDT ignora in silenzio una bbox malformata e risponde con il catalogo intero: `--bbox "non,valido"` e `--bbox "12,45,11"` restituivano 23.738 record con codice 0, un falso successo per chi aveva chiesto una provincia.
+- `codelists.py` documentava `AmbitoTerritoriale_s` con i valori `Provinciale` e `Comunale`, che in catalogo non esistono: i valori reali sono `Regionale`, `Nazionale` e `Locale` (più `Regional`/`Local` in inglese), e il campo manca sul 28% dei record. `discover --what lucene_fields` riportava quindi una codelist falsa.
+
+### Note
+
+L'header CSV cambia per l'aggiunta delle tre colonne: la modifica è additiva, chi legge per nome di colonna non è toccato, chi legge per posizione sì.
+
 ## [3.0.0] - 2026-08-09
 
 ### Changed

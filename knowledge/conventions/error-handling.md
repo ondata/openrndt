@@ -18,7 +18,7 @@ Principio: un agente che orchestra la CLI deve capire l'esito dal solo output. M
 | 1 | ID inesistente in [get](/cli/get.md) | `Metadato non trovato: {id}` |
 | 1 | Risposta 2xx con body non-JSON | `Risposta RNDT inattesa (JSON non valido).` |
 | 1 | `get --format csv\|compact` (dettaglio non tabellare) — rifiutato senza chiamata di rete | messaggio esplicito che suggerisce json o table |
-| 2 | Parametri non validi (`--num` > 5000, `--start` < 1, `--format` non supportato, `--what` sconosciuto, `--xml`+`--html` insieme) | messaggio con valore e limite |
+| 2 | Parametri non validi (`--num` > 5000, `--start` < 1, `--format` non supportato, `--what` sconosciuto, `--xml`+`--html` insieme, `--bbox` malformata) | messaggio con valore e limite |
 
 # Retry e timeout
 

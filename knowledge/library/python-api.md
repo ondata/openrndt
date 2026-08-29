@@ -6,7 +6,7 @@ tags: [libreria, python, api]
 timestamp: 2026-07-17T00:00:00Z
 ---
 
-Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
+Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `compact_results`, `record_dates`, `record_license`, `record_url`, `organization_names`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
 
 # Schema
 
@@ -19,11 +19,13 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 | `ItemNotFoundError` | Sollevata da `get_item` se l'ID non esiste; espone `.item_id`. |
 | `record_dates(result)` | In `openrndt.search`: tupla `(updated, indexed)` di un singolo risultato — `apiso_Modified_dt` e `sys_modified_dt`. |
 | `organization_names(payload)` | In `openrndt.search`: nomi di ente distinti nei risultati, ordinati per frequenza. L'API ignora `facet`: è l'unico modo di scoprire come un ente è scritto in catalogo. |
-| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated` = `apiso_Modified_dt`, `indexed` = `sys_modified_dt`, `resources`). |
+| `record_license(source)` | In `openrndt.search`: tupla `(open, license)` dal campo `isOpendata` di `_source`. `open` è la presenza del campo, `license` i valori diversi dai marcatori `opendata`/`open data`, non normalizzati. |
+| `record_url(result)` | In `openrndt.search`: permalink della scheda sul portale (link `rel="alternate"`, `type="text/html"`), `None` se assente. |
+| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated` = `apiso_Modified_dt`, `indexed` = `sys_modified_dt`, `open`, `license`, `url`, `resources`). |
 
 # Eccezioni propagate
 
-- `ValueError` — parametri non validi (`num` > 5000, `start` < 1, `org` e `org_exact` insieme, date non ISO).
+- `ValueError` — parametri non validi (`num` > 5000, `start` < 1, `org` e `org_exact` insieme, date non ISO, `bbox` malformata: quattro valori numerici, longitudini in -180..180, latitudini in -90..90, `xmin < xmax`, `ymin < ymax`).
 - `httpx.HTTPError` — include `httpx.HTTPStatusError` (risposte 4xx/5xx) e `httpx.ConnectError`/`httpx.TimeoutException` (rete).
 - `json.JSONDecodeError` (sottoclasse di `ValueError`) — risposta 2xx con body non-JSON.
 - `ItemNotFoundError` — solo da `get_item`.
