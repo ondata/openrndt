@@ -316,14 +316,23 @@ Il comando accetta gli stessi filtri principali di `search` (inclusi
 
 Il RNDT dice dove stanno i dati, non li mostra. Per guardarli senza aprire QGIS
 si può usare [GeoLibre](https://geolibre.app), che ha una propria skill e un
-proprio server MCP per scrivere progetti `.geolibre.json`: un WMS del record
-diventa un layer, due annate dello stesso tema diventano uno swipe, e
-`export_html` produce una pagina apribile in un browser.
+proprio server MCP per scrivere progetti `.geolibre.json`. Tre cose diverse da
+mettere su mappa, con comandi e limiti diversi:
+
+- **dove stanno i dataset trovati**: `openrndt footprints` produce il GeoJSON
+  delle bbox, che diventa un layer classificabile (per esempio per distinguere
+  i record con risorse collegate da quelli senza);
+- **il dato visto attraverso un servizio**: un WMS del record diventa un layer,
+  due annate dello stesso tema diventano uno swipe;
+- **il dato vero**: un WFS in `application/json` o un file scaricabile letto
+  direttamente dal suo URL.
 
 Il passaggio non è automatico: il nome del layer non sta nel metadato, molti
-endpoint sono catalogati in `http` e non tutte le risorse scaricabili sono
-leggibili da URL. Le regole verificate, il pre-check con GDAL e i limiti noti
-sono in [`references/geolibre.md`](./references/geolibre.md).
+endpoint sono catalogati in `http`, un WFS senza `srsName` risponde in
+coordinate proiettate e non tutte le risorse sono leggibili da URL. La guida
+completa - percorsi, ricette `jq`, pre-check con GDAL, tabella sintomo/causa e
+`export_html` per condividere - è in
+[`references/geolibre.md`](./references/geolibre.md).
 
 ---
 

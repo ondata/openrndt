@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-08-29 (guida GeoLibre nella skill: dai risultati di ricerca alla mappa)
+
+- **`references/geolibre.md` diventa una guida operativa** (274 righe): i tre esiti che ha senso mettere su mappa - dove stanno i dataset trovati (`footprints`), il dato via servizio (WMS), il dato vero (WFS o file) - ciascuno con la sequenza di comandi, più una sezione su altri usi sensati, la tabella sintomo/causa/verifica e il pre-check GDAL come regola trasversale.
+- **Verificati due percorsi nuovi.** `footprints` → `add_geojson_layer` → `classify_layer`: la classificazione vuole una colonna numerica, mentre `resources` è un array e `open` un booleano, quindi serve un passaggio `jq` che derivi `n_risorse`; su 40 record "uso del suolo" solo 8 avevano risorse collegate. E il join `footprints` + `openrndt resources` per colorare le bbox in base a quanti endpoint rispondono: su 8 record, 7 senza alcuna risorsa e l'ottavo con una viva su due.
+- **WFS: `srsName=EPSG:4326` non è opzionale.** Senza, un GeoServer regionale ha risposto in EPSG:7791 (`[555955, 4377948]` invece di `[9.65, 39.55]`): in una mappa web il dato finisce fuori dal mondo. La `GetFeature` con `outputFormat=application/json` è per il resto un URL GeoJSON che `add_vector_layer` prende così com'è.
+- **Dichiarato cosa non è verificato**: WMTS, WCS, GeoTIFF/COG ed Esri MapServer/ImageServer. Su questi ultimi il campione è concentrato su pochi host e quelli provati non rispondevano (host che non risolve, timeout).
+
 ## 2026-08-29 (ponte verso GeoLibre: reference nella skill, due issue e una PR upstream)
 
 - **Nuova reference `skills/rndt-explorer/references/geolibre.md`** e Fase 5 in SKILL.md: come portare un record RNDT su una mappa [GeoLibre](https://geolibre.app) con la skill e il server MCP di quel progetto. Sei regole ricavate provando su record veri, non dedotte: il nome del layer WMS non sta nel metadato (si ricava dal GetCapabilities o dal link GeoNode); gli endpoint catalogati in `http` vanno promossi a `https` o la webview blocca le tile; la risorsa va provata prima con `gdalinfo`/`ogrinfo`, che gira sullo stesso GDAL che usa GeoLibre e intercetta https, CORS e supporto alle `Range`; i layer WMS vanno scritti con `source.bounds` o lo «zoom to fit» non fa nulla; lo swipe fra due WMS richiede due id per lato; un file locale va inlineato, perché il lettore vive nel filesystem virtuale della pagina e non vede il disco.
