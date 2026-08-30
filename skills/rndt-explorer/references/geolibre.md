@@ -269,15 +269,21 @@ Alla fine del lavoro hai tre oggetti possibili, e non sono intercambiabili:
   viewer hosted (`app_url`) e non si modifica. Va a chi deve solo guardare, da un
   link o da un allegato, senza installare nulla.
 
-- **un URL e basta**, senza file: GeoLibre Web si apre puntato a un dato o a un
-  progetto pubblici (`https://web.geolibre.app/?data=<url>` oppure `?url=<progetto
-  .geolibre.json>`). Il dato lo scarica il browser di chi guarda; nessun server
-  in mezzo. È la consegna più leggera, ma la più esposta ai limiti di rete: vedi
-  «Condividere con un URL» qui sotto.
+- **un URL a un file che pubblichi tu**, senza allegati: metti il progetto o il
+  `footprints.geojson` su un host che permette CORS (gist, GitHub Pages, un bucket)
+  e mandi `https://web.geolibre.app/?url=<progetto>` o `?data=<geojson>`. Il dato lo
+  scarica il browser di chi guarda; nessun server in mezzo. Il CORS del file lo
+  controlli tu, quello dei layer (WMS, WFS) no: vale lo stesso pre-check delle
+  altre due. Vedi «Condividere con un URL».
 
 Regola: consegna il progetto quando il destinatario ha l'app, l'HTML quando non
-ce l'ha, l'URL quando il dato è già pubblico e apribile dal browser; e tieni
-sempre il progetto. Finché `geolibre-mcp` chiede un path che
+ce l'ha, l'URL quando vuoi un link e non un allegato; e tieni sempre il progetto.
+
+Il vincolo comune alle tre: i layer li scarica il browser di chi guarda, in
+MapLibre, con `fetch`. La pagina HTML non «contiene» i dati e aprirla da un file
+locale non aiuta (origine `null`): un WMS o un WFS che non manda
+`Access-Control-Allow-Origin` non si vede in nessuna delle tre. Il pre-check
+CORS non è un dettaglio della consegna 3, è la condizione di tutte. Finché `geolibre-mcp` chiede un path che
 finisce in `.json`, salva come `.geolibre.json`: resta compatibile anche dopo.
 Il progetto non aggira i limiti di rete della pagina (CORS, `http`): la desktop
 è la stessa MapLibre dentro una webview, quindi un WMS che fallisce nell'HTML va
@@ -299,21 +305,26 @@ di authoring per chi deve solo guardare. Il valore di `data` va percent-encoded
 se contiene `&` (ogni `GetFeature` lo contiene): senza, `&VERSION=` diventa un
 parametro di GeoLibre. Da shell: `jq -sRr @uri`.
 
-Cosa entra da RNDT:
+Cosa entra da RNDT, in ordine di affidabilità:
 
-- **la `GetFeature` di un WFS** con `OUTPUTFORMAT=application/json` e
-  `SRSNAME=EPSG:4326` è «un endpoint che risponde con una FeatureCollection».
-  Regione Sardegna (`webgis2.regione.sardegna.it/geoserver/dbu/ows`, aree marine
-  protette): si apre, zoom sui poligoni. Regione FVG (`serviziogc.regione.fvg.it`):
-  risponde GeoJSON a curl ma senza `Access-Control-Allow-Origin`, e GeoLibre dice
-  «The server may be unreachable or blocking CORS». Agenzia delle Entrate: non
-  emette GeoJSON affatto (`InvalidFormat`).
+- **un progetto**: lo stesso `.geolibre.json` della consegna 1, messo su un URL
+  pubblico e aperto con `?url=`. La vista è quella salvata. È il caso buono: il
+  file lo ospiti tu.
 - **un `footprints.geojson` pubblicato** (gist, bucket, pagina del progetto). Non
   c'è un parametro di vista: la mappa si adatta all'estensione dei dati, quindi con
   le bbox nazionali e mondiali dentro si vede il pianeta. Togliile prima con la
   ricetta di `workflows.md` §10 (su «uso del suolo» in Sicilia: da 82 a 7 feature).
-- **un progetto**: lo stesso `.geolibre.json` della consegna 1, messo su un URL
-  pubblico e aperto con `?url=`. La vista è quella salvata.
+- **la `GetFeature` di un WFS di un ente**, con `OUTPUTFORMAT=application/json` e
+  `SRSNAME=EPSG:4326`: in teoria «un endpoint che risponde con una
+  FeatureCollection», in pratica un caso marginale. Misurato il 2026-08-30 su 3000
+  record `dataset`: 163 endpoint WFS distinti per 2041 link; 98 rispondono al
+  GetCapabilities 2.0.0, 70 dichiarano GeoJSON, **48 mandano anche CORS**, cioè 236
+  link su 2041 (11,6%). L'Agenzia delle Entrate vale da sola 1437 link e non emette
+  GeoJSON; tolta lei si sale al 39%, ma quasi tutto è Regione Sardegna e Provincia
+  di Bolzano (`civis.bz.it`). FVG parla GeoJSON su molti GeoServer e non manda CORS
+  su nessuno; Veneto e ARPAV rispondono 301 verso `https` (non seguiti dalla sonda).
+  Non presentarlo come percorso generale: tentalo solo dopo il pre-check, e se
+  fallisce scarica il GeoJSON e pubblicalo tu.
 
 Pre-check obbligatorio, prima di mandare il link:
 
@@ -322,10 +333,8 @@ curl -sI -H "Origin: https://web.geolibre.app" "<url del dato>" | grep -i "^HTTP
 # serve 200 e UNA riga Access-Control-Allow-Origin (* o l'origin). Zero righe = non si apre. Due righe = non si apre (ArcGIS ISPRA).
 ```
 
-Il vincolo è strutturale, non un dettaglio: tutto passa dal browser di chi guarda,
-quindi vale solo per server che permettono il fetch cross-origin. Un gist raw di
-GitHub lo permette; i GeoServer regionali a volte sì (Sardegna) a volte no (FVG).
-Un raw di gist senza hash resta in cache qualche minuto dopo un aggiornamento:
+Un gist raw di GitHub manda `*`; i GeoServer regionali a volte sì (Sardegna,
+Bolzano) a volte no (FVG). Un raw di gist senza hash resta in cache qualche minuto dopo un aggiornamento:
 per il link usa il `raw_url` con il commit (`gh api gists/<id>`).
 
 

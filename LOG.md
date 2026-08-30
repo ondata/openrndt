@@ -2,6 +2,7 @@
 
 ## 2026-08-30 (skill: terza consegna, l'URL di GeoLibre Web)
 
+- **Ridimensionata dopo la sonda sul catalogo**: su 3000 record `dataset`, 163 endpoint WFS per 2041 link; 98 vivi, 70 con GeoJSON, 48 con CORS: 236 link (11,6%), quasi tutti Sardegna e Bolzano; l'Agenzia delle Entrate (1437 link) non emette GeoJSON. La consegna 3 è ora «URL a un file che pubblichi tu» (progetto o footprints su gist/Pages); l'URL diretto a un WFS di un ente resta come nota con i numeri. Chiarito che il vincolo CORS vale per tutte e tre le consegne, HTML compreso: la pagina non contiene i dati e da `file://` l'origine è `null`.
 - **`geolibre.md`, sezione «Condividere con un URL»**: `web.geolibre.app/?data=<dato>` e `?url=<progetto>`, provati su casi RNDT. Si apre: la `GetFeature` GeoJSON di Regione Sardegna (un solo `Access-Control-Allow-Origin: *`), un `footprints.geojson` su gist, un `.geolibre.json` su gist con `?url=`. Non si apre: FVG (GeoJSON ma niente CORS), Agenzia delle Entrate (niente GeoJSON). Regole: percent-encoding del valore di `data`, niente parametro di vista quindi via le bbox nazionali/mondiali prima di pubblicare, pre-check `curl -H Origin` con una sola riga CORS, raw di gist pinnato al commit.
 
 ## 2026-08-30 (skill: due consegne per GeoLibre)

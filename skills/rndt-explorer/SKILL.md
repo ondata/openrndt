@@ -389,8 +389,11 @@ due header): non è un difetto di GeoLibre né tuo, e una pagina Leaflet, che ca
 le tile come `<img>`, lo mostra comunque. Tre consegne
 diverse a seconda del destinatario: il file progetto `.geolibre.json` (la fonte,
 modificabile, per chi ha l'app), la pagina di `export_html` (chiusa, per chi deve
-solo guardare) e un URL `web.geolibre.app/?data=…` o `?url=…` quando il dato o il
-progetto sono già pubblici e il server permette CORS; il progetto si conserva sempre. La guida
+solo guardare) e un URL `web.geolibre.app/?url=…` o `?data=…` a un progetto o a un GeoJSON
+che pubblichi tu su un host con CORS (l'URL diretto a un WFS di un ente funziona
+per l'11,6% dei link del catalogo, quasi tutti Sardegna e Bolzano); il progetto si
+conserva sempre. In tutte e tre i layer li scarica il browser di chi guarda: un
+WMS/WFS senza CORS non si vede in nessuna. La guida
 completa - percorsi, ricette `jq`, pre-check con GDAL, tabella sintomo/causa e
 le tre consegne - è in
 [`references/geolibre.md`](./references/geolibre.md).
