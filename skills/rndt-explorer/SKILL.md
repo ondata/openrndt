@@ -386,12 +386,13 @@ coordinate proiettate, non tutte le risorse sono leggibili da URL, e GeoLibre
 solo** header `Access-Control-Allow-Origin`. Un servizio che a curl dà 200 può
 fallire in pagina con `Failed to fetch (0)` (visto sull'ArcGIS ISPRA, che manda
 due header): non è un difetto di GeoLibre né tuo, e una pagina Leaflet, che carica
-le tile come `<img>`, lo mostra comunque. Due consegne
+le tile come `<img>`, lo mostra comunque. Tre consegne
 diverse a seconda del destinatario: il file progetto `.geolibre.json` (la fonte,
-modificabile, per chi ha l'app) e la pagina di `export_html` (chiusa, per chi deve
-solo guardare); il progetto si conserva sempre. La guida
+modificabile, per chi ha l'app), la pagina di `export_html` (chiusa, per chi deve
+solo guardare) e un URL `web.geolibre.app/?data=…` o `?url=…` quando il dato o il
+progetto sono già pubblici e il server permette CORS; il progetto si conserva sempre. La guida
 completa - percorsi, ricette `jq`, pre-check con GDAL, tabella sintomo/causa e
-le due consegne - è in
+le tre consegne - è in
 [`references/geolibre.md`](./references/geolibre.md).
 
 ---

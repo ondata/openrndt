@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-08-30 (skill: terza consegna, l'URL di GeoLibre Web)
+
+- **`geolibre.md`, sezione «Condividere con un URL»**: `web.geolibre.app/?data=<dato>` e `?url=<progetto>`, provati su casi RNDT. Si apre: la `GetFeature` GeoJSON di Regione Sardegna (un solo `Access-Control-Allow-Origin: *`), un `footprints.geojson` su gist, un `.geolibre.json` su gist con `?url=`. Non si apre: FVG (GeoJSON ma niente CORS), Agenzia delle Entrate (niente GeoJSON). Regole: percent-encoding del valore di `data`, niente parametro di vista quindi via le bbox nazionali/mondiali prima di pubblicare, pre-check `curl -H Origin` con una sola riga CORS, raw di gist pinnato al commit.
+
 ## 2026-08-30 (skill: due consegne per GeoLibre)
 
 - **`geolibre.md` e Fase 5**: regola delle due consegne. Il file progetto `.geolibre.json` è la fonte (JSON leggibile, modificabile, con `metadata` RNDT) e va a chi ha GeoLibre Desktop; la pagina di `export_html` è chiusa e va a chi deve solo guardare. Il progetto si conserva sempre. Motivo: [opengeos/GeoLibre#2163](https://github.com/opengeos/GeoLibre/pull/2163) (mergiata oggi) registra `.geolibre` come tipo di file di sistema, e da lì il progetto diventa apribile con un doppio clic. Finché `geolibre-mcp` vuole un path `.json`, si salva `.geolibre.json`, compatibile anche dopo. Dichiarato che il progetto non aggira CORS/`http`: la desktop è la stessa MapLibre in webview.

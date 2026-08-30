@@ -254,9 +254,9 @@ gratis:
 }
 ```
 
-## Due consegne, scelte dal destinatario
+## Tre consegne, scelte dal destinatario
 
-Alla fine del lavoro hai due oggetti, e non sono intercambiabili:
+Alla fine del lavoro hai tre oggetti possibili, e non sono intercambiabili:
 
 - **il file progetto** (`.geolibre.json`, o `.geolibre` dalla release che
   include [opengeos/GeoLibre#2163](https://github.com/opengeos/GeoLibre/pull/2163),
@@ -269,14 +269,65 @@ Alla fine del lavoro hai due oggetti, e non sono intercambiabili:
   viewer hosted (`app_url`) e non si modifica. Va a chi deve solo guardare, da un
   link o da un allegato, senza installare nulla.
 
+- **un URL e basta**, senza file: GeoLibre Web si apre puntato a un dato o a un
+  progetto pubblici (`https://web.geolibre.app/?data=<url>` oppure `?url=<progetto
+  .geolibre.json>`). Il dato lo scarica il browser di chi guarda; nessun server
+  in mezzo. È la consegna più leggera, ma la più esposta ai limiti di rete: vedi
+  «Condividere con un URL» qui sotto.
+
 Regola: consegna il progetto quando il destinatario ha l'app, l'HTML quando non
-ce l'ha, e tieni sempre il progetto. Finché `geolibre-mcp` chiede un path che
+ce l'ha, l'URL quando il dato è già pubblico e apribile dal browser; e tieni
+sempre il progetto. Finché `geolibre-mcp` chiede un path che
 finisce in `.json`, salva come `.geolibre.json`: resta compatibile anche dopo.
 Il progetto non aggira i limiti di rete della pagina (CORS, `http`): la desktop
 è la stessa MapLibre dentro una webview, quindi un WMS che fallisce nell'HTML va
 verificato anche lì, non dato per funzionante.
 
-## Cosa offre il catalogo, in numeri
+## Condividere con un URL
+
+Provato il 2026-08-30 su GeoLibre Web (doc: [Embedding & Sharing](https://geolibre.app/user-guide/embedding/)).
+
+Due forme:
+
+```text
+https://web.geolibre.app/?data=<URL del dato>          # GeoJSON, GeoParquet, PMTiles, COG, ZIP di GeoJSON, endpoint REST che risponde FeatureCollection
+https://web.geolibre.app/?url=<URL del .geolibre.json>  # un progetto pubblico: vista, layer e stile sono i suoi
+```
+
+`data` si ripete per più dataset; `layout=viewer` o `maponly` tolgono l'interfaccia
+di authoring per chi deve solo guardare. Il valore di `data` va percent-encoded
+se contiene `&` (ogni `GetFeature` lo contiene): senza, `&VERSION=` diventa un
+parametro di GeoLibre. Da shell: `jq -sRr @uri`.
+
+Cosa entra da RNDT:
+
+- **la `GetFeature` di un WFS** con `OUTPUTFORMAT=application/json` e
+  `SRSNAME=EPSG:4326` è «un endpoint che risponde con una FeatureCollection».
+  Regione Sardegna (`webgis2.regione.sardegna.it/geoserver/dbu/ows`, aree marine
+  protette): si apre, zoom sui poligoni. Regione FVG (`serviziogc.regione.fvg.it`):
+  risponde GeoJSON a curl ma senza `Access-Control-Allow-Origin`, e GeoLibre dice
+  «The server may be unreachable or blocking CORS». Agenzia delle Entrate: non
+  emette GeoJSON affatto (`InvalidFormat`).
+- **un `footprints.geojson` pubblicato** (gist, bucket, pagina del progetto). Non
+  c'è un parametro di vista: la mappa si adatta all'estensione dei dati, quindi con
+  le bbox nazionali e mondiali dentro si vede il pianeta. Togliile prima con la
+  ricetta di `workflows.md` §10 (su «uso del suolo» in Sicilia: da 82 a 7 feature).
+- **un progetto**: lo stesso `.geolibre.json` della consegna 1, messo su un URL
+  pubblico e aperto con `?url=`. La vista è quella salvata.
+
+Pre-check obbligatorio, prima di mandare il link:
+
+```bash
+curl -sI -H "Origin: https://web.geolibre.app" "<url del dato>" | grep -i "^HTTP\|access-control-allow-origin"
+# serve 200 e UNA riga Access-Control-Allow-Origin (* o l'origin). Zero righe = non si apre. Due righe = non si apre (ArcGIS ISPRA).
+```
+
+Il vincolo è strutturale, non un dettaglio: tutto passa dal browser di chi guarda,
+quindi vale solo per server che permettono il fetch cross-origin. Un gist raw di
+GitHub lo permette; i GeoServer regionali a volte sì (Sardegna) a volte no (FVG).
+Un raw di gist senza hash resta in cache qualche minuto dopo un aggiornamento:
+per il link usa il `raw_url` con il commit (`gh api gists/<id>`).
+
 
 Su un campione di 3000 record:
 
