@@ -1,7 +1,7 @@
 # Workflow tipici
 
 Sequenze pronte da copiare. Tutte testate live su
-`https://geodati.gov.it/RNDT` (numeri reali al 2026-05-27 in coda).
+`https://geodati.gov.it/RNDT` (numeri reali al 2026-08-30 in coda).
 
 ## 1. Catasto in provincia (filtro tematico + spaziale)
 
@@ -207,7 +207,11 @@ openrndt --format json search --id "ispra_rm:01IdroHazard_DT" \
 openrndt --format json get "ispra_rm:01IdroHazard_DT" \
   | jq '{licenza: ._source.isOpendata, ente: ._source.EnteResponsabile_s,
          aggiornato: ._source.apiso_Modified_dt}'
-# → CC-BY-4.0, ISPRA, 2015-02-13
+# → {"licenza": ["open data", "Dato concesso con licenza CC-BY-4.0"],
+#    "ente": "Istituto Superiore per la Protezione e la Ricerca Ambientale",
+#    "aggiornato": "2015-02-13T00:00:00Z"}
+# `isOpendata` è un ARRAY (marcatore + licenza), non una stringa: chi si aspetta
+# uno scalare sbaglia il parsing. `EnteResponsabile_s` è il nome esteso.
 
 # 4. dal WFS ai dati tabellari (GeoPackage, apribile anche in QGIS)
 ogr2ogr -f GPKG alluvioni.gpkg "WFS:https://sdi.isprambiente.it/geoserver/nz1/wfs" <feature_type>
@@ -215,6 +219,10 @@ ogr2ogr -f GPKG alluvioni.gpkg "WFS:https://sdi.isprambiente.it/geoserver/nz1/wf
 
 Note verificate live (2026-07-17):
 
+- Il campo `resources` di `compact` e il comando `resources` non contano le
+  stesse cose: il primo elenca i tipi dei `links` (qui `WFS`, `WMS`), il
+  secondo legge anche `links_s`/`webServices_s` e sullo stesso record trova in
+  più un `download` (.gpkg). Per la lista completa usa il comando.
 - `resources: []` nel compact è frequente: il record non linka servizi
   fruibili. In quel caso fai `get` e guarda `_source.links_s` — spesso il
   download è dietro un portale regionale (es. Geoscopio Toscana), non un
@@ -228,15 +236,51 @@ Note verificate live (2026-07-17):
 
 ## Risultati di riferimento (sanity check)
 
-Numeri ottenuti live al 2026-07-17 — utili per accorgersi di regressioni
-(cambiano nel tempo: il catalogo cresce):
+Numeri ottenuti live al 2026-08-30 — utili per accorgersi di regressioni
+(cambiano nel tempo, e non solo in crescita: `isOpendata:"CC BY 4.0"` è sceso da
+10.534 a 10.126 fra luglio e agosto 2026 perché alcune schede hanno cambiato valore):
 
 | Query                                                              | `total` atteso |
 |--------------------------------------------------------------------|---------------:|
-| `--q "catasto"`                                                    | 8.827          |
-| `--data-category planningCadastre`                                 | 11.659         |
-| `--data-category "planningCadastre,boundaries"`                    | 12.046         |
-| `--q 'INSPIRETheme_s:Idrografia'`                                  | 863            |
+| `--q "catasto"`                                                    | 8.841          |
+| `--data-category planningCadastre`                                 | 11.687         |
+| `--data-category "planningCadastre,boundaries"`                    | 12.076         |
+| `--q 'INSPIRETheme_s:Idrografia'`                                  | 866            |
 | `--q 'contact_organizations_s:"Agenzia delle Entrate"'`            | 7.699          |
-| `--q 'title:"carta geologica"'`                                    | 154            |
-| catalogo completo (nessun filtro)                                  | 23.632         |
+| `--q 'title:"carta geologica"'`                                    | 155            |
+| `--q 'isOpendata:*'`                                               | 16.759         |
+| catalogo completo (nessun filtro)                                  | 23.738         |
+
+## 10. Footprint di un'area: separare locale, regionale, nazionale
+
+> "Le bbox dei dataset sull'uso del suolo che riguardano la Sicilia, ma solo
+> quelli locali."
+
+`--bbox` è per sovrapposizione: passano anche i record con estensione
+nazionale o mondiale. Sulla Sicilia (2026-08-30): 82 record, di cui 73 a
+estensione nazionale, 2 mondiali (`-180/180`, PAT Trento), 6 della Calabria che
+toccano solo lo Stretto, 1 davvero siciliano. La classificazione va fatta a
+valle, con una regola dichiarata e sempre la stessa:
+
+```bash
+openrndt footprints --q '"uso del suolo" OR "copertura del suolo" OR "land cover" OR "land use"' \
+  --bbox 12.3,36.6,15.7,38.4 --num 500 \
+| jq '.features |= map(
+    (.geometry.coordinates[0] | (map(.[0]) | min) as $x0 | (map(.[0]) | max) as $x1
+                              | (map(.[1]) | min) as $y0 | (map(.[1]) | max) as $y1
+     | {dx: ($x1-$x0), dy: ($y1-$y0), x0: $x0, x1: $x1, y0: $y0, y1: $y1}) as $b
+    | .properties += {
+        estensione: (if $b.dx > 100 then "mondo"
+                     elif $b.dx >= 8 or $b.dy >= 7 then "nazionale"
+                     elif $b.x0 >= 11.5 and $b.x1 <= 16 and $b.y0 >= 35 and $b.y1 <= 39 then "sicilia"
+                     else "altro" end),
+        resources: (.properties.resources | join(";"))
+      })' > uso_suolo_sicilia.geojson
+
+jq -r '.features[].properties.estensione' uso_suolo_sicilia.geojson | sort | uniq -c
+```
+
+Le soglie (8° di longitudine o 7° di latitudine = nazionale; il riquadro
+11.5-16 / 35-39 = Sicilia) vanno adattate alla regione e scritte nel report:
+sono una convenzione, non un dato del catalogo. `resources` viene appiattito in
+stringa perché QGIS legge male gli array. Filtro in QGIS: `"estensione" = 'sicilia'`.

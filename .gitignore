@@ -34,3 +34,4 @@ out.txt
 # Lockfile di `npx skills`: stato di installazione locale della skill,
 # con il path assoluto della macchina. Non descrive il progetto.
 skills-lock.json
+skills/rndt-explorer-workspace/

@@ -19,7 +19,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.2.0"
+  version: "3.3.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -46,11 +46,14 @@ in `isOpendata` (non normalizzato, e assente su una scheda su tre: vedi la nota 
 Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
 guarda `_source.links_s`.
 
-**Le due date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
+**Le tre date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
 `footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa
-su cui filtrano `--updated-from/--updated-to` — mentre `indexed` è l'istante di
-indicizzazione nel catalogo (`sys_modified_dt`), che non dice nulla né sul dato né
-sulla scheda. Nel JSON grezzo (`--format json`) vale invece la convenzione
+su cui filtrano `--updated-from/--updated-to` — mentre `indexed` (presente in
+`compact`, `footprints` e nei profili `gis`/`qgis`, non nel `csv`/`table` di default)
+è l'istante di indicizzazione nel catalogo (`sys_modified_dt`), che non dice nulla né
+sul dato né sulla scheda. La data del **dato** è una terza cosa: sta in
+`apiso_RevisionDate_dt` / `apiso_CreationDate_dt` / `apiso_PublicationDate_dt`
+(vedi Fase 3 per sapere quale delle tre è compilata su un record). Nel JSON grezzo (`--format json`) vale invece la convenzione
 dell'API: il campo top-level `updated` è quello di **indicizzazione**, la data
 della scheda sta in `_source.apiso_Modified_dt`.
 
@@ -124,7 +127,11 @@ Filtri principali:
 > `q=keywords_s:VAL`. Dettagli in `ref/rest-api-rndt.md`.
 
 Sintassi `--q` (AND/OR/NOT, frasi esatte, wildcard, campi specifici):
-vedi [`references/search-syntax.md`](./references/search-syntax.md).
+vedi [`references/search-syntax.md`](./references/search-syntax.md). **Lo spazio fra
+termini è un OR**, non un AND: `catasto siciliana` (8.903) vale `catasto OR siciliana`,
+mentre `catasto AND siciliana` dà 1. Se aggiungendo una clausola il totale *cresce*, è
+questo. Scrivi sempre `AND` esplicito per restringere. (`discover --what search_params`
+delle versioni ≤ 3.1.0 della CLI dice «AND implicito»: è sbagliato, corretto dalla 3.2.0.)
 
 **Ricerca per campo** — usa `campo:valore` in `--q`. I campi interrogabili
 sono visibili con `openrndt discover --what lucene_fields`. Esempi utili:
@@ -214,6 +221,16 @@ dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul c
    record, i primi 20 tutti pertinenti. Serve quando il passo 2 è troppo stretto. In alternativa alla
    bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1381.
 
+4. **Controllo di completezza: il nome da solo, raggruppato per ente.** I passi 1-3 trovano chi
+   pubblica *sul* territorio, ma possono perdere enti che non stanno nella lista dei suggerimenti né
+   nella bbox stretta del capoluogo. `--format compact search --q padova --num 200 | jq -r .org | sort |
+   uniq -c` ha fatto emergere, sul caso Padova, AVEPA e i comuni della cintura che pubblicano in
+   proprio il DB topografico: enti che la sequenza 1-3 non aveva visto. Costa un comando e chiude la
+   risposta: «chi pubblica davvero» è l'elenco degli enti che escono qui, non solo il primo trovato.
+
+Nel report cita per ogni scheda l'`id` o l'`url` di `compact`: una tabella di soli titoli non è
+verificabile da chi legge.
+
 **Due strade da non prendere**, entrambe verificate:
 
 - `--bbox` più `AmbitoTerritoriale_s:Locale` non funziona come sembra. Il valore `Locale` copre 41
@@ -227,7 +244,7 @@ dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul c
 Se nessuna strada dà risultati, l'ente potrebbe davvero non avere dati in catalogo: è un esito
 legittimo, non un errore della query.
 
-**`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
+**`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Un campo sconosciuto (`--sort description`) non dà errore: viene ignorato in silenzio e l'ordine resta quello del no-sort, quindi controlla che i primi id cambino davvero. Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
 
 ---
 
@@ -244,6 +261,24 @@ openrndt get <id> --html > meta.html       # HTML pronto
 Struttura del payload e mappa dei campi `_source` (per costruire ricerche
 mirate via `q=campo:valore`):
 vedi [`references/result-structure.md`](./references/result-structure.md).
+
+**Quale data è "la data del dato"? Lo dice solo l'XML.** Il JSON espone
+`apiso_RevisionDate_dt`, `apiso_CreationDate_dt`, `apiso_PublicationDate_dt` già
+separati, ma quando su un record ne compare una sola non dice quale ruolo avesse
+nella scheda originale, e `apiso_Modified_dt` è la data della scheda, non del dato.
+Se devi scrivere «aggiornato il …» in un documento, conferma il tipo con l'XML,
+dove ogni data porta il suo `CI_DateTypeCode`:
+
+```bash
+openrndt get <id> --xml | grep -A3 "<gmd:date>" | grep -E "gco:Date|codeListValue"
+```
+
+**Scegli la scheda giusta fra i duplicati.** Lo stesso oggetto può avere più
+record: l'Agenzia delle Entrate ha schede comunali del 2021 senza licenza standard
+(«dato pubblico CAD, oneroso per i privati») accanto a schede 2025 con `CC BY 4.0`
+e WMS+WFS, e una serie madre `age:S_0000_ITALIA`. Prima di descriverne uno, guarda
+i candidati in `compact` ordinati per `apiso_Modified_dt:desc` e prendi il più
+recente, o dichiara perché no.
 
 ---
 
@@ -280,6 +315,15 @@ Ogni riga del check riporta `ok`, `status_code`, `final_url`, `redirect_url`,
 Tabella `rel`/`dctype` completa in
 [`references/result-structure.md`](./references/result-structure.md).
 
+**`ok=true` vuol dire «il GetCapabilities risponde», non «il servizio serve mappe».**
+Il WMS PCN della Carta Geologica risponde 200 al GetCapabilities e `ServiceException`
+a ogni GetMap (il MapServer non raggiunge il proprio database). Prima di mettere un
+WMS in una pagina o in un report come "funzionante", chiedi una tile vera e controlla
+che torni `image/*` (ricetta in [`references/ogc-services.md`](./references/ogc-services.md),
+«Il GetCapabilities vivo non basta»). Nella direzione opposta, fino alla CLI 3.1.0 un
+server con TLS legacy (`sgi2.isprambiente.it`) dava `ConnectError` pur rispondendo a
+curl: se `error` è di rete, riprova con `curl -sI` prima di dichiararlo morto.
+
 Esempio rapido — tutti i WMS dei primi 50 risultati di una ricerca:
 
 ```bash
@@ -310,6 +354,14 @@ Il comando accetta gli stessi filtri principali di `search` (inclusi
 `FeatureCollection` con proprietà essenziali (`id`, `title`, `org`, `type`,
 `updated`, `indexed`, `open`, `license`, `url`, `resources`).
 
+Due cose da sapere prima di aprirlo in QGIS: `resources` è un array, e QGIS lo
+legge male come attributo (appiattiscilo con `jq` in una stringa `WMS;WFS`); e il
+filtro `--bbox` è per **sovrapposizione**, quindi i record a estensione nazionale
+o mondiale passano sempre (su «uso del suolo» in Sicilia: 82 record, 1 solo
+siciliano). Per separare locale/regionale/nazionale usa la ricetta fissa in
+[`references/workflows.md`](./references/workflows.md) §10, invece di inventare
+soglie ogni volta.
+
 ---
 
 ## Fase 5 — Visualizza (opzionale)
@@ -329,7 +381,12 @@ mettere su mappa, con comandi e limiti diversi:
 
 Il passaggio non è automatico: il nome del layer non sta nel metadato, molti
 endpoint sono catalogati in `http`, un WFS senza `srsName` risponde in
-coordinate proiettate e non tutte le risorse sono leggibili da URL. La guida
+coordinate proiettate, non tutte le risorse sono leggibili da URL, e GeoLibre
+(MapLibre) scarica le tile con `fetch`: il server WMS deve rispondere con **un
+solo** header `Access-Control-Allow-Origin`. Un servizio che a curl dà 200 può
+fallire in pagina con `Failed to fetch (0)` (visto sull'ArcGIS ISPRA, che manda
+due header): non è un difetto di GeoLibre né tuo, e una pagina Leaflet, che carica
+le tile come `<img>`, lo mostra comunque. La guida
 completa - percorsi, ricette `jq`, pre-check con GDAL, tabella sintomo/causa e
 `export_html` per condividere - è in
 [`references/geolibre.md`](./references/geolibre.md).

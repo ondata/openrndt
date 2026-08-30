@@ -12,7 +12,7 @@ Interroga l'endpoint [/rest/metadata/search](/api/rndt-rest-api.md) del RNDT.
 
 | Opzione | Significato |
 |---------|-------------|
-| `--q`, `-q` | Testo di ricerca, sintassi Lucene/Elasticsearch (AND implicito, `-termine`, `"frase"`, wildcard `*`/`?`, `campo:valore`, range su `_dt`/`_i`). |
+| `--q`, `-q` | Testo di ricerca, sintassi Lucene/Elasticsearch (**OR implicito** fra termini separati da spazio: per restringere scrivere `AND`; `-termine`, `"frase"`, wildcard `*`/`?`, `campo:valore`, range su `_dt`/`_i`). |
 | `--bbox` | Bounding box WGS84 `xmin,ymin,xmax,ymax`, semantica *overlaps*. Validata prima della chiamata: quattro valori numerici, longitudini in -180..180, latitudini in -90..90, `xmin < xmax`, `ymin < ymax`. Una bbox malformata esce con codice 2 e non interroga l'API, che la ignorerebbe restituendo il catalogo intero. |
 | `--bbox-crs` | CRS esplicito della bbox. Supportati: `EPSG:4326` (default implicito), `CRS:84`, `WGS84`. |
 | `--org` | Ente responsabile: frase su `apiso_OrganizationName_txt` (campo analizzato, quindi case-insensitive e insensibile all'ordine dei token). In AND con gli altri filtri. Su zero risultati la CLI fa una query esplorativa e stampa i nomi di ente presenti in catalogo che somigliano a quello cercato. |

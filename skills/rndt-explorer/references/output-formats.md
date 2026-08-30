@@ -54,7 +54,7 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
 # JSON puro su stdout, errori su stderr
 openrndt --format json search --q catasto > out.json
 
-# Tabella Rich con colonne id/title/updated/org/author/bbox
+# Tabella Rich con colonne id/title/updated/org/author/open/license/bbox (indexed e url solo nei profili gis/qgis e in compact/csv)
 openrndt --format table search --q catasto --num 10
 
 # Tabella "GIS-friendly" (il profilo implica già --format table)

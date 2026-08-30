@@ -209,8 +209,9 @@ jq --slurpfile r resources.json '
 ```
 
 Poi `add_geojson_layer` e `classify_layer` su `n_ok`. Su un campione di otto
-record "uso del suolo", sette non avevano alcuna risorsa collegata e l'ottavo
-ne aveva una viva su due: è il tipo di cosa che una tabella non fa vedere e una
+record "uso del suolo" (2026-08-29), sette non avevano alcuna risorsa collegata
+e l'ottavo ne aveva una viva su due (il 30 agosto erano già due i record con
+`n_ok=1`: è una fotografia, non una regola): è il tipo di cosa che una tabella non fa vedere e una
 mappa sì.
 
 ### Tipi di risorsa che non ho verificato
@@ -229,6 +230,8 @@ pre-check.
 | Sintomo | Causa probabile | Come verificarlo |
 | --- | --- | --- |
 | Layer nell'elenco, mappa vuota, tile fallite in 0-4 ms | endpoint in `http` | riprova l'URL in `https` |
+| `AJAXError: Failed to fetch (0)` sulla tile, ma `curl` sullo stesso URL dà 200 `image/png` | CORS: manca `Access-Control-Allow-Origin`, oppure il server ne manda **due** (ArcGIS ISPRA: uno riflesso e uno `*`), valore che i browser rifiutano | `curl -sI -H "Origin: https://geolibre.app" "<tile url>" \| grep -i access-control`: deve esserci **una** riga. Non è risolvibile lato GeoLibre: MapLibre usa `fetch`. Una pagina Leaflet (`<img>`) mostra la stessa tile |
+| GetCapabilities 200 ma nessuna tile arriva, o arriva un XML | il server serve il capabilities ma non le mappe (PCN: `ServiceException`, database non raggiungibile) | una GetMap a mano: `Content-Type` deve essere `image/*` (vedi `ogc-services.md`) |
 | Layer nell'elenco, mappa vuota, nessuna richiesta | risorsa non leggibile | `ogrinfo` sullo stesso path che usa GeoLibre |
 | «GDAL Error (4): does not exist in the file system» | zip remoto senza `Range`, o path locale | `curl -I -H "Range: bytes=0-99"`: deve dare `206` |
 | Lo «zoom to fit» non fa nulla | manca `source.bounds` | guarda il layer nel `.geolibre.json` |

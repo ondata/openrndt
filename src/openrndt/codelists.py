@@ -44,7 +44,7 @@ SORT_VALUES: dict[str, str] = {
     "apiso_Modified_dt:desc": "Per data: ultimi metadati modificati per primi (proxy migliore per 'più recenti').",
     "apiso_Modified_dt:asc": "Per data: metadati modificati meno di recente per primi.",
     "sys_modified_dt:desc": "Per data di reindex catalogo (poco utile: valori ravvicinati).",
-    "relevance": "Pertinenza (verificato).",
+    "relevance": "⚠️ Ignorato dal server: stesso ordine del no-sort (verificato 2026-08-30).",
     "dateDescending": "⚠️ Documentato ma NON ordina su RNDT (ignorato, identico a dateAscending).",
     "dateAscending": "⚠️ Documentato ma NON ordina su RNDT (ignorato).",
 }
@@ -64,11 +64,12 @@ OUTPUT_FORMATS: dict[str, str] = {
 # Parametri principali dell'endpoint /rest/metadata/search.
 SEARCH_PARAMS: dict[str, str] = {
     "q": (
-        "Testo libero o query Lucene: AND implicito, -termine per escludere, "
-        "virgolette per frase esatta, wildcard * (zero o più char) e ? (un char). "
-        "Testo libero: wildcard ovunque (*suo*, na??ra). "
-        "Su campo specifico (campo:valore): solo trailing (palerm*); "
-        "leading wildcard (*palerm*) non supportato su campo esplicito. "
+        "Testo libero o query Lucene. ⚠️ Fra termini e clausole separati da spazio "
+        "l'operatore implicito è OR (verificato 2026-08-30: `catasto siciliana` = "
+        "`catasto OR siciliana`): per restringere scrivi AND esplicito. "
+        "-termine per escludere, virgolette per frase esatta, wildcard * (zero o più "
+        "char) e ? (un char), anche iniziale e anche su campo esplicito (*palerm*, "
+        "EnteResponsabile_s:*Siciliana). I campi _s sono case-sensitive, i _txt no. "
         "Esclusione: (suolo -natura). Raggruppamento: (termine1 termine2). "
         "Date: campo_dt:[2024-01-01T00:00:00Z TO *]. Interi: campo_i:[1 TO 10000]. "
         "Vedi `discover --what lucene_fields` per i campi disponibili."
@@ -107,10 +108,11 @@ SEARCH_PARAMS: dict[str, str] = {
 # Fonte: ispezione della risposta JSON di qualunque metadato RNDT (`openrndt get <id>`).
 #
 # Suffissi e wildcard:
-#   _txt  campo analizzato (tokenizzato, lowercase): wildcard trailing OK (palerm*),
-#         leading wildcard (*palerm*) NON supportato.
-#   _s    campo keyword (non analizzato, case-sensitive): wildcard solo trailing (Palerm*),
-#         leading wildcard (*Palerm*) bloccato da Elasticsearch.
+#   _txt  campo analizzato (tokenizzato, lowercase): wildcard trailing e leading OK
+#         (palerm*, *palerm*), case-insensitive.
+#   _s    campo keyword (non analizzato, case-sensitive): wildcard trailing e leading OK
+#         (Palerm*, *Siciliana); con la maiuscola sbagliata il risultato è 0.
+#   Riverificato su API reale il 2026-08-29/30: il leading wildcard funziona ovunque.
 #   _dt   campo data ISO 8601: usare range [2024-01-01T00:00:00Z TO *].
 #   _i    campo intero: usare range [1 TO 10000].
 #   _b    campo booleano: valori true | false.

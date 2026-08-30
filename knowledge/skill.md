@@ -4,7 +4,7 @@ title: rndt-explorer
 description: Agent Skill che guida l'esplorazione conversazionale del catalogo RNDT tramite la CLI openrndt.
 resource: skills/rndt-explorer/SKILL.md
 tags: [skill, agenti, esplorazione]
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-08-30T00:00:00Z
 ---
 
 La skill `rndt-explorer` (in `skills/rndt-explorer/` nel repository) insegna a un agente AI a usare la [CLI](/cli/index.md) per trovare dati geografici italiani a partire da una domanda in linguaggio naturale — anche quando l'utente non nomina RNDT, geoportali o metadati.
