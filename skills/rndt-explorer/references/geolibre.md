@@ -282,12 +282,28 @@ ce l'ha, l'URL quando vuoi un link e non un allegato; e tieni sempre il progetto
 Il vincolo comune alle tre: i layer li scarica il browser di chi guarda, in
 MapLibre, con `fetch`. La pagina HTML non «contiene» i dati e aprirla da un file
 locale non aiuta (origine `null`): un WMS o un WFS che non manda
-`Access-Control-Allow-Origin` non si vede in nessuna delle tre. Il pre-check
-CORS non è un dettaglio della consegna 3, è la condizione di tutte. Finché `geolibre-mcp` chiede un path che
-finisce in `.json`, salva come `.geolibre.json`: resta compatibile anche dopo.
-Il progetto non aggira i limiti di rete della pagina (CORS, `http`): la desktop
-è la stessa MapLibre dentro una webview, quindi un WMS che fallisce nell'HTML va
-verificato anche lì, non dato per funzionante.
+`Access-Control-Allow-Origin` non si vede né nell'HTML né via URL. Il pre-check
+CORS non è un dettaglio della consegna 3, è la condizione di tutte. Finché
+`geolibre-mcp` chiede un path che finisce in `.json`, salva come `.geolibre.json`:
+resta compatibile anche dopo.
+
+**Nella desktop il vincolo vale a metà** (misurato il 2026-08-30 con un progetto
+di cinque layer, file `test-cors-desktop.geolibre.json`):
+
+| Layer | CORS del server | Web / HTML | Desktop |
+| --- | --- | --- | --- |
+| WFS Sardegna, GeoJSON via `add_vector_layer` | un header `*` | si vede | si vede |
+| WFS FVG, GeoJSON via `add_vector_layer` | nessun header | **non** si vede | **si vede** |
+| WMS ISPRA GeoServer 1:500K | un header `*` | si vede | si vede |
+| WMS FVG | nessun header (tile 200 a curl) | non si vede | **non** si vede |
+| WMS ISPRA ArcGIS 1:1M | **due** header | non si vede | non si vede |
+
+Cioè: i **dati vettoriali da URL** la desktop li legge per via nativa, fuori
+dalla webview, e CORS non conta (come in QGIS); le **tile WMS** le chiede ancora
+MapLibre dentro la webview, con le regole del browser. Il progetto aperto
+nell'app è quindi la consegna più robusta per WFS e GeoJSON, ma per un WMS senza
+CORS non serve: lì l'alternativa è una pagina Leaflet, che carica le tile come
+`<img>`, oppure QGIS.
 
 ## Condividere con un URL
 
