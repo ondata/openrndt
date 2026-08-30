@@ -155,3 +155,24 @@ openrndt --format json get <id> | jq '._source | keys'
 Lo stesso oggetto in `results[*]` di una `search`, ma esposto al primo livello
 con metadati Elasticsearch aggiuntivi: `_index`, `_id`, `_version`, `found`,
 `_source`. La struttura di `_source` è identica.
+
+## Campi del check di `resources`
+
+`openrndt --format json resources <id>` restituisce per ogni risorsa `type`,
+`url`, `source` e, quando il check è attivo, gli esiti della probe. Attenzione:
+qui le chiavi sono `type`/`url`, mentre in `links[]` di `search`/`get` le stesse
+informazioni stanno in `dctype`/`href`.
+
+| Campo | Significato |
+|---|---|
+| `ok` / `status_code` | esito della probe sul GetCapabilities (o sull'URL del file). `ok=true` non prova che un WMS sappia disegnare: vedi `ogc-services.md` |
+| `final_url` / `redirect_url` | ultimo URL contattato e prima destinazione di redirect |
+| `redirected` / `redirect_count` | i redirect sono seguiti solo verso host pubblici; verso loopback, IP privati o DNS riservati si fermano con `error=redirect-blocked:…` (un endpoint `http` che rimanda al proprio `https`, es. `gaia.arpa.veneto.it`, risulta quindi `ok=true`) |
+| `latency_ms` | durata complessiva della probe: distingue un servizio veloce da uno che risponde 200 ma lento |
+| `error` | tipo dell'eccezione. Se è di rete, riprova con `curl -sI`: fino alla CLI 3.1.0 i server con TLS legacy davano `ConnectError` pur rispondendo |
+| `method` | `HEAD` o `GET`: la probe prova HEAD e ripiega su GET in streaming |
+
+Con più ID l'output è `{"count": N, "results": [per-id]}` e un metadato mancante
+produce una voce con `error` senza interrompere gli altri; con un solo ID resta
+il formato storico.
+

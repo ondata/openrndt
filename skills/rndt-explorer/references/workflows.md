@@ -284,3 +284,82 @@ Le soglie (8° di longitudine o 7° di latitudine = nazionale; il riquadro
 11.5-16 / 35-39 = Sicilia) vanno adattate alla regione e scritte nel report:
 sono una convenzione, non un dato del catalogo. `resources` viene appiattito in
 stringa perché QGIS legge male gli array. Filtro in QGIS: `"estensione" = 'sicilia'`.
+
+## 11. Un conteggio difendibile
+
+**Quando conti, controlla anche cosa è entrato.** Allargare il perimetro (unire
+tema INSPIRE e categoria ISO, mettere in OR le tre date della risorsa) alza il
+richiamo e fa entrare rumore: in una misura sull'idrografia, dentro l'universo
+così costruito c'erano ortofoto, immagini satellitari e parchi nazionali, e il
+totale è stato pubblicato senza dirlo. Prima di scrivere il numero, guarda i
+titoli e quantifica quanti sono fuori tema:
+
+```bash
+# 1. i titoli del perimetro, per leggerli davvero
+openrndt --format compact search --q '<perimetro>' --num 500 | jq -r .title | sort | head -40
+
+# 2. quanti nominano il tema nel titolo (stima per difetto del "davvero in tema")
+openrndt --format compact search --q '<perimetro>' --num 500 \
+  | jq -r 'select(.title | test("fium|lag|idrograf|acqu"; "i")) | .title' | wc -l
+
+# 3. quante famiglie, non quante schede (lo stesso dato può avere N schede figlie)
+openrndt --format json search --q '<perimetro>' --num 500 \
+  | jq -r '.results[]._source.apiso_ParentIdentifier_s // .id' | sort -u | wc -l
+```
+
+Dai il numero largo e quello stretto, e di' cosa separa i due: «231 nel perimetro
+tematico, un centinaio se si richiede il tema anche nel titolo» è difendibile,
+«231» da solo no.
+
+### La licenza non sta in un campo solo
+
+> **`isOpendata` non è l'elenco completo dei dati aperti.** Misurato su 3000 record il 2026-08-29: il
+> campo è presente sul 72%, ma 1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
+> copertura scende al 55%; in un terzo dei casi contiene solo il marcatore `opendata`, senza il nome
+> della licenza. Alcuni dataset aperti hanno la licenza solo in `apiso_OtherConstraints_s` o in
+> `apiso_ConditionApplyingToAccessAndUse_txt` e con `isOpendata:*` non si vedono. I valori inoltre non
+> sono normalizzati: `CC BY 4.0`, `CCBY`, `Licenza CC-BY 4.0`, URL e interi paragrafi di disclaimer
+> convivono nello stesso campo. Un conteggio dei dati aperti fatto su un solo campo non è difendibile:
+> dichiara sempre quale campo hai usato.
+
+## 12. Cercare i dati di un ente che non pubblica in proprio
+
+
+Quando un comune non è in catalogo con il proprio nome, i suoi dati spesso ci sono lo stesso, caricati
+dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul caso Bologna il 2026-08-29:
+
+1. **Gli enti che la CLI suggerisce.** Su zero risultati `--org` stampa i nomi realmente presenti che
+   somigliano a quello cercato (`Citta' metropolitana di Bologna | Agenzia Regionale per La Sicurezza
+   Territoriale | Regione Emilia-Romagna`). Rilancia `--org` su quelli: è la via più pulita, perché
+   filtra per ente e non per testo.
+
+2. **Il nome del territorio come frase esatta.** `--q '"Comune di Bologna"'` → 13 record, tutti
+   pertinenti: sono i dati *di* quel territorio pubblicati da altri, e il nome compare nel titolo o
+   nell'abstract. Poche righe, alta precisione: è il modo più rapido per capire se i dati esistono.
+
+3. **Il nome del territorio più la sua bbox.** `--q "bologna" --bbox 11.25,44.44,11.42,44.55` → 1512
+   record, i primi 20 tutti pertinenti. Serve quando il passo 2 è troppo stretto. In alternativa alla
+   bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1381.
+
+4. **Controllo di completezza: il nome da solo, raggruppato per ente.** I passi 1-3 trovano chi
+   pubblica *sul* territorio, ma possono perdere enti che non stanno nella lista dei suggerimenti né
+   nella bbox stretta del capoluogo. `--format compact search --q padova --num 200 | jq -r .org | sort |
+   uniq -c` ha fatto emergere, sul caso Padova, AVEPA e i comuni della cintura che pubblicano in
+   proprio il DB topografico: enti che la sequenza 1-3 non aveva visto. Costa un comando e chiude la
+   risposta: «chi pubblica davvero» è l'elenco degli enti che escono qui, non solo il primo trovato.
+
+Nel report cita per ogni scheda l'`id` o l'`url` di `compact`: una tabella di soli titoli non è
+verificabile da chi legge.
+
+**Due strade da non prendere**, entrambe verificate:
+
+- `--bbox` più `AmbitoTerritoriale_s:Locale` non funziona come sembra. Il valore `Locale` copre 41
+  record su un campione di 3000, e il filtro bbox è per sovrapposizione: i record a estensione
+  nazionale passano comunque. Sulla bbox di Bologna quella query restituisce fogli geologici ISPRA
+  del Monte Etna e di Caltanissetta.
+- `contact_organizations_s:*Bologna*` → 110 record, e nessuno è del Comune: sono di Regione
+  Emilia-Romagna, Città metropolitana, ARSTPC e ARPAE, cioè chi *nomina* quel territorio, spesso
+  soltanto perché ci ha la sede legale. È anche case-sensitive: `*bologna*` → 0.
+
+Se nessuna strada dà risultati, l'ente potrebbe davvero non avere dati in catalogo: è un esito
+legittimo, non un errore della query.

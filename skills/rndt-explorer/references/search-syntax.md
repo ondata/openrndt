@@ -241,3 +241,37 @@ Tre casi ricorrenti, tutti verificati live:
 - Per filtrare per categoria ISO 19115 **non usare la query string
   `dataCategory`** (non funziona, vedi `ref/rest-api-rndt.md`): usa il flag
   CLI `--data-category` oppure direttamente `q=keywords_s:VAL`.
+
+## Operatori e wildcard nel testo libero
+
+```bash
+# Esclusione con -
+openrndt search --q "(suolo -natura)"
+
+# Wildcard ovunque nel testo libero (* = zero o più char, ? = un char)
+openrndt search --q "(*suo*)"
+openrndt search --q "(na??ra)"          # matcha "natura", "navara", …
+
+# Combinazione
+openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
+```
+
+**Regole wildcard per suffisso** (riverificate su API reale il 2026-08-29):
+
+| Contesto | Wildcard trailing | Leading wildcard |
+|---|---|---|
+| Testo libero (senza `campo:`) | ✅ `palerm*` | ✅ `*palerm*` |
+| Campo `_txt` (analizzato, case-insensitive) | ✅ `regione*` | ✅ `*egione*`, `*SICILIANA` |
+| Campo `_s` (keyword, **case-sensitive**) | ✅ `Regione*` | ✅ `*Regione*`, `*Siciliana` |
+| Campo `_dt` (data) | — | `[2024-01-01T00:00:00Z TO *]` |
+| Campo `_i` (intero) | — | `[1 TO 10000]` |
+| Campo `_b` (booleano) | — | `true` \| `false` |
+
+> **Correzione**: una versione precedente di questa tabella dava il leading wildcard per bloccato sui
+> campi con nome esplicito. Non lo è. Prova decisiva: `EnteResponsabile_s:*Siciliana` → 62, lo stesso
+> totale della frase esatta `EnteResponsabile_s:"Regione Siciliana"`, mentre `EnteResponsabile_s:Siciliana`
+> senza asterisco → 0. Se il `*` iniziale venisse scartato, la prima query varrebbe la terza e darebbe 0.
+>
+> Quando una wildcard su un campo `_s` dà 0, la causa quasi sempre è un'altra: quei campi sono
+> case-sensitive. `EnteResponsabile_s:*siciliana` → 0, `EnteResponsabile_s:*Siciliana` → 62. Sui campi
+> `_txt` la maiuscola è irrilevante: `apiso_OrganizationName_txt:*SICILIANA` → 62.

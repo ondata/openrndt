@@ -154,72 +154,17 @@ openrndt search --q "apiso_RevisionDate_dt:[2024-01-01T00:00:00Z TO *]"
 openrndt search --q "apiso_Type_s:service"
 ```
 
-**Quando conti, controlla anche cosa è entrato.** Allargare il perimetro (unire
-tema INSPIRE e categoria ISO, mettere in OR le tre date della risorsa) alza il
-richiamo e fa entrare rumore: in una misura sull'idrografia, dentro l'universo
-così costruito c'erano ortofoto, immagini satellitari e parchi nazionali, e il
-totale è stato pubblicato senza dirlo. Prima di scrivere il numero, guarda i
-titoli e quantifica quanti sono fuori tema:
+**Conteggi difendibili.** Prima di pubblicare un numero, dichiara il campo licenza
+che hai usato (`isOpendata` copre il 72% delle schede e in un terzo dei casi ha solo
+il marcatore, quindi non è l'elenco dei dati aperti) e misura il rumore dentro il
+perimetro: allargarlo fa entrare fuori tema. Ricette e nota completa su `isOpendata`
+in [`references/workflows.md`](./references/workflows.md) §11.
 
-```bash
-# 1. i titoli del perimetro, per leggerli davvero
-openrndt --format compact search --q '<perimetro>' --num 500 | jq -r .title | sort | head -40
-
-# 2. quanti nominano il tema nel titolo (stima per difetto del "davvero in tema")
-openrndt --format compact search --q '<perimetro>' --num 500 \
-  | jq -r 'select(.title | test("fium|lag|idrograf|acqu"; "i")) | .title' | wc -l
-
-# 3. quante famiglie, non quante schede (lo stesso dato può avere N schede figlie)
-openrndt --format json search --q '<perimetro>' --num 500 \
-  | jq -r '.results[]._source.apiso_ParentIdentifier_s // .id' | sort -u | wc -l
-```
-
-Dai il numero largo e quello stretto, e di' cosa separa i due: «231 nel perimetro
-tematico, un centinaio se si richiede il tema anche nel titolo» è difendibile,
-«231» da solo no.
-
-> **`isOpendata` non è l'elenco completo dei dati aperti.** Misurato su 3000 record il 2026-08-29: il
-> campo è presente sul 72%, ma 1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
-> copertura scende al 55%; in un terzo dei casi contiene solo il marcatore `opendata`, senza il nome
-> della licenza. Alcuni dataset aperti hanno la licenza solo in `apiso_OtherConstraints_s` o in
-> `apiso_ConditionApplyingToAccessAndUse_txt` e con `isOpendata:*` non si vedono. I valori inoltre non
-> sono normalizzati: `CC BY 4.0`, `CCBY`, `Licenza CC-BY 4.0`, URL e interi paragrafi di disclaimer
-> convivono nello stesso campo. Un conteggio dei dati aperti fatto su un solo campo non è difendibile:
-> dichiara sempre quale campo hai usato.
-
-**Operatori disponibili nel testo libero:**
-
-```bash
-# Esclusione con -
-openrndt search --q "(suolo -natura)"
-
-# Wildcard ovunque nel testo libero (* = zero o più char, ? = un char)
-openrndt search --q "(*suo*)"
-openrndt search --q "(na??ra)"          # matcha "natura", "navara", …
-
-# Combinazione
-openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
-```
-
-**Regole wildcard per suffisso** (riverificate su API reale il 2026-08-29):
-
-| Contesto | Wildcard trailing | Leading wildcard |
-|---|---|---|
-| Testo libero (senza `campo:`) | ✅ `palerm*` | ✅ `*palerm*` |
-| Campo `_txt` (analizzato, case-insensitive) | ✅ `regione*` | ✅ `*egione*`, `*SICILIANA` |
-| Campo `_s` (keyword, **case-sensitive**) | ✅ `Regione*` | ✅ `*Regione*`, `*Siciliana` |
-| Campo `_dt` (data) | — | `[2024-01-01T00:00:00Z TO *]` |
-| Campo `_i` (intero) | — | `[1 TO 10000]` |
-| Campo `_b` (booleano) | — | `true` \| `false` |
-
-> **Correzione**: una versione precedente di questa tabella dava il leading wildcard per bloccato sui
-> campi con nome esplicito. Non lo è. Prova decisiva: `EnteResponsabile_s:*Siciliana` → 62, lo stesso
-> totale della frase esatta `EnteResponsabile_s:"Regione Siciliana"`, mentre `EnteResponsabile_s:Siciliana`
-> senza asterisco → 0. Se il `*` iniziale venisse scartato, la prima query varrebbe la terza e darebbe 0.
->
-> Quando una wildcard su un campo `_s` dà 0, la causa quasi sempre è un'altra: quei campi sono
-> case-sensitive. `EnteResponsabile_s:*siciliana` → 0, `EnteResponsabile_s:*Siciliana` → 62. Sui campi
-> `_txt` la maiuscola è irrilevante: `apiso_OrganizationName_txt:*SICILIANA` → 62.
+**Wildcard**: funzionano ovunque, anche iniziali e anche su campo esplicito
+(`EnteResponsabile_s:*Siciliana` → 62). Se una wildcard su un campo `_s` dà 0, di
+norma è la maiuscola: quei campi sono case-sensitive, i `_txt` no. Tabella per
+suffisso, operatori del testo libero ed esempi in
+[`references/search-syntax.md`](./references/search-syntax.md).
 
 **Zero risultati? Leggi i suggerimenti su stderr.** Più spesso di quanto sembri, `0` è un esito legittimo, non un errore tuo. La CLI stampa suggerimenti contestuali: allarga il testo con wildcard, rimuovi `--data-category`/`--time`/`--bbox` uno alla volta, e cerca un ente col nominativo esatto. Tre cause ricorrenti:
 
@@ -229,44 +174,16 @@ openrndt search --q "(*suo* -na??ra)" --sort "title:desc"
 
 ### Cercare i dati di un ente che non pubblica in proprio
 
-Quando un comune non è in catalogo con il proprio nome, i suoi dati spesso ci sono lo stesso, caricati
-dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul caso Bologna il 2026-08-29:
-
-1. **Gli enti che la CLI suggerisce.** Su zero risultati `--org` stampa i nomi realmente presenti che
-   somigliano a quello cercato (`Citta' metropolitana di Bologna | Agenzia Regionale per La Sicurezza
-   Territoriale | Regione Emilia-Romagna`). Rilancia `--org` su quelli: è la via più pulita, perché
-   filtra per ente e non per testo.
-
-2. **Il nome del territorio come frase esatta.** `--q '"Comune di Bologna"'` → 13 record, tutti
-   pertinenti: sono i dati *di* quel territorio pubblicati da altri, e il nome compare nel titolo o
-   nell'abstract. Poche righe, alta precisione: è il modo più rapido per capire se i dati esistono.
-
-3. **Il nome del territorio più la sua bbox.** `--q "bologna" --bbox 11.25,44.44,11.42,44.55` → 1512
-   record, i primi 20 tutti pertinenti. Serve quando il passo 2 è troppo stretto. In alternativa alla
-   bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1381.
-
-4. **Controllo di completezza: il nome da solo, raggruppato per ente.** I passi 1-3 trovano chi
-   pubblica *sul* territorio, ma possono perdere enti che non stanno nella lista dei suggerimenti né
-   nella bbox stretta del capoluogo. `--format compact search --q padova --num 200 | jq -r .org | sort |
-   uniq -c` ha fatto emergere, sul caso Padova, AVEPA e i comuni della cintura che pubblicano in
-   proprio il DB topografico: enti che la sequenza 1-3 non aveva visto. Costa un comando e chiude la
-   risposta: «chi pubblica davvero» è l'elenco degli enti che escono qui, non solo il primo trovato.
-
-Nel report cita per ogni scheda l'`id` o l'`url` di `compact`: una tabella di soli titoli non è
-verificabile da chi legge.
-
-**Due strade da non prendere**, entrambe verificate:
-
-- `--bbox` più `AmbitoTerritoriale_s:Locale` non funziona come sembra. Il valore `Locale` copre 41
-  record su un campione di 3000, e il filtro bbox è per sovrapposizione: i record a estensione
-  nazionale passano comunque. Sulla bbox di Bologna quella query restituisce fogli geologici ISPRA
-  del Monte Etna e di Caltanissetta.
-- `contact_organizations_s:*Bologna*` → 110 record, e nessuno è del Comune: sono di Regione
-  Emilia-Romagna, Città metropolitana, ARSTPC e ARPAE, cioè chi *nomina* quel territorio, spesso
-  soltanto perché ci ha la sede legale. È anche case-sensitive: `*bologna*` → 0.
-
-Se nessuna strada dà risultati, l'ente potrebbe davvero non avere dati in catalogo: è un esito
-legittimo, non un errore della query.
+Un comune assente dal catalogo con il proprio nome quasi sempre ha i suoi dati
+lì lo stesso, caricati dalla regione o dalla città metropolitana. Quattro passi,
+in ordine: gli enti che la CLI suggerisce su zero risultati, il nome del
+territorio come frase esatta, il nome più la bbox (o `--org` dell'ente
+sovraordinato), e infine l'aggregazione per ente di una ricerca sul solo nome
+(`--format compact … | jq -r .org | sort | uniq -c`), che è il passo che chiude
+la risposta: «chi pubblica davvero» è quell'elenco, non il primo ente trovato.
+Cita sempre `id` o `url` delle schede: una tabella di soli titoli non è
+verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
+[`references/workflows.md`](./references/workflows.md) §12.
 
 **`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Un campo sconosciuto (`--sort description`) non dà errore: viene ignorato in silenzio e l'ordine resta quello del no-sort, quindi controlla che i primi id cambino davvero. Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
 
@@ -312,7 +229,7 @@ I servizi e i file scaricabili stanno in `results[].links[]` (per ogni
 risultato di `search`) o in `_source.links_s` / `_source.webServices_s`
 (per `get`). Filtra per `dctype` (`WMS`, `WFS`, `WCS`, `download`).
 
-Per estrazione e check veloce endpoint usa direttamente:
+Per estrarre gli endpoint e provarli usa `resources`.
 
 **Attenzione alle chiavi: `resources` e `links` non usano gli stessi nomi.** In
 `search`/`get` ogni voce di `links[]` ha `dctype` e `href`; nell'output di
@@ -332,21 +249,10 @@ openrndt --format json resources <id> | jq -r '.resources[] | "\(.type)\t\(.url)
 openrndt --format json resources <id1> <id2> <id3>
 ```
 
-Ogni riga del check riporta `ok`, `status_code`, `final_url`, `redirect_url`,
-`redirected`/`redirect_count`, `latency_ms` e l'eventuale `error`:
-
-- **I redirect vengono seguiti**, ma solo verso host pubblici: un endpoint
-  catalogato in `http` che risponde 301 verso il suo equivalente `https`
-  (es. `gaia.arpa.veneto.it`) ora risulta `ok=true` con `redirected=true`,
-  non più falso negativo. Un redirect verso un host non pubblico (loopback,
-  privato, DNS riservato) non viene seguito: `error=redirect-blocked:…`.
-- **`latency_ms`** è la durata complessiva della probe: distingue un servizio
-  vivo e veloce da uno 200 ma lento, che lo status da solo non dice.
-- **Batch**: con più ID l'output JSON è `{"count": N, "results": [per-id]}`;
-  un metadato mancante o irraggiungibile produce una voce con `error` senza
-  interrompere gli altri (con un solo ID resta il formato storico).
-
-Tabella `rel`/`dctype` completa in
+Ogni riga riporta `ok`, `status_code`, `final_url`, `redirect_url`,
+`redirected`/`redirect_count`, `latency_ms` e l'eventuale `error`. I redirect
+sono seguiti solo verso host pubblici, e con più ID gli errori per-record non
+fermano gli altri. Campi in dettaglio e tabella `rel`/`dctype` in
 [`references/result-structure.md`](./references/result-structure.md).
 
 **`ok=true` vuol dire «il GetCapabilities risponde», non «il servizio serve mappe».**
@@ -441,8 +347,9 @@ le tre consegne - è in
 [`references/workflows.md`](./references/workflows.md) raccoglie sequenze
 testate live (catasto per provincia, WMS di un tema INSPIRE, dataset di un
 ente, aggiornamenti recenti per categoria, export CSV, dati scaricabili con
-licenza e citazione della fonte per data journalist, sanity check con i
-totali attesi).
+licenza e citazione della fonte per data journalist, footprint per area con le
+soglie di estensione §10, conteggio difendibile e nota completa su `isOpendata`
+§11, ente che non pubblica in proprio §12, sanity check con i totali attesi).
 
 ## Output e parsing
 

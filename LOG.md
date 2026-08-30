@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-08-30 (skill sfoltita: SKILL.md da 464 a 371 righe)
+
+- Spostati nelle reference i blocchi che erano cresciuti nel corpo: conteggio difendibile e nota completa su `isOpendata` in `workflows.md` §11, ricetta «ente che non pubblica in proprio» in §12, operatori e tabella wildcard in `search-syntax.md`, campi del check di `resources` in `result-structure.md`. In `SKILL.md` restano la regola operativa e il rimando. Il filo delle cinque fasi torna leggibile senza perdere nulla: le reference passano da 1465 a 1623 righe.
+
+
 ## 2026-08-30 (iteration-2 della valutazione skill, e quattro correzioni)
 
 - **Iteration-2**: 5 casi, skill attuale contro lo snapshot di stamattina (`0441063`), grading indipendente per caso. Pass rate identico (96,6%), ma i punti si spostano: la nuova vince su Padova (6/6 contro 5/6: aggrega per ente, distingue `apiso_OrganizationName_txt` da `EnteResponsabile_s`, cita 40 id verificabili, mentre la vecchia ne cita uno solo), perde sul conteggio idrografia (5/6 contro 6/6: costruisce un universo più largo senza misurarne il rumore, e il 231 pubblicato contiene ortofoto e immagini satellitari). Su scheda catastale, WMS e footprints pareggio, con la nuova migliore nel merito (data confermata dall'XML, scelta consapevole fra duplicati, copertura 82 contro 71 record).
