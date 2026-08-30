@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-08-30 (skill: due consegne per GeoLibre)
+
+- **`geolibre.md` e Fase 5**: regola delle due consegne. Il file progetto `.geolibre.json` è la fonte (JSON leggibile, modificabile, con `metadata` RNDT) e va a chi ha GeoLibre Desktop; la pagina di `export_html` è chiusa e va a chi deve solo guardare. Il progetto si conserva sempre. Motivo: [opengeos/GeoLibre#2163](https://github.com/opengeos/GeoLibre/pull/2163) (mergiata oggi) registra `.geolibre` come tipo di file di sistema, e da lì il progetto diventa apribile con un doppio clic. Finché `geolibre-mcp` vuole un path `.json`, si salva `.geolibre.json`, compatibile anche dopo. Dichiarato che il progetto non aggira CORS/`http`: la desktop è la stessa MapLibre in webview.
+
+
 ## 2026-08-30 (valutazione della skill rndt-explorer con test reali; CLI 3.2.0)
 
 - **Cinque casi di test** (ente che non pubblica, lettura scheda con licenza e date, conteggio open data "difendibile", WMS su mappa condivisibile, footprints per QGIS) eseguiti da subagenti con e senza skill, più un check statico di tutti i comandi della skill contro l'API viva. Risultati in `skills/rndt-explorer-workspace/iteration-1/`. Pass rate identico (97%) perché le assertion erano poco discriminanti; la differenza è di merito: con skill la data usata è quella del dato e non della scheda, il permalink è quello canonico, la scheda scelta è la più recente. Nel caso "ente che non pubblica" la baseline è stata più completa (AVEPA, comuni della cintura): aggiunto un passo di completezza alla ricetta.

@@ -254,8 +254,27 @@ gratis:
 }
 ```
 
-`export_html` produce infine una pagina autoconsistente da aprire in un
-browser o da mandare a qualcuno.
+## Due consegne, scelte dal destinatario
+
+Alla fine del lavoro hai due oggetti, e non sono intercambiabili:
+
+- **il file progetto** (`.geolibre.json`, o `.geolibre` dalla release che
+  include [opengeos/GeoLibre#2163](https://github.com/opengeos/GeoLibre/pull/2163),
+  che registra l'estensione nel sistema: doppio clic e si apre nell'app). È la
+  fonte: pochi KB di JSON leggibile con endpoint, layer, bounds e il blocco
+  `metadata` con record e permalink RNDT. Chi lo riceve può cambiare stile,
+  aggiungere un layer, spostare la vista. Va a chi ha GeoLibre Desktop o lo può
+  installare, e va comunque conservato accanto a qualunque altra consegna.
+- **la pagina HTML** di `export_html`, autoconsistente ma chiusa: incorpora il
+  viewer hosted (`app_url`) e non si modifica. Va a chi deve solo guardare, da un
+  link o da un allegato, senza installare nulla.
+
+Regola: consegna il progetto quando il destinatario ha l'app, l'HTML quando non
+ce l'ha, e tieni sempre il progetto. Finché `geolibre-mcp` chiede un path che
+finisce in `.json`, salva come `.geolibre.json`: resta compatibile anche dopo.
+Il progetto non aggira i limiti di rete della pagina (CORS, `http`): la desktop
+è la stessa MapLibre dentro una webview, quindi un WMS che fallisce nell'HTML va
+verificato anche lì, non dato per funzionante.
 
 ## Cosa offre il catalogo, in numeri
 
