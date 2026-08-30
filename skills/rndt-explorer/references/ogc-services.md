@@ -31,6 +31,28 @@ Richiesta (sostituisci `SERVICE`/`VERSION` per WFS/WCS/WMTS):
 curl -s "<endpoint>?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities" -o caps.xml
 ```
 
+## Il GetCapabilities vivo non basta
+
+Un server può rispondere 200 al GetCapabilities e non servire una sola mappa:
+il WMS PCN della Carta Geologica d'Italia (`wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/Vettoriali/Carta_geologica.map`)
+restituisce l'elenco dei layer e poi `ServiceException` a ogni GetMap, perché il
+MapServer non raggiunge il proprio PostGIS. `openrndt resources` lo segna
+`ok=true`, e ha ragione per quel che misura. Prima di scrivere «funzionante»,
+chiedi una tile piccola e guarda il `Content-Type`:
+
+```bash
+# layer e bbox dal GetCapabilities, poi una GetMap 64x64
+curl -s -o tile.png -w '%{http_code} %{content_type}\n' \
+  "<endpoint>?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=<layer>&STYLES=&CRS=EPSG:4326&BBOX=36,6,48,19&WIDTH=64&HEIGHT=64&FORMAT=image/png"
+# 200 image/png → vivo.  200 text/xml o application/vnd.ogc.se_xml → leggi tile.png: è l'eccezione.
+```
+
+Per un WFS l'equivalente è `GetFeature` con `count=1`. Due trappole in più,
+viste sugli ISPRA: alcuni GeoServer servono i layer con lo **stile di default**
+(poligoni grigi) e la carta non si legge senza il raster affiancato; e un server
+con TLS legacy (`sgi2.isprambiente.it`, solo TLS 1.2 `AES128-SHA`) risponde a
+curl ma dava `ConnectError` a httpx fino alla CLI 3.1.0.
+
 GDAL/OGR ne leggono solo un **sottoinsieme comodo** (nomi + titoli, come layer
 raster/vettoriali pronti all'uso) e scartano il resto. Quindi: usa GDAL per la
 via rapida, ma quando ti serve un'informazione che GDAL non espone

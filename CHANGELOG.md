@@ -4,6 +4,17 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.2.0] - 2026-08-30
+
+### Fixed
+
+- **`resources` non dichiara più morti i server con TLS legacy**: la probe usa un contesto TLS con `DEFAULT:@SECLEVEL=1`. Diversi GeoServer di enti pubblici (es. `sgi2.isprambiente.it`) negoziano solo TLS 1.2 con `AES128-SHA`, che OpenSSL a livello 2 rifiuta: httpx otteneva `Connection reset by peer` mentre curl rispondeva 200. Certificato e hostname restano verificati. Inoltre, se la `HEAD` fallisce per un errore di trasporto, si riprova con una `GET` in streaming prima di segnare l'errore.
+- **`discover --what search_params` diceva il contrario del vero su due punti.** L'operatore implicito fra termini di `--q` è **OR**, non AND (`catasto siciliana` → 8.903 = `catasto OR siciliana`; `catasto AND siciliana` → 1): per restringere serve `AND` esplicito. E il leading wildcard funziona anche su campo esplicito (`EnteResponsabile_s:*Siciliana` → 62), mentre la codelist lo dava per non supportato. `discover --what sort_values` marcava `relevance` come «verificato»: è ignorato dal server come `dateDescending`.
+
+### Note
+
+- Il check di `resources` resta una prova di raggiungibilità del GetCapabilities: un WMS può rispondere 200 lì e fallire su ogni GetMap (visto sul PCN, `wms.pcn.minambiente.it`, che non raggiunge il proprio PostGIS). Per dichiarare un servizio usabile serve una GetMap reale (vedi la skill, `references/ogc-services.md`).
+
 ## [3.1.0] - 2026-08-29
 
 ### Added

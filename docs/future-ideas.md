@@ -3,6 +3,14 @@
 Spunti raccolti per evoluzioni di openrndt. Non sono impegni: vanno valutati
 caso per caso rispetto al design (CLI snella, read-only, niente cache locale).
 
+## Probe GetMap reale in `resources` (2026-08-30)
+
+Il check attuale dice se il GetCapabilities risponde. Sul PCN (`wms.pcn.minambiente.it`, Carta Geologica) è 200 mentre ogni GetMap fallisce con `ServiceException`. Un'opzione `--probe getmap` potrebbe leggere dal GetCapabilities il primo layer e la sua bbox, chiedere una tile 64x64 e controllare `Content-Type: image/*`. Costo: una richiesta in più per WMS e il parsing del GetCapabilities. Analogamente per WFS: `GetFeature` con `count=1`.
+
+## Classificazione dell'estensione delle bbox (2026-08-30)
+
+Nei test della skill due agenti indipendenti hanno reinventato con soglie ad hoc la distinzione «bbox nazionale / regionale / locale» sui `footprints`. Una proprietà `extent_class` calcolata dalla CLI (per esempio: `mondo` se copre più di 100° di longitudine, `nazionale` se copre più di 8° o 7°, `locale` altrimenti) toglierebbe la scelta arbitraria e renderebbe filtrabile il GeoJSON in QGIS senza jq.
+
 ## Ponte verso la visualizzazione: openrndt + GeoLibre (2026-08-29)
 
 Test riuscito: dal record RNDT `r_emiro:2016-04-01T154419` a due layer WMS visibili in GeoLibre Desktop,

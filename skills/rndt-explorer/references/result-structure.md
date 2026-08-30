@@ -37,13 +37,13 @@ significa zero risultati.
 
 | `rel`        | Significato                                          |
 |--------------|------------------------------------------------------|
-| `alternate`  | rappresentazione alternativa del metadato (JSON/HTML/XML) — ⚠️ **href inutilizzabile**, vedi sotto |
+| `alternate`  | rappresentazione alternativa del metadato (JSON/HTML/XML); quello `type=text/html` è il permalink della scheda (campo `url` di `compact`) |
 | `related`    | risorsa correlata; il `dctype` indica il tipo         |
 | `enclosure`  | file scaricabile (di solito ZIP/GeoTIFF/PDF)          |
 
-> ⚠️ **Non seguire gli href di `rel=alternate`.** Puntano a un indirizzo IP privato del server (`http://192.168.3.34:8080/geoportal-catalog/...`), irraggiungibile da qualunque client esterno. Vale per **tutti** i risultati di `search` (bug lato RNDT, issue #2 del repository).
+> **Nota storica.** Fino all'estate 2026 gli href di `rel=alternate` puntavano a un IP privato del server (`http://192.168.3.34:8080/...`), irraggiungibile dall'esterno (issue #2 del repository, segnalata al RNDT). Dal 2026-08-29 il bug è corretto: su 600 link di 200 risultati tutti gli host sono `https://geodati.gov.it`. Gli href sono quindi usabili e il permalink `text/html` è quello che la CLI espone come `url`. Se in futuro dovessi rivedere un IP privato, la cura è la stessa di allora: sostituire l'host.
 >
-> Per ottenere JSON, XML o HTML di un metadato usa i comandi dedicati, che costruiscono l'URL corretto:
+> Per ottenere JSON, XML o HTML di un metadato i comandi dedicati restano la via più comoda:
 >
 > ```bash
 > openrndt --format json get <id>     # JSON (_source completo)
@@ -51,10 +51,9 @@ significa zero risultati.
 > openrndt get <id> --html            # HTML
 > ```
 >
-> Se ti serve l'URL diretto (es. per un `curl` in uno script), sostituisci l'host: il percorso è già corretto e pubblicamente servito.
+> URL diretti equivalenti, per un `curl` in uno script:
 >
 > ```
-> ✗ http://192.168.3.34:8080/geoportal-catalog/rest/metadata/item/{id}/xml
 > ✓ https://geodati.gov.it/geoportal-catalog/rest/metadata/item/{id}/xml
 > ✓ https://geodati.gov.it/RNDT/rest/metadata/item/{id}/xml            (equivalente, usato dalla CLI)
 > ```

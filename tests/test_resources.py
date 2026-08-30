@@ -89,6 +89,7 @@ def test_check_resources_adds_http_status():
 @respx.mock
 def test_check_resources_handles_network_errors():
     respx.head("https://down.test/wms?service=WMS").mock(side_effect=httpx.ConnectError("down"))
+    respx.get("https://down.test/wms?service=WMS").mock(side_effect=httpx.ConnectError("down"))
     checked = check_resources(
         [{"type": "WMS", "url": "https://down.test/wms?service=WMS", "source": "links_s"}],
         timeout=1,
@@ -96,6 +97,7 @@ def test_check_resources_handles_network_errors():
     assert checked[0]["ok"] is False
     assert checked[0]["status_code"] is None
     assert checked[0]["error"] == "ConnectError"
+    # HEAD e GET entrambe fallite: nessuna risposta, resta il metodo di default
     assert checked[0]["method"] == "HEAD"
 
 
@@ -292,3 +294,18 @@ def test_check_resources_reports_latency(monkeypatch):
         timeout=1,
     )
     assert checked[0]["latency_ms"] == 250
+
+
+@respx.mock
+def test_check_resources_falls_back_to_get_when_head_connection_is_reset():
+    # GeoServer dietro proxy: HEAD chiude la connessione, GET risponde 200.
+    respx.head("https://reset.test/geoserver/wms").mock(side_effect=httpx.ReadError("reset"))
+    respx.get("https://reset.test/geoserver/wms").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://reset.test/geoserver/wms", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["status_code"] == 200
+    assert checked[0]["ok"] is True
+    assert checked[0]["method"] == "GET"
+    assert checked[0]["error"] is None

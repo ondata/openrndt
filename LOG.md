@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-08-30 (valutazione della skill rndt-explorer con test reali; CLI 3.2.0)
+
+- **Cinque casi di test** (ente che non pubblica, lettura scheda con licenza e date, conteggio open data "difendibile", WMS su mappa condivisibile, footprints per QGIS) eseguiti da subagenti con e senza skill, più un check statico di tutti i comandi della skill contro l'API viva. Risultati in `skills/rndt-explorer-workspace/iteration-1/`. Pass rate identico (97%) perché le assertion erano poco discriminanti; la differenza è di merito: con skill la data usata è quella del dato e non della scheda, il permalink è quello canonico, la scheda scelta è la più recente. Nel caso "ente che non pubblica" la baseline è stata più completa (AVEPA, comuni della cintura): aggiunto un passo di completezza alla ricetta.
+- **Tre difetti della CLI corretti (3.2.0)**: `discover` diceva «AND implicito» e «leading wildcard non supportato su campo», entrambi falsi (lo spazio è OR: `catasto siciliana` 8.903 = `catasto OR siciliana`, con AND 1); `sort_values` dava `relevance` per verificato; `resources` dichiarava morto `sgi2.isprambiente.it` (solo TLS 1.2 `AES128-SHA`, rifiutato da OpenSSL a SECLEVEL 2) - ora la probe usa `@SECLEVEL=1` e riprova in GET su errore di trasporto.
+- **Skill 3.3.0**: nota storica al posto dell'avviso su `192.168.3.34` (bug RNDT risolto); esempio «solo dataset» che dava 0 sostituito; numeri di riferimento al 2026-08-30; `indexed` non è nel csv/table di default; il tipo di data (`revision`/`creation`) si conferma solo dall'XML; duplicati AdE (schede 2021 senza licenza vs 2025 CC BY); `ok=true` di `resources` non prova che un WMS serva mappe (PCN: GetCapabilities 200, GetMap `ServiceException`) con ricetta GetMap; CORS con due `Access-Control-Allow-Origin` (ArcGIS ISPRA) che blocca GeoLibre/MapLibre ma non Leaflet; workflow §10 con ricetta jq fissa per classificare le bbox (locale/regionale/nazionale/mondo), verificata: 82 record, 1 siciliano.
+
+
 ## 2026-08-29 (guida GeoLibre nella skill: dai risultati di ricerca alla mappa)
 
 - **`references/geolibre.md` diventa una guida operativa** (274 righe): i tre esiti che ha senso mettere su mappa - dove stanno i dataset trovati (`footprints`), il dato via servizio (WMS), il dato vero (WFS o file) - ciascuno con la sequenza di comandi, più una sezione su altri usi sensati, la tabella sintomo/causa/verifica e il pre-check GDAL come regola trasversale.

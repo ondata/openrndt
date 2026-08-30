@@ -1,0 +1,80 @@
+{
+  "skill_name": "rndt-explorer",
+  "evals": [
+    {
+      "id": 0,
+      "name": "ente-che-non-pubblica",
+      "prompt": "Sto cercando i dati geografici del Comune di Padova sul geoportale nazionale (RNDT). Ho la CLI openrndt installata. Dimmi cosa c'è, chi lo pubblica davvero e come lo hai capito. Scrivi il risultato in un file report.md con i comandi usati.",
+      "expected_output": "Riconosce che --org 'comune di padova' dà 0 o pochi record, usa i suggerimenti su stderr/frase esatta/bbox, attribuisce i dati a Regione Veneto o altri, cita i comandi e non inventa record.",
+      "files": [],
+      "assertions": [
+        "report.md esiste ed è in italiano, con i comandi openrndt effettivamente eseguiti",
+        "Riconosce che il Comune di Padova non pubblica in proprio (0 o quasi record con --org) e non presenta l esito 0 come errore",
+        "Attribuisce i dati trovati a enti reali presenti in catalogo (es. Regione Veneto, ARPAV, Provincia/altro) con nomi presi dall output della CLI",
+        "Usa almeno due strategie di fallback (suggerimenti ente su stderr, frase esatta \"Comune di Padova\", bbox, --org ente sovraordinato)",
+        "Nessun record, ID o ente inventato: gli ID citati sono verificabili con openrndt get",
+        "Riporta il permalink (url) o l ID delle schede citate"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "leggere-scheda-licenza-date",
+      "prompt": "Trova nel RNDT un dataset sulle particelle catastali (INSPIRE Cadastral Parcels) dell'Agenzia delle Entrate, prendine uno e spiegami in modo chiaro in un file scheda.md: chi lo pubblica, quando è stato aggiornato (il dato, non la scheda), che licenza ha, quali servizi espone e se rispondono. Usa la CLI openrndt.",
+      "expected_output": "Distingue data scheda/dato/indicizzazione, riporta la licenza come dichiarata in isOpendata con caveat, elenca link WMS/WFS con esito del check (openrndt resources), permalink della scheda.",
+      "files": [],
+      "assertions": [
+        "scheda.md esiste ed è in italiano",
+        "Il dataset scelto è dell Agenzia delle Entrate e riguarda le particelle catastali",
+        "Distingue esplicitamente la data del dato (RevisionDate/temporal) dalla data della scheda (apiso_Modified_dt) e dalla data di indicizzazione",
+        "Riporta la licenza come dichiarata nel metadato (isOpendata/OtherConstraints) citando il campo e senza normalizzarla arbitrariamente",
+        "Elenca gli endpoint WMS/WFS del record e per ciascuno l esito di un check reale (status code o ok/errore)",
+        "Riporta il permalink della scheda sul portale"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "conteggio-open-data-logica",
+      "prompt": "Quanti dataset sull'idrografia (fiumi, laghi, reticolo idrografico) nel RNDT sono open data e aggiornati dal 2024 in poi? Voglio un numero difendibile per un articolo, con la spiegazione di come lo hai calcolato, in un file conteggio.md. Usa openrndt.",
+      "expected_output": "Non dà un numero secco: dichiara quale campo ha usato per 'open' (isOpendata parziale), quale data (apiso_Modified_dt = scheda vs RevisionDate), evita dateDescending, mostra le query e i totali con la data di misura.",
+      "files": [],
+      "assertions": [
+        "conteggio.md esiste ed è in italiano",
+        "Dichiara quale campo ha usato per open data (es. isOpendata) e avverte che non copre tutti i dataset aperti",
+        "Dichiara quale campo data ha usato e spiega che apiso_Modified_dt è la data della scheda, non del dato",
+        "Non usa dateDescending/dateAscending come se ordinassero",
+        "Mostra le query eseguite e i totali intermedi (idrografia totale, con open, con data) con la data della misura",
+        "Il numero finale è accompagnato da un intervallo o da caveat, non presentato come esatto"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "wms-su-mappa-condivisibile",
+      "prompt": "Vorrei vedere su una mappa web che posso mandare a un collega il servizio WMS della Carta Geologica d'Italia (ISPRA) che sta nel RNDT. Trova il servizio con openrndt, verifica che risponda, capisci il nome del layer da usare e produci una pagina HTML standalone in questa cartella. Se usi GeoLibre va bene.",
+      "expected_output": "Trova l'endpoint WMS via search/resources, usa gdalinfo -json o GetCapabilities per il nome del layer, verifica lo status, produce mappa.html (GeoLibre export_html o altro), riporta i limiti (http vs https, layer non nel metadato).",
+      "files": [],
+      "assertions": [
+        "mappa.html esiste, è standalone (nessun riferimento a file locali) e referenzia l endpoint WMS ISPRA",
+        "note.md è in italiano e riporta endpoint, nome layer, esito del check",
+        "Il nome del layer è ricavato da GetCapabilities o gdalinfo, non dal metadato o inventato",
+        "L endpoint è stato verificato con un check reale (openrndt resources, curl o gdalinfo) e l esito è riportato",
+        "Segnala almeno un limite (http vs https, layer non nel metadato, CRS, GetFeatureInfo)",
+        "Il record RNDT di partenza è citato con ID o permalink"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "footprints-provincia-qgis",
+      "prompt": "Mi serve un GeoJSON delle estensioni (bbox) di tutti i dataset RNDT sull'uso del suolo che riguardano la Sicilia, da aprire in QGIS, con per ogni record il link alla scheda e se ha servizi collegati. Poi dimmi quanti dei record hanno bbox nazionale invece che regionale, perché mi interessano solo quelli locali.",
+      "expected_output": "Usa openrndt footprints con --bbox della Sicilia e categoria/testo uso suolo, spiega che bbox si sovrappone (i nazionali passano), calcola quanti record hanno bbox ampia con jq/duckdb, salva il GeoJSON e riporta i conteggi.",
+      "files": [],
+      "assertions": [
+        "Esiste un file .geojson valido (FeatureCollection, poligoni EPSG:4326) apribile in QGIS",
+        "Ogni feature ha una proprietà con il link alla scheda e una che indica la presenza di servizi/risorse",
+        "Usa un filtro spaziale (bbox della Sicilia) più un filtro tematico (uso del suolo: categoria o testo)",
+        "Spiega che il filtro bbox è per sovrapposizione e quindi i record a estensione nazionale passano",
+        "Riporta il conteggio di record con bbox nazionale vs locale con il criterio usato (es. area o estensione oltre la Sicilia)",
+        "risposta.md è in italiano e contiene i comandi usati"
+      ]
+    }
+  ]
+}

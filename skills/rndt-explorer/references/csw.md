@@ -4,7 +4,7 @@ Oltre all'API REST, il RNDT espone un **servizio CSW** (OGC Catalogue Service fo
 
 **Quando usarlo — risposta breve: quasi mai.** Come sorgente dati non offre nulla che l'API REST non dia già, e su filtri e ordinamento è nettamente inferiore. Ha senso in un caso solo: quando sei dentro un flusso **GDAL/OGR o QGIS**, dove il CSW è consumabile da strumenti che l'API REST proprietaria non sanno parlare.
 
-Tutto ciò che segue è verificato live (2026-07-17) con GDAL 3.11.
+Tutto ciò che segue è verificato live (2026-07-17, riconfermato 2026-08-30) con GDAL 3.11 e 3.13.
 
 ## Cosa NON guadagni passando al CSW
 

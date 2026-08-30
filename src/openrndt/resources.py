@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import socket
+import ssl
 import time
 from typing import Any
 from urllib.parse import parse_qs, urljoin, urlparse
@@ -16,6 +17,24 @@ from openrndt.config import get_timeout
 _NON_RESOURCE_RELS = {"alternate", "icon", "self"}
 _REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 _MAX_REDIRECTS = 3
+
+
+def _probe_ssl_context() -> ssl.SSLContext:
+    """Contesto TLS per la sola probe di raggiungibilità.
+
+    Diversi server OGC di enti pubblici (es. sgi2.isprambiente.it, GeoServer)
+    negoziano solo TLS 1.2 con cifrature legacy (`AES128-SHA`) che il livello
+    di sicurezza predefinito di OpenSSL (SECLEVEL=2) rifiuta: httpx ottiene
+    `Connection reset by peer` mentre curl risponde 200. Qui non si trasferiscono
+    dati sensibili, si chiede solo se il servizio è vivo: abbassare il livello
+    evita falsi negativi. Certificato e hostname restano verificati.
+    """
+    ctx = ssl.create_default_context()
+    ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+    return ctx
+
+
+_PROBE_SSL_CONTEXT = _probe_ssl_context()
 _DOWNLOAD_EXTENSIONS = {
     ".csv",
     ".geojson",
@@ -179,15 +198,24 @@ def _apply_response(row: dict[str, Any], response: httpx.Response, method: str, 
 
 
 def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[httpx.Response, str, float]:
-    """Probe HTTP leggera: HEAD, con fallback GET in streaming sui 4xx/5xx.
+    """Probe HTTP leggera: HEAD, con fallback GET in streaming sui 4xx/5xx e sugli errori di trasporto.
 
     Non segue redirect (li gestisce il chiamante, con validazione per hop).
     Ritorna (response, metodo usato, millisecondi trascorsi).
     """
     start = time.perf_counter()
-    response = httpx.head(url, headers=headers, timeout=timeout, follow_redirects=False)
+    try:
+        response = httpx.head(
+            url, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT
+        )
+    except httpx.TransportError:
+        # Alcuni server (es. GeoServer dietro proxy) chiudono la connessione su
+        # HEAD e rispondono normalmente a GET: prima di segnare un errore di
+        # rete si riprova in streaming (falso negativo visto su
+        # sgi2.isprambiente.it/geoserver, 2026-08-30).
+        response = None
     elapsed = (time.perf_counter() - start) * 1000
-    if response.status_code >= 400:
+    if response is None or response.status_code >= 400:
         # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
         # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
         # l'endpoint riproviamo in streaming, senza scaricare il body.
@@ -197,6 +225,7 @@ def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[http
             headers=headers,
             timeout=timeout,
             follow_redirects=False,
+            verify=_PROBE_SSL_CONTEXT,
         ) as stream_response:
             elapsed = (time.perf_counter() - start) * 1000
             return stream_response, "GET", elapsed

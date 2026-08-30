@@ -8,7 +8,7 @@ Syntax](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html).
 
 | Operatore         | Significato                                       | Esempio                                     |
 |-------------------|---------------------------------------------------|---------------------------------------------|
-| spazio            | OR implicito                                       | `catasto urbano`                            |
+| spazio            | **OR implicito** (non AND: `catasto siciliana` → 8.903 = `catasto OR siciliana`; con `AND` → 1). Se un filtro in più fa *crescere* il totale, è questo | `catasto urbano`                            |
 | `AND`             | entrambi i termini                                 | `title:(carta AND geologica)`               |
 | `OR`              | almeno uno dei termini                             | `WMS OR WFS`                                |
 | `NOT` o `-`       | esclusione                                         | `suolo -natura`                             |
@@ -51,8 +51,10 @@ openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana - Assessorato
 # Ultimi 5 per ente, ordinati per data (dateDescending NON ordina: usa apiso_Modified_dt:desc)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort 'apiso_Modified_dt:desc' --num 5
 
-# Solo dataset (esclude servizi)
-openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana" AND apiso_Type_s:dataset' --num 10
+# Solo dataset (esclude servizi). Con "Regione Siciliana" dà 0, e non è un errore di
+# sintassi: i suoi 56 record sono tutti apiso_Type_s:service. Un ente che pubblica
+# solo servizi esiste, e la controprova è ripetere con `service`.
+openrndt search --q 'apiso_OrganizationName_txt:"Agenzia delle Entrate" AND apiso_Type_s:dataset' --num 10   # 7.692 su 7.699
 
 # Ricavare il codice IPA dell'ente capofila (non dell'ufficio specifico)
 openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --num 1 \
@@ -108,7 +110,7 @@ Il filtro si scrive come range Lucene dentro `--q` (timestamp completo, `Z` fina
 
 ```bash
 # Dataset sugli incendi creati dal 2024 a oggi
-openrndt search --q 'incendi AND apiso_CreationDate_dt:[2024-01-01T00:00:00Z TO 2026-07-18T23:59:59Z]' --num 50
+openrndt search --q 'incendi AND apiso_CreationDate_dt:[2024-01-01T00:00:00Z TO *]' --num 50
 
 # Tutto ciò che è stato pubblicato nel 2024 (335 record)
 openrndt search --q 'apiso_PublicationDate_dt:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z]' --num 1
@@ -132,7 +134,7 @@ Poiché i tre campi della risorsa sono compilati solo dal 36% al 56% dei record,
 Regola pratica: se la domanda è precisa ("creati nel 2024") filtra il campo giusto; se è larga ("cosa si è mosso dal 2024") usa l'OR:
 
 ```bash
-Y='[2024-01-01T00:00:00Z TO 2026-07-18T23:59:59Z]'
+Y='[2024-01-01T00:00:00Z TO *]'
 openrndt search --num 50 \
   --q "incendi AND (apiso_CreationDate_dt:$Y OR apiso_PublicationDate_dt:$Y OR apiso_RevisionDate_dt:$Y)"
 ```
