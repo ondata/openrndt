@@ -47,6 +47,24 @@ curl -s -o tile.png -w '%{http_code} %{content_type}\n' \
 # 200 image/png → vivo.  200 text/xml o application/vnd.ogc.se_xml → leggi tile.png: è l'eccezione.
 ```
 
+**Una tile vuota non è un servizio morto: spesso è una scala sbagliata.** I layer
+possono dichiarare `MinScaleDenominator`/`MaxScaleDenominator`, e fuori da quella
+finestra il server risponde `200 image/png` con un PNG interamente trasparente,
+senza errori. Prima di scartare un layer leggi i suoi limiti, e leggi quelli del
+layer che intendi usare: in un GetCapabilities con più layer è facile prendere i
+valori del vicino e scartare per errore proprio quello giusto (successo in un test
+sul 1:100.000 di ISPRA, scartato citando la scala di un altro layer, mentre a
+richiesta rifatta disegnava).
+
+```bash
+# limiti di scala per layer, in ordine di dichiarazione
+xmllint --format caps.xml | grep -E "<(Name|Title|MinScaleDenominator|MaxScaleDenominator)>"
+
+# e poi guarda la tile: 200 image/png non basta, contale i colori
+python3 -c "from PIL import Image; im=Image.open('tile.png'); print(im.size, len(im.getcolors(1<<20) or []))"
+# 1 colore solo = vuota (fuori scala, o stile che non copre l'area): cambia scala o bbox prima di concludere
+```
+
 Per un WFS l'equivalente è `GetFeature` con `count=1`. Due trappole in più,
 viste sugli ISPRA: alcuni GeoServer servono i layer con lo **stile di default**
 (poligoni grigi) e la carta non si legge senza il raster affiancato; e un server

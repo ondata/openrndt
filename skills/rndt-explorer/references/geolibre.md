@@ -265,9 +265,15 @@ Alla fine del lavoro hai tre oggetti possibili, e non sono intercambiabili:
   `metadata` con record e permalink RNDT. Chi lo riceve può cambiare stile,
   aggiungere un layer, spostare la vista. Va a chi ha GeoLibre Desktop o lo può
   installare, e va comunque conservato accanto a qualunque altra consegna.
-- **la pagina HTML** di `export_html`, autoconsistente ma chiusa: incorpora il
-  viewer hosted (`app_url`) e non si modifica. Va a chi deve solo guardare, da un
-  link o da un allegato, senza installare nulla.
+- **la pagina HTML** di `export_html`: non è una figura, è l'applicazione dentro
+  una pagina. Chi la riceve apre un GIS senza installare nulla e può continuare il
+  lavoro: aggiungere un proprio layer, confrontare due annate con lo swipe,
+  interrogare gli attributi, cambiare stile, esportare. L'interfaccia di editing
+  che resta a vista è il prezzo di questo, non un difetto: una pagina scritta a
+  mano con Leaflet è più pulita e mostra anche i WMS senza CORS, ma fa solo quello
+  che hai deciso tu, e chi la riceve non può verificarci nulla. Scegli Leaflet
+  quando conta la resa o quando il servizio non manda CORS, `export_html` quando
+  vuoi che l'altro possa lavorarci.
 
 - **un URL a un file che pubblichi tu**, senza allegati: metti il progetto o il
   `footprints.geojson` su un host che permette CORS (gist, GitHub Pages, un bucket)

@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-08-30 (iteration-2 della valutazione skill, e quattro correzioni)
+
+- **Iteration-2**: 5 casi, skill attuale contro lo snapshot di stamattina (`0441063`), grading indipendente per caso. Pass rate identico (96,6%), ma i punti si spostano: la nuova vince su Padova (6/6 contro 5/6: aggrega per ente, distingue `apiso_OrganizationName_txt` da `EnteResponsabile_s`, cita 40 id verificabili, mentre la vecchia ne cita uno solo), perde sul conteggio idrografia (5/6 contro 6/6: costruisce un universo più largo senza misurarne il rumore, e il 231 pubblicato contiene ortofoto e immagini satellitari). Su scheda catastale, WMS e footprints pareggio, con la nuova migliore nel merito (data confermata dall'XML, scelta consapevole fra duplicati, copertura 82 contro 71 record).
+- **Errore non intercettato da nessuna assertion**: nell'eval 3 la versione nuova ha scartato il layer 1:100.000 citando un limite di scala che è del layer 2 (236.235 contro 944.940, verificato oggi sul GetCapabilities), consegnando il 1:500.000. Da qui la correzione sui limiti di scala.
+- **Quattro correzioni alla skill**: chiavi di `resources` (`type`/`url`, non `dctype`/`href` come in `links[]`); controllo del rumore dentro il perimetro prima di pubblicare un conteggio, con le tre ricette `jq`; limiti di scala da leggere sul layer che si intende usare più il conteggio dei colori della tile (verificato: layer 1 dà 54 colori su Roma e 1 su tutta l'Italia); e riformulazione delle tre consegne GeoLibre, dove `export_html` non è "una pagina chiusa per chi deve solo guardare" ma l'applicazione dentro una pagina, che permette a chi riceve di aggiungere layer, confrontare e interrogare - l'interfaccia di editing è il prezzo di questo, non un difetto.
+
+
 ## 2026-08-30 (skill: terza consegna, l'URL di GeoLibre Web)
 
 - **GeoLibre Desktop e CORS, misurato** con un progetto di cinque layer: i GeoJSON da URL (`add_vector_layer`) si vedono anche senza header CORS (FVG), le tile WMS no (FVG, e ISPRA ArcGIS col doppio header); con header singolo tutto si vede. La desktop legge i vettoriali per via nativa e le tile in webview. Tabella in `geolibre.md`. Nel campione di 3000 record nessun link punta direttamente a un `.geojson`: il GeoJSON da condividere lo si produce da un WFS o da `footprints`.

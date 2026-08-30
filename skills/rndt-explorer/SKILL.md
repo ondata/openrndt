@@ -154,6 +154,30 @@ openrndt search --q "apiso_RevisionDate_dt:[2024-01-01T00:00:00Z TO *]"
 openrndt search --q "apiso_Type_s:service"
 ```
 
+**Quando conti, controlla anche cosa è entrato.** Allargare il perimetro (unire
+tema INSPIRE e categoria ISO, mettere in OR le tre date della risorsa) alza il
+richiamo e fa entrare rumore: in una misura sull'idrografia, dentro l'universo
+così costruito c'erano ortofoto, immagini satellitari e parchi nazionali, e il
+totale è stato pubblicato senza dirlo. Prima di scrivere il numero, guarda i
+titoli e quantifica quanti sono fuori tema:
+
+```bash
+# 1. i titoli del perimetro, per leggerli davvero
+openrndt --format compact search --q '<perimetro>' --num 500 | jq -r .title | sort | head -40
+
+# 2. quanti nominano il tema nel titolo (stima per difetto del "davvero in tema")
+openrndt --format compact search --q '<perimetro>' --num 500 \
+  | jq -r 'select(.title | test("fium|lag|idrograf|acqu"; "i")) | .title' | wc -l
+
+# 3. quante famiglie, non quante schede (lo stesso dato può avere N schede figlie)
+openrndt --format json search --q '<perimetro>' --num 500 \
+  | jq -r '.results[]._source.apiso_ParentIdentifier_s // .id' | sort -u | wc -l
+```
+
+Dai il numero largo e quello stretto, e di' cosa separa i due: «231 nel perimetro
+tematico, un centinaio se si richiede il tema anche nel titolo» è difendibile,
+«231» da solo no.
+
 > **`isOpendata` non è l'elenco completo dei dati aperti.** Misurato su 3000 record il 2026-08-29: il
 > campo è presente sul 72%, ma 1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
 > copertura scende al 55%; in un terzo dei casi contiene solo il marcatore `opendata`, senza il nome
@@ -290,9 +314,19 @@ risultato di `search`) o in `_source.links_s` / `_source.webServices_s`
 
 Per estrazione e check veloce endpoint usa direttamente:
 
+**Attenzione alle chiavi: `resources` e `links` non usano gli stessi nomi.** In
+`search`/`get` ogni voce di `links[]` ha `dctype` e `href`; nell'output di
+`resources` la stessa risorsa ha `type` e `url` (più `source`). Un `jq` con
+`select(.dctype=="WMS") | .href` su `resources` restituisce `null` e sembra un
+servizio rotto: è solo la chiave sbagliata.
+
 ```bash
 openrndt --format json resources <id>             # include ok/status_code/final_url
 openrndt --format json resources <id> --no-check  # solo estrazione URL
+
+# chiavi giuste per resources: .type e .url
+openrndt --format json resources <id> | jq -r '.resources[] | "\(.type)\t\(.url)"'
+# con più id l'output è {"count":N,"results":[…]}: .results[].resources[]
 
 # Health-check in batch: più ID in un comando (gli errori per-record non bloccano il resto)
 openrndt --format json resources <id1> <id2> <id3>
@@ -386,10 +420,12 @@ coordinate proiettate, non tutte le risorse sono leggibili da URL, e GeoLibre
 solo** header `Access-Control-Allow-Origin`. Un servizio che a curl dà 200 può
 fallire in pagina con `Failed to fetch (0)` (visto sull'ArcGIS ISPRA, che manda
 due header): non è un difetto di GeoLibre né tuo, e una pagina Leaflet, che carica
-le tile come `<img>`, lo mostra comunque. Tre consegne
-diverse a seconda del destinatario: il file progetto `.geolibre.json` (la fonte,
-modificabile, per chi ha l'app), la pagina di `export_html` (chiusa, per chi deve
-solo guardare) e un URL `web.geolibre.app/?url=…` o `?data=…` a un progetto o a un GeoJSON
+le tile come `<img>`, lo mostra comunque. Tre consegne,
+scelte in base a cosa deve poterci fare chi riceve: il file progetto
+`.geolibre.json` (la fonte, per chi ha l'app), la pagina di `export_html` (che
+non è una figura ma l'applicazione dentro una pagina: l'altro può aggiungere
+layer, confrontare, interrogare, senza installare nulla) e un URL
+`web.geolibre.app/?url=…` o `?data=…` a un progetto o a un GeoJSON
 che pubblichi tu su un host con CORS (l'URL diretto a un WFS di un ente funziona
 per l'11,6% dei link del catalogo, quasi tutti Sardegna e Bolzano); il progetto si
 conserva sempre. In tutte e tre i layer li scarica il browser di chi guarda: un
