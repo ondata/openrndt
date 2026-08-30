@@ -97,8 +97,8 @@ def test_check_resources_handles_network_errors():
     assert checked[0]["ok"] is False
     assert checked[0]["status_code"] is None
     assert checked[0]["error"] == "ConnectError"
-    # HEAD e GET entrambe fallite: nessuna risposta, resta il metodo di default
-    assert checked[0]["method"] == "HEAD"
+    # HEAD fallita per rete → riprovato in GET: è l'ultimo metodo tentato
+    assert checked[0]["method"] == "GET"
 
 
 @respx.mock
@@ -309,3 +309,17 @@ def test_check_resources_falls_back_to_get_when_head_connection_is_reset():
     assert checked[0]["ok"] is True
     assert checked[0]["method"] == "GET"
     assert checked[0]["error"] is None
+
+
+@respx.mock
+def test_check_resources_does_not_retry_get_after_head_timeout():
+    respx.head("https://slow.test/wms").mock(side_effect=httpx.ReadTimeout("slow"))
+    get_route = respx.get("https://slow.test/wms").mock(return_value=httpx.Response(200))
+    checked = check_resources(
+        [{"type": "WMS", "url": "https://slow.test/wms", "source": "links_s"}],
+        timeout=1,
+    )
+    assert checked[0]["ok"] is False
+    assert checked[0]["error"] == "ReadTimeout"
+    assert checked[0]["method"] == "HEAD"
+    assert not get_route.called

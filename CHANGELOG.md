@@ -8,7 +8,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il pr
 
 ### Fixed
 
-- **`resources` non dichiara più morti i server con TLS legacy**: la probe usa un contesto TLS con `DEFAULT:@SECLEVEL=1`. Diversi GeoServer di enti pubblici (es. `sgi2.isprambiente.it`) negoziano solo TLS 1.2 con `AES128-SHA`, che OpenSSL a livello 2 rifiuta: httpx otteneva `Connection reset by peer` mentre curl rispondeva 200. Certificato e hostname restano verificati. Inoltre, se la `HEAD` fallisce per un errore di trasporto, si riprova con una `GET` in streaming prima di segnare l'errore.
+- **`resources` non dichiara più morti i server con TLS legacy**: la probe usa un contesto TLS con `DEFAULT:@SECLEVEL=1`. Diversi GeoServer di enti pubblici (es. `sgi2.isprambiente.it`) negoziano solo TLS 1.2 con `AES128-SHA`, che OpenSSL a livello 2 rifiuta: httpx otteneva `Connection reset by peer` mentre curl rispondeva 200. Certificato e hostname restano verificati. Inoltre, se la `HEAD` fallisce per un errore di trasporto (non per timeout, che non viene ritentato), si riprova con una `GET` in streaming prima di segnare l'errore; `method` riporta l'ultimo tentativo.
 - **`discover --what search_params` diceva il contrario del vero su due punti.** L'operatore implicito fra termini di `--q` è **OR**, non AND (`catasto siciliana` → 8.903 = `catasto OR siciliana`; `catasto AND siciliana` → 1): per restringere serve `AND` esplicito. E il leading wildcard funziona anche su campo esplicito (`EnteResponsabile_s:*Siciliana` → 62), mentre la codelist lo dava per non supportato. `discover --what sort_values` marcava `relevance` come «verificato»: è ignorato dal server come `dateDescending`.
 
 ### Note

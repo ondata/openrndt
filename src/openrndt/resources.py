@@ -208,6 +208,10 @@ def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[http
         response = httpx.head(
             url, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT
         )
+    except httpx.TimeoutException:
+        # Un timeout non è un rifiuto della HEAD: riprovare in GET
+        # raddoppierebbe l'attesa senza cambiare l'esito.
+        raise
     except httpx.TransportError:
         # Alcuni server (es. GeoServer dietro proxy) chiudono la connessione su
         # HEAD e rispondono normalmente a GET: prima di segnare un errore di
@@ -216,20 +220,33 @@ def _probe_once(url: str, headers: dict[str, str], timeout: float) -> tuple[http
         response = None
     elapsed = (time.perf_counter() - start) * 1000
     if response is None or response.status_code >= 400:
-        # HEAD è solo un'ottimizzazione. Molti WMS/WFS reali lo rifiutano con
-        # 403/405/500 pur rispondendo 200 a GET: prima di dichiarare fallito
-        # l'endpoint riproviamo in streaming, senza scaricare il body.
-        with httpx.stream(
-            "GET",
-            url,
-            headers=headers,
-            timeout=timeout,
-            follow_redirects=False,
-            verify=_PROBE_SSL_CONTEXT,
-        ) as stream_response:
-            elapsed = (time.perf_counter() - start) * 1000
-            return stream_response, "GET", elapsed
+        try:
+            return _stream_get(url, headers, timeout, start)
+        except httpx.HTTPError as exc:
+            # Chi legge l'errore deve sapere che l'ultimo tentativo era GET.
+            exc.probe_method = "GET"  # type: ignore[attr-defined]
+            raise
     return response, "HEAD", elapsed
+
+
+def _stream_get(
+    url: str, headers: dict[str, str], timeout: float, start: float
+) -> tuple[httpx.Response, str, float]:
+    """GET in streaming, senza scaricare il body.
+
+    HEAD è solo un'ottimizzazione: molti WMS/WFS reali la rifiutano con
+    403/405/500 (o chiudono la connessione) pur rispondendo 200 a GET.
+    """
+    with httpx.stream(
+        "GET",
+        url,
+        headers=headers,
+        timeout=timeout,
+        follow_redirects=False,
+        verify=_PROBE_SSL_CONTEXT,
+    ) as stream_response:
+        elapsed = (time.perf_counter() - start) * 1000
+        return stream_response, "GET", elapsed
 
 
 def check_resources(resources: list[dict[str, str]], *, timeout: float | None = None) -> list[dict[str, Any]]:
@@ -271,6 +288,7 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
                 response, method, elapsed = _probe_once(current, headers, timeout)
             except httpx.HTTPError as exc:
                 row["error"] = type(exc).__name__
+                row["method"] = getattr(exc, "probe_method", "HEAD")
                 break
             total_ms += elapsed
             _apply_response(row, response, method, current)
