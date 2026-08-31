@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-08-31 (rilasciata la 3.3.0 su PyPI)
+
+- **[PR #18](https://github.com/ondata/openrndt/pull/18) mergiata in rebase**, tag `v3.3.0`, GitHub Release, pubblicazione su PyPI. Smoke test sulla CLI reinstallata **da PyPI** (`uv tool install openrndt==3.3.0 --reinstall --no-cache`): `get` normalizzato con `contact.email` e tre risorse, `--raw` che torna le sette chiavi della busta, `compact` con `email` e `download`, `--raw --xml` che esce 2, e gli helper importabili da un ambiente creato con `uvx --from openrndt==3.3.0`.
+- **La CI ha bocciato il primo push della PR, e aveva ragione**: il test nuovo cercava la stringa `--raw` in `result.output`, ma con il colore attivo Rich intercala codici ANSI dentro il nome dell'opzione e manda a capo dentro il riquadro. In locale passava perché il colore era spento: il test verificava l'ambiente, non il comportamento. Ora il testo si normalizza prima del confronto (via ANSI e bordi, spazi collassati), provato a 40, 60, 80 e 120 colonne.
+
 ## 2026-08-31 (correzioni post-valutazione; skill 3.4.0)
 
 - **Chiusi i rilievi della valutazione**. Parità CLI/libreria: `item_record`, `contact_point`, `download_urls`, `bbox_from_envelope` esportati da `openrndt`. `--raw` con `--xml`/`--html` ora è un `BadParameter` invece di un'opzione ignorata in silenzio. README aggiornato in tre punti (documento normalizzato con la dichiarazione di additività, `email`/`download` in `compact`, `item_record` nella sezione libreria), che era l'unica documentazione rimasta alla 3.2.0.
