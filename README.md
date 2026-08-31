@@ -85,8 +85,11 @@ openrndt footprints --q "catasto" --num 50 > footprints.geojson
 # Per categoria tematica ISO 19115
 openrndt search --data-category planningCadastre --num 5
 
-# Singolo metadato
+# Singolo metadato (documento normalizzato: contatto, bbox, lineage, risorse)
 openrndt get age:D_E973_MARSAGLIA
+
+# Lo stesso metadato come busta Elasticsearch grezza
+openrndt get age:D_E973_MARSAGLIA --raw
 
 # Estrai e verifica endpoint WMS/WFS/download di un metadato
 openrndt resources age:D_E973_MARSAGLIA
@@ -96,6 +99,24 @@ openrndt get age:D_E973_MARSAGLIA --xml > meta.xml
 
 # Codelist disponibili (no rete)
 openrndt discover
+```
+
+Dalla 3.3.0 `get` con `--format json` (il default) non restituisce più la sola
+busta Elasticsearch: costruisce un documento con lo stesso vocabolario delle
+risposte di `search` (`id`, `title`, `org`, `type`, `category`, `updated`,
+`indexed`, `open`, `license`, `url`) più i campi che servono a usare davvero la
+scheda: `data_date` (la data del **dato**, non della scheda), `contact`
+(`{name, email, website}` del punto di contatto designato), `bbox`
+(`{xmin, ymin, xmax, ymax}`), `lineage` e `resources` (le risorse fruibili già
+tipizzate e deduplicate, come `resources --no-check`).
+
+La modifica è additiva: `_source` e i flag della busta (`_index`, `_id`,
+`_version`, `found`, …) restano in coda con gli stessi valori di prima, quindi
+ogni `jq` scritto per le versioni precedenti continua a funzionare. `--raw`
+restituisce la sola busta, com'era ante 3.3.0.
+
+```bash
+openrndt get age:D_E973_MARSAGLIA | jq '{data_date, email: .contact.email, bbox}'
 ```
 
 La bbox viene controllata prima della chiamata: quattro valori numerici, longitudini
@@ -126,8 +147,8 @@ Unica eccezione al default: `search --profile ...` senza `--format` esplicito es
 in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
-`indexed`, `open`, `license`, `url`, `resources`), pensata per agenti AI e pipe a
-basso consumo di token:
+`indexed`, `open`, `license`, `url`, `resources`, `email`, `download`), pensata
+per agenti AI e pipe a basso consumo di token:
 
 ```bash
 openrndt --format compact search --q "stato chimico dei fiumi" --num 3
@@ -138,6 +159,12 @@ Ecco una riga reale (uno dei tre record):
 ```
 {"id": "arpa_ve:StatoChimicoFiumi_DGR1856", "title": "Stato chimico fiumi 2010-2013 (DGR 1856/2015)", "org": "ARPAV - U.O. Transizione Digitale e ICT", "type": "dataset", "category": "inlandWaters", "updated": "2017-12-20T00:00:00Z", "indexed": "2026-04-25T15:55:59.587Z", "open": false, "license": null, "url": "https://geodati.gov.it/geoportal-catalog/rest/metadata/item/arpa_ve%3AStatoChimicoFiumi_DGR1856/html", "resources": ["WFS", "WMS"]}
 ```
+
+`email` è l'indirizzo del punto di contatto designato della scheda e `download`
+la lista degli URL di download dichiarati (`url_download_s` e
+`url_http_download_s`, riportati come sono: il RNDT ci mette anche endpoint che
+download diretti non sono). Insieme rispondono alle due domande che vengono
+subito dopo una ricerca: chi contatto, e da dove scarico.
 
 `open`, `license` e `url` servono a chi deve riusare o citare il dato. `open` e
 `license` riportano quello che l'ente ha dichiarato nel campo `isOpendata`, senza
@@ -387,7 +414,7 @@ un dataset, con i dati essenziali negli attributi.
 ## Uso come libreria Python
 
 ```python
-from openrndt import search, get_item, get_item_xml, ItemNotFoundError
+from openrndt import search, get_item, item_record, get_item_xml, ItemNotFoundError
 
 # Ricerca
 results = search(q="catasto", num=5)
@@ -397,9 +424,13 @@ for r in results["results"]:
 # Filtro per categoria e bbox
 results = search(data_category="planningCadastre", bbox="7,44,8,45", num=10)
 
-# Dettaglio singolo metadato
+# Dettaglio singolo metadato: get_item dà la busta Elasticsearch grezza,
+# item_record il documento normalizzato (lo stesso che stampa la CLI)
 item = get_item("age:D_E973_MARSAGLIA")
-print(item["_source"]["title"])
+record = item_record(item)
+print(record["title"], record["data_date"], record["contact"]["email"])
+for r in record["resources"]:
+    print(r["type"], r["url"])
 
 # XML ISO 19139
 xml = get_item_xml("age:D_E973_MARSAGLIA")
@@ -410,6 +441,11 @@ try:
 except ItemNotFoundError:
     print("metadato non trovato")
 ```
+
+Sono esposti anche i mattoni del documento: `contact_point`, `download_urls` e
+`bbox_from_envelope` lavorano direttamente su un `_source`, e `compact_results`,
+`record_dates`, `record_license`, `record_url`, `organization_names` sulle
+risposte di `search`.
 
 Le funzioni propagano le eccezioni `httpx`: `httpx.HTTPStatusError` per le
 risposte 4xx/5xx e `httpx.ConnectError` / `httpx.TimeoutException` per i

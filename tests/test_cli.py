@@ -804,3 +804,20 @@ def test_cli_get_raw_keeps_es_envelope(item_response_json):
     result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA", "--raw"])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) == item_response_json
+
+
+def test_cli_get_raw_rejects_xml_and_html():
+    """`--raw` riguarda solo il JSON: con --xml o --html è un errore, non un'opzione ignorata."""
+    for flag in ("--xml", "--html"):
+        result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA", "--raw", flag])
+        assert result.exit_code == 2, result.output
+        assert "--raw" in result.output
+
+
+def test_public_api_exports_item_helpers():
+    """Gli helper del documento normalizzato sono importabili dal package, non solo dal modulo."""
+    import openrndt
+
+    for name in ("item_record", "contact_point", "download_urls", "bbox_from_envelope"):
+        assert name in openrndt.__all__
+        assert callable(getattr(openrndt, name))

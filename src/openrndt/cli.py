@@ -715,6 +715,8 @@ def get(
     """
     if as_xml and as_html:
         raise typer.BadParameter("Specifica --xml oppure --html, non entrambi.")
+    if as_raw and (as_xml or as_html):
+        raise typer.BadParameter("--raw riguarda solo l'output JSON: non usarlo con --xml o --html.")
     if not (as_xml or as_html) and output.get_mode() in {"csv", "compact"}:
         typer.echo(
             "Il dettaglio di un metadato non è tabellare: usa --format json (default) o table.",
