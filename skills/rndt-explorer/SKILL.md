@@ -44,12 +44,14 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
 campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `indexed`,
-`open`, `license`, `url`, `resources` — ideale per individuare il record giusto prima
-di chiedere il dettaglio con `get`. `open` e `license` sono ciò che l'ente ha dichiarato
-in `isOpendata` (non normalizzato, e assente su una scheda su tre: vedi la nota più sotto),
-`url` è il permalink citabile della scheda sul portale.
-Se `resources` è `[]` il record non linka servizi fruibili: fai `get <id>` e
-guarda `_source.links_s`.
+`open`, `license`, `url`, `resources`, `email`, `download` — ideale per individuare
+il record giusto prima di chiedere il dettaglio con `get`. `open` e `license` sono ciò
+che l'ente ha dichiarato in `isOpendata` (non normalizzato, e assente su una scheda su
+tre: vedi la nota più sotto), `url` è il permalink citabile della scheda sul portale,
+`email` è il punto di contatto designato e `download` gli URL di download dichiarati
+(`url_download_s` + `url_http_download_s`, esposti come sono).
+Se `resources` è `[]` o `download` è `[]` il record non linka servizi fruibili: fai
+`get <id>` e guarda `_source.links_s`.
 
 **Le tre date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
 `footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa

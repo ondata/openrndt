@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-08-31 (v3.3.0 - output CLI: get normalizzato, compact email+download)
+
+- **`get` normalizzato** (verificato su API reale): parte dal confronto col mirror CKAN di dati.gov.it, dove email/licenza/bbox sono solo proiezioni del RNDT grezzo. `_source` li ha già ma l'output JSON sputava la busta ES. Ora `--format json` (default) costruisce il documento: id/title/org/type/category, date updated (scheda) e indexed, `data_date` (del dato), `contact` (name/email/website da `PuntoDiContatto*`), `bbox` (da `envelope_geo`), `lineage`, `resources` (come `resources --no-check`) e `url` permalink; `_source` preservato. `get --raw` ripristina la busta. 3.3.0 chiude il gap: `result-structure.md` documentava già il normalizzato che la CLI non emetteva.
+- **`resources` ora legge `resources_nst`**: risorse tipizzate dal catalogo (`url_s`+`url_type_s`) con precedenza su links/links_s/webServices_s, dedup per URL (verificato: source WMS/WFS diventa `resources_nst`).
+- **compact + `email` e `download`**: scremata a basso costo con "chi contatto / come scarico". Fields da `PuntoDiContattoEmail_s` (500/500 su campione) e `url_download_s`+`url_http_download_s` (488/500), tipi misti normalizzati.
+- Nota: il `jq` sul PATH della shell di sessione è un builtin che si autodichiara jaq 2.3.0; jq vero = `/home/aborruso/bin/jq` (jqlang 1.7.1).
+
 ## 2026-08-31 (eval di triggering della descrizione)
 
 - Costruita con l'utente una eval di trigger: 21 query approvate una a una (10 positive, 11 negative costruite sui quasi-raggiungimenti delle skill concorrenti) più 6 di holdout, 3 run per query, giudice = modello di sessione con la lista reale delle concorrenti. Baseline: recall 10/10 ma 2 falsi positivi (geoportale regionale da sfogliare, Corine Land Cover europeo). Applicata la V2 (scope catalogo nazionale dei metadati + non-goal espliciti): 21/21 sul set, 6/6 su holdout, riprova post-applicazione 4/4. Dataset in `skills/rndt-explorer/evals/trigger-evals.json`, misure in `skills/rndt-explorer/evals/trigger-results.json`, dettagli in `docs/evaluation-v3.3.0.md`.

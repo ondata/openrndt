@@ -9,7 +9,10 @@ import respx
 from openrndt.config import DEFAULT_BASE_URL
 from openrndt.search import (
     MAX_NUM,
+    bbox_from_envelope,
     compact_results,
+    download_urls,
+    item_record,
     organization_names,
     record_dates,
     record_license,
@@ -194,6 +197,8 @@ def test_compact_results_extracts_high_signal_fields(search_response_json):
         "license",
         "url",
         "resources",
+        "email",
+        "download",
     }
 
 
@@ -417,3 +422,79 @@ def test_compact_results_carries_license_and_url(search_response_json):
         assert "open" in record and isinstance(record["open"], bool)
         assert "license" in record
         assert "url" in record
+
+
+def test_item_record_normalizes_envelope_and_details(item_response_json):
+    """`get` normalizzato: vocabolario di search + dettaglio, busta preservata."""
+    rec = item_record(item_response_json)
+    assert rec["id"] == "age:D_E973_MARSAGLIA"
+    assert rec["title"] == "Cartografia catastale - Comune di MARSAGLIA"
+    assert rec["org"] == "Agenzia delle Entrate"
+    assert rec["type"] == "dataset"
+    assert rec["category"] == "planningCadastre"
+    # date: scheda, indicizzazione e (terza cosa) il dato
+    assert rec["updated"] == "2025-02-11T00:00:00Z"
+    assert rec["indexed"] == "2026-04-25T15:37:01.891Z"
+    assert rec["data_date"] == "2023-09-22T00:00:00Z"
+    assert rec["open"] is True
+    assert rec["license"] == "CC BY 4.0"
+    # envelope ES [[xmin,ymax],[xmax,ymin]] -> bbox xmin/ymin/xmax/ymax
+    assert rec["bbox"] == {"xmin": 7.9496964, "ymin": 44.434402, "xmax": 8.0305591, "ymax": 44.475662}
+    assert rec["contact"] == {
+        "name": "Agenzia delle Entrate",
+        "email": "assistenzaweb@agenziaentrate.it",
+        "website": "http://www.agenziaentrate.gov.it/",
+    }
+    assert isinstance(rec["lineage"], str) and "rilievo" in rec["lineage"]
+    assert {r["type"] for r in rec["resources"]} >= {"WMS", "WFS"}
+    assert rec["url"] == "https://geodati.gov.it/geoportal-catalog/rest/metadata/item/age%3AD_E973_MARSAGLIA/html"
+    # la busta resta fruibile com'era prima della normalizzazione
+    assert rec["_source"]["fileid"] == "age:D_E973_MARSAGLIA"
+    assert rec["found"] is True
+    assert rec["_index"] == "geoportal-metadata_v1"
+
+
+def test_item_record_missing_fields_become_none_not_errors():
+    """Scheda quasi vuota: ogni campo assente è None/[]/False, mai eccezione."""
+    rec = item_record({"_id": "x:1", "found": True, "_source": {}})
+    assert rec["id"] == "x:1"
+    assert rec["title"] is None
+    assert rec["org"] is None
+    assert rec["category"] is None
+    assert rec["bbox"] is None
+    assert rec["data_date"] is None
+    assert rec["updated"] is None and rec["indexed"] is None
+    assert rec["open"] is False and rec["license"] is None
+    assert rec["contact"] == {"name": None, "email": None, "website": None}
+    assert rec["lineage"] is None
+    assert rec["resources"] == []
+
+
+def test_download_urls_normalizes_scalar_and_list():
+    assert download_urls({"url_download_s": ["a"], "url_http_download_s": "b"}) == ["a", "b"]
+    assert download_urls({"url_download_s": "solo"}) == ["solo"]
+    assert download_urls({}) == []
+    assert download_urls({"url_download_s": None, "url_http_download_s": [None, 3]}) == []
+
+
+def test_bbox_from_envelope_malformed_returns_none():
+    assert bbox_from_envelope(None) is None
+    assert bbox_from_envelope([]) is None
+    assert bbox_from_envelope([{"coordinates": [[1.0, 2.0]]}]) is None
+    assert bbox_from_envelope([{"coordinates": "non-coordinate"}]) is None
+
+
+def test_compact_results_carries_email_and_download(search_response_json):
+    """Compact: email del punto di contatto e URL di download dichiarati."""
+    # la fixture porta già _source con i tre campi (url_download_s array,
+    # url_http_download_s scalare: tipi misti da normalizzare)
+    first = compact_results(search_response_json)[0]
+    assert first["email"] == "assistenzaweb@agenziaentrate.it"
+    assert first["download"] == [
+        "https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0",
+        "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities",
+    ]
+    # campi assenti: email None e download lista vuota, mai errore
+    bare = compact_results({"results": [{"id": "x", "title": "T", "author": {"name": "a"}}]})[0]
+    assert bare["email"] is None
+    assert bare["download"] == []

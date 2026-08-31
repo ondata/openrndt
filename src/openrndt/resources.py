@@ -157,10 +157,29 @@ def _validate_check_url(url: str) -> str | None:
 
 
 def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
-    """Estrae e deduplica risorse utili (WMS/WFS/.../download) dal payload item."""
+    """Estrae e deduplica risorse utili (WMS/WFS/.../download) dal payload item.
+
+    Fonti in ordine di affidabilità: ``resources_nst`` (tipi assegnati dal
+    catalogo), ``links`` (dctype dichiarato nel metadato), ``webServices_s`` e
+    ``links_s`` (URL nude, tipo dedotto dall'URL). Deduplica per URL: vince la
+    prima fonte che presenta l'indirizzo.
+    """
     source = item_payload.get("_source") or {}
     rows: list[dict[str, str]] = []
     seen: set[str] = set()
+
+    for entry in source.get("resources_nst") or []:
+        if not isinstance(entry, dict):
+            continue
+        url = entry.get("url_s")
+        if not isinstance(url, str) or not url or url in seen:
+            continue
+        declared = entry.get("url_type_s")
+        kind = _normalize_kind(declared) if isinstance(declared, str) else "link"
+        if kind == "link":
+            kind = _normalize_kind(_infer_kind(url))
+        seen.add(url)
+        rows.append({"type": kind, "url": url, "source": "resources_nst"})
 
     for link in (item_payload.get("links") or []):
         if not isinstance(link, dict):

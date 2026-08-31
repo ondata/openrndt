@@ -17,12 +17,12 @@ def test_extract_resources_dedup_and_filter_non_resource_links(item_response_jso
         {
             "type": "WMS",
             "url": "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities",
-            "source": "links_s",
+            "source": "resources_nst",
         },
         {
             "type": "WFS",
             "url": "https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0",
-            "source": "links_s",
+            "source": "resources_nst",
         },
     ]
 

@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import date
 import re
 from typing import Any, cast
+from urllib.parse import quote
 
 from openrndt.client import rndt_request
 from openrndt.codelists import DATA_CATEGORIES
+from openrndt.resources import extract_resources
 
 SEARCH_PATH = "/rest/metadata/search"
 MAX_NUM = 5000
@@ -334,16 +336,122 @@ def record_url(result: dict[str, Any]) -> str | None:
     return None
 
 
+def _first_str(value: Any) -> str | None:
+    """Primo valore stringa non vuoto di un campo che arriva scalare o array."""
+    if isinstance(value, list):
+        value = next((v for v in value if isinstance(v, str) and v), None)
+    return value if isinstance(value, str) and value else None
+
+
+def contact_point(source: dict[str, Any]) -> dict[str, str | None]:
+    """Punto di contatto designato del dataset: nome, email e sito web."""
+    return {
+        "name": _first_str(source.get("PuntoDiContatto_s")),
+        "email": _first_str(source.get("PuntoDiContattoEmail_s")),
+        "website": _first_str(source.get("PuntoDiContattoSitoWeb_s")),
+    }
+
+
+def download_urls(source: dict[str, Any]) -> list[str]:
+    """URL di download dichiarati: ``url_download_s`` + ``url_http_download_s``.
+
+    I due campi arrivano con tipi incoerenti (scalare o array) a seconda della
+    scheda: la normalizzazione in lista mantiene l'ordine dei campi e scarta i
+    valori non stringa. I contenuti non vengono giudicati: il RNDT mette qui
+    anche URL che non sono download diretti (verificato: un GetCapabilities
+    WMS dentro ``url_http_download_s``).
+    """
+    urls: list[str] = []
+    for field in ("url_download_s", "url_http_download_s"):
+        value = source.get(field)
+        if isinstance(value, list):
+            urls.extend(u for u in value if isinstance(u, str) and u)
+        elif isinstance(value, str) and value:
+            urls.append(value)
+    return urls
+
+
+def bbox_from_envelope(envelope: Any) -> dict[str, float] | None:
+    """bbox ``{xmin,ymin,xmax,ymax}`` dall'``envelope_geo`` Elasticsearch.
+
+    L'envelope ha coordinate ``[[xmin, ymax], [xmax, ymin]]`` (angolo nord-ovest
+    e sud-est). ``None`` se assente o malformato: nessuna bbox inventata.
+    """
+    try:
+        coords = envelope[0]["coordinates"]
+        (xmin, ymax), (xmax, ymin) = coords
+        return {"xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax}
+    except (IndexError, KeyError, TypeError, ValueError):
+        return None
+
+
+# Path del permalink pubblico della scheda: lo stesso che il server mette nei
+# link `alternate` delle risposte di ricerca. L'endpoint `item` non espone quei
+# link, per cui il permalink va costruito dall'id.
+CATALOG_PERMALINK = "https://geodati.gov.it/geoportal-catalog/rest/metadata/item"
+
+
+def item_record(payload: dict[str, Any]) -> dict[str, Any]:
+    """Documento normalizzato di ``get``: vocabolario di ``search`` + dettaglio.
+
+    Espande la busta Elasticsearch in un oggetto con gli stessi campi delle
+    risposte di ricerca (``id``, ``title``, ``org``, ``category``, e le date
+    ``updated``/``indexed`` con la stessa semantica di ``compact``), più i
+    dettagli utili alla scheda: ``data_date`` (del dato, non della scheda),
+    ``contact`` (nome/email/sito del punto di contatto designato), ``bbox``
+    (da ``envelope_geo``), ``lineage``, ``resources`` (come ``resources``
+    senza check) e ``url`` (permalink citabile). ``_source`` e i flag della
+    busta sono preservati inalterati per chi li usa già.
+    """
+    source = payload.get("_source") or {}
+    updated, indexed = record_dates(payload)
+    is_open, license_text = record_license(source)
+    item_id = _first_str(source.get("fileid")) or payload.get("_id")
+    record: dict[str, Any] = {
+        "id": item_id,
+        "title": _first_str(source.get("title")),
+        "description": _first_str(source.get("description")),
+        "org": _first_str(source.get("apiso_OrganizationName_txt"))
+        or _first_str(source.get("EnteResponsabile_s")),
+        "type": _first_str(source.get("apiso_Type_s")),
+        "category": _topic_category(source, []),
+        "updated": updated,
+        "indexed": indexed,
+        "data_date": (
+            _first_str(source.get("apiso_RevisionDate_dt"))
+            or _first_str(source.get("apiso_CreationDate_dt"))
+            or _first_str(source.get("apiso_PublicationDate_dt"))
+        ),
+        "open": is_open,
+        "license": license_text,
+        "contact": contact_point(source),
+        "bbox": bbox_from_envelope(source.get("envelope_geo")),
+        "lineage": _first_str(source.get("apiso_Lineage_txt")),
+        "resources": extract_resources(payload),
+        "url": (
+            f"{CATALOG_PERMALINK}/{quote(str(item_id), safe='')}/html"
+            if item_id
+            else None
+        ),
+    }
+    for key in ("_index", "_id", "_version", "_seq_no", "_primary_term", "found", "_source"):
+        if key in payload:
+            record[key] = payload[key]
+    return record
+
+
 def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Riduce la risposta di :func:`search` a record sintetici per agenti/pipe.
 
     Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
     ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
     di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
-    della scheda), ``indexed`` (indicizzazione nel catalogo), ``open`` e
-    ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda)
-    e ``resources`` (tipi di servizio/download fruibili). Pensata per l'output
-    ``--format compact`` (NDJSON), ma utilizzabile direttamente come libreria.
+    della scheda), ``indexed`` (indicizzazione nel catalogo), 
+    ``open`` e ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda)
+    e ``resources`` (tipi di servizio/download fruibili), ``email`` (punto di contatto
+    designato, vedi :func:`contact_point`) e ``download`` (URL dichiarati, vedi
+    :func:`download_urls`). Pensata per l'output ``--format compact`` (NDJSON), ma
+    utilizzabile direttamente come libreria.
     """
     records: list[dict[str, Any]] = []
     for r in payload.get("results", []) or []:
@@ -365,9 +473,12 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "license": license_text,
                 "url": record_url(r),
                 "resources": _resource_types(r.get("links") or []),
+                "email": _first_str(source.get("PuntoDiContattoEmail_s")),
+                "download": download_urls(source),
             }
         )
     return records
+
 
 
 def organization_names(payload: dict[str, Any]) -> list[str]:

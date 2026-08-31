@@ -152,9 +152,34 @@ openrndt --format json get <id> | jq '._source | keys'
 
 ## Response di `get`
 
-Lo stesso oggetto in `results[*]` di una `search`, ma esposto al primo livello
-con metadati Elasticsearch aggiuntivi: `_index`, `_id`, `_version`, `found`,
-`_source`. La struttura di `_source` è identica.
+Dalla 3.3.0 `get` con `--format json` (default) restituisce un **documento
+normalizzato** costruito da `_source`, con lo stesso vocabolario delle risposte
+di `search` più i dettagli utili alla scheda. `_source` e i flag della busta
+(`_index`, `_id`, `_version`, `found`, …) sono preservati inalterati in coda.
+
+| Campo              | Contenuto                                                  |
+|--------------------|------------------------------------------------------------|
+| `id`               | identificativo del record (`_source.fileid`)               |
+| `title`, `description` | titolo e descrizione                                   |
+| `org`              | ente responsabile (`apiso_OrganizationName_txt` o `EnteResponsabile_s`) |
+| `type`, `category` | tipo risorsa (`apiso_Type_s`) e categoria ISO 19115           |
+| `updated`          | data della **scheda** (`apiso_Modified_dt`), come in `compact` |
+| `indexed`          | indicizzazione nel catalogo (`sys_modified_dt`)               |
+| `data_date`        | data del **dato** (`apiso_RevisionDate_dt`, poi Creation/Publication) |
+| `open`, `license`  | come in `compact` (isOpendata e licenza dichiarata, non normalizzate) |
+| `contact`          | `{name, email, website}` del punto di contatto designato (`PuntoDiContatto*`) |
+| `bbox`             | `{xmin,ymin,xmax,ymax}` ricavato da `envelope_geo`            |
+| `lineage`          | provenienza/qualità del dato (`apiso_Lineage_txt`)            |
+| `resources`        | risorse fruibili come `resources --no-check` (vedi sotto)     |
+| `url`              | permalink citabile della scheda (`…/rest/metadata/item/{id}/html`) |
+
+La busta Elasticsearch grezza resta disponibile con `--raw` (comportamento
+ante 3.3.0), per chi lavora direttamente sui campi indicizzati:
+
+```bash
+openrndt --format json get ispra_rm:01CLCALL_SDT | jq '.contact.email, .data_date, .bbox'
+openrndt get ispra_rm:01CLCALL_SDT --raw | jq '._source | keys'
+```
 
 ## Campi del check di `resources`
 

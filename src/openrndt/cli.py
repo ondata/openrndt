@@ -15,6 +15,7 @@ from openrndt.resources import check_resources, extract_resources
 from openrndt.search import (
     ORG_EXACT_FIELD,
     compact_results,
+    item_record,
     organization_names,
     record_dates,
     record_license,
@@ -699,8 +700,19 @@ def get(
     item_id: str = typer.Argument(..., help="ID del metadato (es. age:D_E973_MARSAGLIA)."),
     as_xml: bool = typer.Option(False, "--xml", help="Restituisci XML ISO 19139 grezzo."),
     as_html: bool = typer.Option(False, "--html", help="Restituisci HTML."),
+    as_raw: bool = typer.Option(
+        False,
+        "--raw",
+        help="Busta Elasticsearch grezza (comportamento ante 3.3.0), senza normalizzazione.",
+    ),
 ) -> None:
-    """Recupera il dettaglio di un singolo metadato."""
+    """Recupera il dettaglio di un singolo metadato.
+
+    Con `--format json` (default) emette il documento normalizzato: gli stessi
+    campi delle risposte di `search` più email/bbox/lineage/date del dato
+    (vedi references/result-structure.md). `--raw` ripristina la busta
+    Elasticsearch completa.
+    """
     if as_xml and as_html:
         raise typer.BadParameter("Specifica --xml oppure --html, non entrambi.")
     if not (as_xml or as_html) and output.get_mode() in {"csv", "compact"}:
@@ -725,7 +737,7 @@ def get(
         raise typer.Exit(1)
     except httpx.HTTPError as exc:
         _http_error(exc)
-    output.emit(payload)
+    output.emit(payload if as_raw else item_record(payload))
 
 
 @app.command()

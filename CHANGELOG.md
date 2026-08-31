@@ -4,6 +4,19 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.3.0] - 2026-08-31
+
+### Added
+
+- **`get` con `--format json` (default) restituisce un documento normalizzato** invece della busta Elasticsearch grezza: stessi campi delle risposte di `search` (id, title, org, type, category, date updated/indexed) più `data_date` (data del dato), `contact` (nome/email/sito del punto di contatto designato, da `PuntoDiContatto*`), `bbox` (da `envelope_geo`), `lineage`, `resources` (come `resources --no-check`) e `url` (permalink citabile). `_source` e i flag della busta restano inalterati in coda.
+- **`get --raw`**: ripristina la busta Elasticsearch completa, comportamento ante 3.3.0.
+- **`search --format compact` arricchito di due campi**: `email` (punto di contatto designato, `PuntoDiContattoEmail_s`) e `download` (URL dichiarati da `url_download_s` + `url_http_download_s`, normalizzati in lista).
+- **`resources` legge anche `resources_nst`**: le risorse con tipo assegnato dal catalogo (`url_s` + `url_type_s`) ora hanno precedenza su `link`/`links_s`/`webServices_s`, deduplicando per URL.
+
+### Changed
+
+- Il contratto documentato di `get` (reference della skill, `references/result-structure.md`) coincide ora con l'output reale, che prima non lo rispettava.
+
 ## [3.2.0] - 2026-08-30
 
 ### Fixed

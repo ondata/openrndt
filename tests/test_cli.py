@@ -154,6 +154,8 @@ def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
                 "license",
                 "url",
                 "resources",
+                "email",
+                "download",
             }
 
 
@@ -349,12 +351,12 @@ def test_cli_invalid_format_no_traceback():
 
 
 @respx.mock
-def test_cli_get_json_success(item_response_json):
-    """get senza flag (default json) su un ID esistente: payload completo su stdout."""
+def test_cli_get_raw_success(item_response_json):
+    """get --raw restituisce la busta Elasticsearch com'era prima della normalizzazione."""
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA"])
+    result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA", "--raw"])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) == item_response_json
 
@@ -774,3 +776,31 @@ def test_cli_search_table_truncates_long_license(search_response_json):
     assert result.exit_code == 0, result.output
     assert "…" in result.output
     assert lunga not in result.output.replace("\n", "")
+
+
+@respx.mock
+def test_cli_get_json_normalized(item_response_json):
+    """`get` restituisce il documento normalizzato, con busta preservata."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    doc = json.loads(result.stdout)
+    assert doc["id"] == "age:D_E973_MARSAGLIA"
+    assert doc["org"] == "Agenzia delle Entrate"
+    assert doc["contact"]["email"] == "assistenzaweb@agenziaentrate.it"
+    assert doc["bbox"]["xmin"] == 7.9496964
+    assert doc["resources"]
+    assert doc["_source"]["fileid"] == "age:D_E973_MARSAGLIA"
+
+
+@respx.mock
+def test_cli_get_raw_keeps_es_envelope(item_response_json):
+    """`--raw` ripristina la busta Elasticsearch com'era ante 3.3.0."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA", "--raw"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == item_response_json
