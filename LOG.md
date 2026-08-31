@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-08-31 (eval di triggering della descrizione)
+
+- Costruita con l'utente una eval di trigger: 21 query approvate una a una (10 positive, 11 negative costruite sui quasi-raggiungimenti delle skill concorrenti) più 6 di holdout, 3 run per query, giudice = modello di sessione con la lista reale delle concorrenti. Baseline: recall 10/10 ma 2 falsi positivi (geoportale regionale da sfogliare, Corine Land Cover europeo). Applicata la V2 (scope catalogo nazionale dei metadati + non-goal espliciti): 21/21 sul set, 6/6 su holdout, riprova post-applicazione 4/4. Dataset in `skills/rndt-explorer/evals/trigger-evals.json`, misure in `skills/rndt-explorer/evals/trigger-results.json`, dettagli in `docs/evaluation-v3.3.0.md`.
+
 ## 2026-08-30 (skill sfoltita: SKILL.md da 464 a 371 righe)
 
 - Spostati nelle reference i blocchi che erano cresciuti nel corpo: conteggio difendibile e nota completa su `isOpendata` in `workflows.md` §11, ricetta «ente che non pubblica in proprio» in §12, operatori e tabella wildcard in `search-syntax.md`, campi del check di `resources` in `result-structure.md`. In `SKILL.md` restano la regola operativa e il rimando. Il filo delle cinque fasi torna leggibile senza perdere nulla: le reference passano da 1465 a 1623 righe.

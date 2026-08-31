@@ -1,17 +1,22 @@
 ---
 name: rndt-explorer
 description: >
-  Esplorazione guidata del Repertorio Nazionale dei Dati Territoriali (RNDT)
-  tramite la CLI openrndt. Usa questa skill ogni volta che l'utente cerca
-  dati geografici, cartografici o territoriali italiani — anche se non
-  menziona esplicitamente RNDT, geoportale o metadati. Coprono: catasto,
-  cartografia di base, uso del suolo, idrografia, trasporti, ambiente,
-  servizi WMS/WFS regionali e nazionali, dati INSPIRE, dataset ISTAT
-  georeferenziati, dati di enti come Agenzia delle Entrate, ISPRA, regioni,
-  comuni, autorità di bacino. La skill guida l'utente passo passo:
-  scopre le codelist disponibili, esegue ricerche con filtri progressivi,
-  recupera il dettaglio del metadato e segnala le risorse scaricabili
-  (WMS, WFS, download diretto).
+  Esplorazione guidata del Repertorio Nazionale dei Dati Territoriali (RNDT) - il
+  catalogo nazionale dei metadati geografici italiani (ISO 19115/INSPIRE) - tramite
+  la CLI openrndt. Usa questa skill ogni volta che l'utente cerca dove trovare dati
+  geografici, cartografici o territoriali italiani, anche se non menziona RNDT,
+  geoportale o metadati: identifica i dataset, l'ente che li pubblica davvero
+  (Agenzia delle Entrate, ISPRA, regioni, autorità di bacino, comuni), la data del
+  dato, la licenza dichiarata e i servizi fruibili (WMS, WFS, download diretto).
+  Copre catasto e temi INSPIRE, cartografia di base, uso del suolo, idrografia,
+  rischi, trasporti, ambiente, confini amministrativi, e i servizi WMS/WFS
+  regionali e nazionali indicizzati in questo catalogo nazionale. Non usarla per:
+  geodati non italiani (Copernicus, Corine, dataset esteri), statistiche o tabelle
+  senza geometrie, elaborazione o riproiezione di file GIS che l'utente ha già,
+  mappe da dati già disponibili, portali open data non geografici (CKAN,
+  dati.gov.it), codici ISTAT o elenchi amministrativi senza geometrie, audit di
+  qualità dei dati, contatti e PEC degli enti, o per navigare il portale o
+  geoportale di un singolo ente quando non serve una ricerca nei metadati nazionali.
 license: MIT
 compatibility: >
   Richiede la CLI openrndt >= 3.1.0 (comandi: search, footprints, get,

@@ -1,0 +1,496 @@
+{
+ "meta": {
+  "date": "2026-08-31",
+  "judge_model": "zai/glm-5.3-flash (modello di sessione, stesso che decide il trigger nell'harness)",
+  "k": 3,
+  "trigger_threshold": "hits >= 2/3",
+  "competitor_skills": [
+   "ckan-explorer",
+   "datawrapper",
+   "geolibre",
+   "ipa",
+   "istat-mcp",
+   "open-data-quality",
+   "portolan",
+   "sdmx-explorer",
+   "situas-explorer"
+  ],
+  "dataset": "evals/trigger-evals.json (21 casi approvati dall'utente)",
+  "holdout": "6 casi nuovi, non usati nell'iterazione"
+ },
+ "baseline": {
+  "description_hash": "449b47e4",
+  "main": {
+   "recall_pos": 1.0,
+   "fpr_neg": 0.18181818181818182,
+   "accuracy": 0.9047619047619048,
+   "fail_ids": [
+    "n1",
+    "n10"
+   ],
+   "per_item": [
+    {
+     "id": "p1",
+     "tag": "esplicito",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p2",
+     "tag": "implicito-geodati",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p3",
+     "tag": "wms",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p4",
+     "tag": "licenze",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p5",
+     "tag": "footprints",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p6",
+     "tag": "competes-situas",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p7",
+     "tag": "competes-ckan",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p8",
+     "tag": "statistiche-catalogo",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p9",
+     "tag": "casual-implicito",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p10",
+     "tag": "cli",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "n1",
+     "tag": "estero",
+     "should_trigger": false,
+     "hits": 2,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "n2",
+     "tag": "statistiche-istanza",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n3",
+     "tag": "processing-locale",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n4",
+     "tag": "mappa-da-csv",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n5",
+     "tag": "ckan-nazionale",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n6",
+     "tag": "codici-istat",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n7",
+     "tag": "qualita-dati",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n8",
+     "tag": "pec-contatti",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n9",
+     "tag": "wms-gia-noto",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n10",
+     "tag": "geoportale-regionale",
+     "should_trigger": false,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "n11",
+     "tag": "estero-speculare",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    }
+   ]
+  },
+  "holdout": {
+   "recall_pos": 1.0,
+   "fpr_neg": 0.3333333333333333,
+   "accuracy": 0.8333333333333334,
+   "fail_ids": [
+    "h6"
+   ],
+   "per_item": [
+    {
+     "id": "h1",
+     "tag": "pos-implicito-rischi",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h2",
+     "tag": "pos-licenze-tesi",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h3",
+     "tag": "pos-footprints",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h4",
+     "tag": "neg-estero-osm",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "h5",
+     "tag": "neg-statistiche",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "h6",
+     "tag": "neg-geoportale-singolo",
+     "should_trigger": false,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    }
+   ]
+  }
+ },
+ "v2": {
+  "description": "Esplorazione guidata del Repertorio Nazionale dei Dati Territoriali (RNDT) - il catalogo nazionale dei metadati geografici italiani (ISO 19115/INSPIRE) - tramite la CLI openrndt. Usa questa skill ogni volta che l'utente cerca dove trovare dati geografici, cartografici o territoriali italiani, anche se non menziona RNDT, geoportale o metadati: identifica i dataset, l'ente che li pubblica davvero (Agenzia delle Entrate, ISPRA, regioni, autorita' di bacino, comuni), la data del dato, la licenza dichiarata e i servizi fruibili (WMS, WFS, download diretto). Copre catasto e temi INSPIRE, cartografia di base, uso del suolo, idrografia, rischi, trasporti, ambiente, confini amministrativi, e i servizi WMS/WFS regionali e nazionali INDICIZZATI IN QUESTO CATALOGO NAZIONALE. Non usarla per: geodati non italiani (Copernicus, Corine, dataset esteri), statistiche o tabelle senza geometrie, elaborazione o riproiezione di file GIS che l'utente ha gia', mappe da dati gia' disponibili, portali open data non geografici (CKAN, dati.gov.it), codici ISTAT o elenchi amministrativi senza geometrie, audit di qualita' dei dati, contatti e PEC degli enti, o per navigare il portale/geoportale di un singolo ente quando non serve una ricerca nei metadati nazionali.",
+  "main": {
+   "recall_pos": 1.0,
+   "fpr_neg": 0.0,
+   "accuracy": 1.0,
+   "fail_ids": [],
+   "per_item": [
+    {
+     "id": "p1",
+     "tag": "esplicito",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p2",
+     "tag": "implicito-geodati",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p3",
+     "tag": "wms",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p4",
+     "tag": "licenze",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p5",
+     "tag": "footprints",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p6",
+     "tag": "competes-situas",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p7",
+     "tag": "competes-ckan",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p8",
+     "tag": "statistiche-catalogo",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p9",
+     "tag": "casual-implicito",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "p10",
+     "tag": "cli",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "n1",
+     "tag": "estero",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n2",
+     "tag": "statistiche-istanza",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n3",
+     "tag": "processing-locale",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n4",
+     "tag": "mappa-da-csv",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n5",
+     "tag": "ckan-nazionale",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n6",
+     "tag": "codici-istat",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n7",
+     "tag": "qualita-dati",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n8",
+     "tag": "pec-contatti",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n9",
+     "tag": "wms-gia-noto",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n10",
+     "tag": "geoportale-regionale",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "n11",
+     "tag": "estero-speculare",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    }
+   ]
+  },
+  "holdout": {
+   "recall_pos": 1.0,
+   "fpr_neg": 0.0,
+   "accuracy": 1.0,
+   "fail_ids": [],
+   "per_item": [
+    {
+     "id": "h1",
+     "tag": "pos-implicito-rischi",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h2",
+     "tag": "pos-licenze-tesi",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h3",
+     "tag": "pos-footprints",
+     "should_trigger": true,
+     "hits": 3,
+     "k": 3,
+     "triggered": true
+    },
+    {
+     "id": "h4",
+     "tag": "neg-estero-osm",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "h5",
+     "tag": "neg-statistiche",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    },
+    {
+     "id": "h6",
+     "tag": "neg-geoportale-singolo",
+     "should_trigger": false,
+     "hits": 0,
+     "k": 3,
+     "triggered": false
+    }
+   ]
+  }
+ }
+}

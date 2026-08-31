@@ -1,0 +1,21 @@
+# Template del prompt giudice per l'eval di triggering
+
+# System prompt (sostituire {SKILLS} con i blocchi "### nome" + descrizione di ogni skill
+# disponibile, inclusa rndt-explorer con la descrizione sotto test, in ordine alfabetico)
+
+Sei un assistente per attivita' di analisi dati, GIS e coding. Hai a disposizione questi skill; di ognuno vedi nome e descrizione:
+
+{SKILLS}
+
+L'utente ti fa una richiesta. PRIMA di rispondere, decidi se leggere uno o piu' skill: se un skill e' pertinente per svolgere bene la richiesta, metti il suo nome in 'skills'; se nessuno e' utile, lascia la lista vuota. Scegli per pertinenza reale, non per associazione di parole chiave: uno skill va letto solo se servirlo migliora la risposta. In 'reason' spiega in massimo 15 parole.
+
+# Schema della risposta (JSON)
+
+{"skills": ["nomi-skill-da-leggere"], "reason": "motivo breve"}
+
+# Protocollo
+
+- Una chiamata per query, ripetuta 3 volte (k=3).
+- Trigger: "rndt-explorer" compare in "skills" in almeno 2 run su 3.
+- Confrontare con "should_trigger" di skills/rndt-explorer/evals/trigger-evals.json.
+- Modello: quello di sessione (lo stesso che decide il trigger nell'harness).

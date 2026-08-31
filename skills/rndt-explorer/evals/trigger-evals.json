@@ -1,0 +1,28 @@
+{
+  "skill_name": "rndt-explorer",
+  "kind": "trigger",
+  "reviewed_by_user": "2026-08-31, 21/21 casi approvati",
+  "items": [
+    {"id": "p1", "should_trigger": true, "tag": "esplicito", "query": "Cerca nel RNDT tutti i dataset dell'ISPRA sull'uso del suolo che sono open data, dimmi quanti sono e dammi i permalink delle schede."},
+    {"id": "p2", "should_trigger": true, "tag": "implicito-geodati", "query": "Devo mettere in QGIS l'idrografia ufficiale italiana, fiumi e laghi. Dove la trovo in formato scaricabile?"},
+    {"id": "p3", "should_trigger": true, "tag": "wms", "query": "Mi serve l'indirizzo del servizio WMS della Carta Geologica d'Italia per usarlo in un progetto GIS. Lo trovi?"},
+    {"id": "p4", "should_trigger": true, "tag": "licenze", "query": "Sto citando i dati catastali in un articolo: le particelle catastali (INSPIRE Cadastral Parcels) dell'Agenzia delle Entrate che licenza hanno nel catalogo nazionale? Sono riutilizzabili?"},
+    {"id": "p5", "should_trigger": true, "tag": "footprints", "query": "Per uno studio sulla Sicilia mi servono le estensioni geografiche (i bbox) dei dataset italiani sull'uso del suolo, per capire quali sono regionali e quali nazionali."},
+    {"id": "p6", "should_trigger": true, "tag": "competes-situas", "query": "Mi servono i confini amministrativi dei comuni italiani in formato GIS, shapefile o geojson."},
+    {"id": "p7", "should_trigger": true, "tag": "competes-ckan", "query": "Cerco dati geografici ufficiali sulle aree a rischio idraulico pubblicati da enti pubblici italiani, da georeferenziare in un progetto."},
+    {"id": "p8", "should_trigger": true, "tag": "statistiche-catalogo", "query": "Quante schede di metadati ha pubblicato l'Autorità di bacino del fiume Po nel catalogo nazionale? Di quante hanno servizi WMS collegati?"},
+    {"id": "p9", "should_trigger": true, "tag": "casual-implicito", "query": "ciao, per un lavoretto mi serve la carta tecnica regionale in formato consultabile online, qualcosa di ufficiale della mia regione (l'umbria). trovi qualcosa?"},
+    {"id": "p10", "should_trigger": true, "tag": "cli", "query": "Sto usando openrndt da terminale: come esporto i risultati di search in CSV senza perdere i permalink?"},
+    {"id": "n1", "should_trigger": false, "tag": "estero", "query": "Scarico Corine Land Cover 2018 di Copernicus per l'Europa e la devo ritagliare sull'Italia: come organizzo il download?"},
+    {"id": "n2", "should_trigger": false, "tag": "statistiche-istanza", "query": "Dammi la popolazione dei comuni italiani al 2024 e il tasso di invecchiamento per regione, in un foglio unico."},
+    {"id": "n3", "should_trigger": false, "tag": "processing-locale", "query": "Ho questo shapefile delle frazioni: riproiettalo in EPSG:4326 e semplifica le geometrie per una mappa web leggera."},
+    {"id": "n4", "should_trigger": false, "tag": "mappa-da-csv", "query": "Con questo CSV dei consumi idrici per comune costruiscimi una mappa coropletica da condividere online."},
+    {"id": "n5", "should_trigger": false, "tag": "ckan-nazionale", "query": "Cerca sul portale open data nazionale (dati.gov.it) i dataset sulla qualità dell'aria e dimmi quanti sono."},
+    {"id": "n6", "should_trigger": false, "tag": "codici-istat", "query": "Elenca i comuni della provincia di Treviso con i loro codici ISTAT attuali, in CSV."},
+    {"id": "n7", "should_trigger": false, "tag": "qualita-dati", "query": "Verifica se il dataset 'Elenco scuole' sul portale CKAN della Regione Lombardia è pubblicato secondo le linee guida per i CSV degli open data."},
+    {"id": "n8", "should_trigger": false, "tag": "pec-contatti", "query": "Mi serve la PEC dell'Autorità di bacino distrettuale delle Alpi Orientali per una richiesta formale."},
+    {"id": "n9", "should_trigger": false, "tag": "wms-gia-noto", "query": "Con questo WMS che ho già (https://wms2.regione.toscana.it/geoserver/wms) costruisci una pagina mappa web da mandare a un collega."},
+    {"id": "n10", "should_trigger": false, "tag": "geoportale-regionale", "query": "Voglio sfogliare il Geoportale della Regione Toscana: dammi il link al loro catalogo di mappe e come è organizzato."},
+    {"id": "n11", "should_trigger": false, "tag": "estero-speculare", "query": "Mi servono i confini amministrativi dei comuni spagnoli in GIS per un confronto europeo."}
+  ]
+}
