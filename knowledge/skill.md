@@ -26,6 +26,14 @@ non tocca il codice). La versione minima di CLI richiesta si dichiara invece in
 `compatibility`. Fino alla 3.1.0 i due numeri coincidevano perché la skill era
 sempre cambiata insieme al codice.
 
+# Vincoli del frontmatter
+
+`description` deve stare entro **1024 caratteri**: è il massimo fissato dalla specifica Agent Skills, e vale anche quando un runtime carica la skill ugualmente. Un troncamento a 1024 taglierebbe la coda della descrizione, dove stanno le esclusioni («non usarla per…») che evitano i falsi trigger: la parte da difendere quando si accorcia. Controllo rapido:
+
+```bash
+python3 -c "import yaml;print(len(yaml.safe_load(open('skills/rndt-explorer/SKILL.md').read().split('---')[1])['description'].rstrip()))"
+```
+
 # Riferimenti inclusi nella skill
 
 | File | Contenuto |

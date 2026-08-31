@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-08-31 (skill 3.4.1: description dentro il limite di spec)
+
+- **`description` della skill portata da 1253 a 937 caratteri**. La spec Agent Skills fissa il massimo a 1024 (`specs/agent-skills/specification.md`): Claude Code la caricava lo stesso, ma è una tolleranza del runtime e un troncamento a 1024 avrebbe tagliato proprio la coda, cioè l'elenco dei casi in cui la skill **non** va usata - la parte che evita i falsi trigger. Segnalato da un runtime terzo in fase di caricamento. Tagliate solo ridondanze: gli esempi di enti tra parentesi, i servizi WMS/WFS «regionali e nazionali» già coperti dalla frase precedente, «mappe da dati già disponibili». Trigger positivi ed esclusioni restano tutti.
+
 ## 2026-08-31 (rilasciata la 3.3.0 su PyPI)
 
 - **[PR #18](https://github.com/ondata/openrndt/pull/18) mergiata in rebase**, tag `v3.3.0`, GitHub Release, pubblicazione su PyPI. Smoke test sulla CLI reinstallata **da PyPI** (`uv tool install openrndt==3.3.0 --reinstall --no-cache`): `get` normalizzato con `contact.email` e tre risorse, `--raw` che torna le sette chiavi della busta, `compact` con `email` e `download`, `--raw --xml` che esce 2, e gli helper importabili da un ambiente creato con `uvx --from openrndt==3.3.0`.

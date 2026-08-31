@@ -1,22 +1,18 @@
 ---
 name: rndt-explorer
 description: >
-  Esplorazione guidata del Repertorio Nazionale dei Dati Territoriali (RNDT) - il
-  catalogo nazionale dei metadati geografici italiani (ISO 19115/INSPIRE) - tramite
+  Esplorazione guidata del Repertorio Nazionale dei Dati Territoriali (RNDT), il
+  catalogo nazionale dei metadati geografici italiani (ISO 19115/INSPIRE), tramite
   la CLI openrndt. Usa questa skill ogni volta che l'utente cerca dove trovare dati
-  geografici, cartografici o territoriali italiani, anche se non menziona RNDT,
-  geoportale o metadati: identifica i dataset, l'ente che li pubblica davvero
-  (Agenzia delle Entrate, ISPRA, regioni, autorità di bacino, comuni), la data del
+  geografici, cartografici o territoriali italiani, anche senza menzionare RNDT o
+  geoportale: identifica i dataset, l'ente che li pubblica davvero, la data del
   dato, la licenza dichiarata e i servizi fruibili (WMS, WFS, download diretto).
   Copre catasto e temi INSPIRE, cartografia di base, uso del suolo, idrografia,
-  rischi, trasporti, ambiente, confini amministrativi, e i servizi WMS/WFS
-  regionali e nazionali indicizzati in questo catalogo nazionale. Non usarla per:
-  geodati non italiani (Copernicus, Corine, dataset esteri), statistiche o tabelle
-  senza geometrie, elaborazione o riproiezione di file GIS che l'utente ha già,
-  mappe da dati già disponibili, portali open data non geografici (CKAN,
-  dati.gov.it), codici ISTAT o elenchi amministrativi senza geometrie, audit di
-  qualità dei dati, contatti e PEC degli enti, o per navigare il portale o
-  geoportale di un singolo ente quando non serve una ricerca nei metadati nazionali.
+  rischi, trasporti, ambiente, confini amministrativi. Non usarla per: geodati non
+  italiani (Copernicus, Corine), statistiche o tabelle senza geometrie,
+  elaborazione di file GIS che l'utente ha già, portali open data non geografici
+  (CKAN, dati.gov.it), codici ISTAT senza geometrie, audit di qualità dei dati,
+  contatti e PEC degli enti, o per navigare il portale di un singolo ente.
 license: MIT
 compatibility: >
   Richiede la CLI openrndt >= 3.3.0 (comandi: search, footprints, get,
@@ -25,7 +21,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.0"
+  version: "3.4.1"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
