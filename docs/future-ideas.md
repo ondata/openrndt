@@ -195,3 +195,7 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 
 - Esporre `envelope_geo` come bbox nei campi normalizzati di `get`/`search`: esiste in `_source` ma non emerge negli output attuali.
 - Risolvere l'email del punto di contatto (le URI `geodati.gov.it/resource/pointOfContact/...` la contengono): sul mirror CKAN arriva pronta come `contact_email`, da openrndt no.
+
+## 2026-08-31 - verifica sull'email di contatto
+
+- L'email non va risolverla dalle URI pointOfContact: sta già nella scheda XML del record (`gmd:contactInfo/gmd:electronicMailAddress`; nella scheda Corine CLC cinque indirizzi per ruolo distinti). Il mirror CKAN ne proietta una in `contact_email`. Idea: aprire gli indirizzi email del punto di contatto nei campi normalizzati di openrndt.
