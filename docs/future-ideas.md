@@ -191,3 +191,7 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 - Gestione credenziali per provider: RNDT è aperto.
 - Immagine Docker da 14 GB con Python/R/Julia/Rust preinstallati.
 - **Routing table multi-provider dentro la CLI**: fuori perimetro, il design è read-only e single-portal. A livello di *skill* è legittima solo nella forma minima: quando RNDT è il catalogo sbagliato, rimandare a `ckan-explorer`, `situas-explorer`, `portolan`. 
+## 2026-08-31 - dal confronto RNDT vs mirror CKAN (dati.gov.it)
+
+- Esporre `envelope_geo` come bbox nei campi normalizzati di `get`/`search`: esiste in `_source` ma non emerge negli output attuali.
+- Risolvere l'email del punto di contatto (le URI `geodati.gov.it/resource/pointOfContact/...` la contengono): sul mirror CKAN arriva pronta come `contact_email`, da openrndt no.
