@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 import httpx
 import respx
@@ -806,12 +807,23 @@ def test_cli_get_raw_keeps_es_envelope(item_response_json):
     assert json.loads(result.stdout) == item_response_json
 
 
+def _plain(text: str) -> str:
+    """Testo senza codici ANSI, senza bordi del riquadro e su una riga sola.
+
+    Rich colora le opzioni e manda a capo dentro il riquadro d'errore: cercare
+    una stringa nell'output grezzo passa in locale e fallisce in CI, dove il
+    colore è attivo e spezza `--raw` in mezzo ai codici di escape.
+    """
+    without_ansi = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    return " ".join(without_ansi.translate(str.maketrans("", "", "│╭╮╰╯─")).split())
+
+
 def test_cli_get_raw_rejects_xml_and_html():
     """`--raw` riguarda solo il JSON: con --xml o --html è un errore, non un'opzione ignorata."""
     for flag in ("--xml", "--html"):
         result = runner.invoke(app, ["get", "age:D_E973_MARSAGLIA", "--raw", flag])
         assert result.exit_code == 2, result.output
-        assert "--raw" in result.output
+        assert "riguarda solo l'output JSON" in _plain(result.output)
 
 
 def test_public_api_exports_item_helpers():
