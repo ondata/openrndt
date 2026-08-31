@@ -30,7 +30,9 @@
 Una riga JSON per record con i soli campi ad alto segnale: `id`, `title`,
 `org`, `type`, `category`, `updated` (data della scheda, `apiso_Modified_dt`),
 `indexed` (indicizzazione nel catalogo, `sys_modified_dt`), `open`, `license`,
-`url`, `resources`.
+`url`, `resources`, `email` (punto di contatto designato,
+`PuntoDiContattoEmail_s`) e `download` (URL dichiarati in `url_download_s` +
+`url_http_download_s`, riportati come sono).
 
 ```bash
 openrndt --format compact search --q "frane AND isOpendata:*" --num 30
@@ -38,7 +40,7 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
 
 - `resources` elenca i tipi di servizio/download fruibili (`WMS`, `WFS`,
   `download`, …). Se è `[]` il record non linka servizi: per i dettagli fai
-  `get <id>` e guarda `_source.links_s`.
+  `get <id>` e guarda il suo campo `resources`, con `type` e `url` già risolti.
 - `open` e `license` vengono da `isOpendata`, non normalizzato: `license` può
   essere `CC BY 4.0` come un intero paragrafo di disclaimer, e `open=false`
   significa «l'ente non l'ha dichiarato lì», non «dato chiuso» (alcune schede

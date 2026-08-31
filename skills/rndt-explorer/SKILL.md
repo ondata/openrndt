@@ -19,12 +19,13 @@ description: >
   geoportale di un singolo ente quando non serve una ricerca nei metadati nazionali.
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt >= 3.1.0 (comandi: search, footprints, get,
-  resources, discover).
+  Richiede la CLI openrndt >= 3.3.0 (comandi: search, footprints, get,
+  resources, discover). Dalla 3.3.0 `get` emette il documento normalizzato e
+  accetta `--raw`: con una CLI precedente le ricette che li usano falliscono.
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.3.0"
+  version: "3.4.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -51,7 +52,8 @@ tre: vedi la nota più sotto), `url` è il permalink citabile della scheda sul p
 `email` è il punto di contatto designato e `download` gli URL di download dichiarati
 (`url_download_s` + `url_http_download_s`, esposti come sono).
 Se `resources` è `[]` o `download` è `[]` il record non linka servizi fruibili: fai
-`get <id>` e guarda `_source.links_s`.
+`get <id>` e guarda il suo campo `resources`, che parte da `resources_nst` (i tipi
+assegnati dal catalogo) e ricade sui link solo dove quello manca.
 
 **Le tre date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
 `footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa
@@ -201,10 +203,16 @@ verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 Con un `id` interessante:
 
 ```bash
-openrndt --format json get <id>           # JSON Elasticsearch (_source completo)
+openrndt --format json get <id>           # documento normalizzato (_source in coda)
+openrndt get <id> --raw                    # sola busta Elasticsearch (ante 3.3.0)
 openrndt get <id> --xml > meta.xml         # XML ISO 19139 (per INSPIRE)
 openrndt get <id> --html > meta.html       # HTML pronto
 ```
+
+Il documento normalizzato ha in cima i campi già pronti - `data_date` (la data
+del **dato**), `contact` (`{name, email, website}`), `bbox`, `lineage`,
+`resources`, `open`/`license`, `url` - e in coda `_source` inalterato. Prima di
+ricostruire un valore a mano da `_source`, controlla se è già al primo livello.
 
 Struttura del payload e mappa dei campi `_source` (per costruire ricerche
 mirate via `q=campo:valore`):
@@ -232,9 +240,11 @@ recente, o dichiara perché no.
 
 ## Fase 4 — Download (risorse collegate)
 
-I servizi e i file scaricabili stanno in `results[].links[]` (per ogni
-risultato di `search`) o in `_source.links_s` / `_source.webServices_s`
-(per `get`). Filtra per `dctype` (`WMS`, `WFS`, `WCS`, `download`).
+Per un record singolo la via breve è il campo `resources` di `get`: già
+tipizzato e deduplicato, identico a `resources --no-check`. Le fonti grezze
+restano disponibili - `results[].links[]` per ogni risultato di `search`,
+`_source.links_s` / `_source.webServices_s` dentro la busta - e lì si filtra per
+`dctype` (`WMS`, `WFS`, `WCS`, `download`).
 
 Per estrarre gli endpoint e provarli usa `resources`.
 

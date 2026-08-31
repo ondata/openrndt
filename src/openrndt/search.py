@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date
 import re
+from datetime import date
 from typing import Any, cast
 from urllib.parse import quote
 
@@ -386,8 +386,10 @@ def bbox_from_envelope(envelope: Any) -> dict[str, float] | None:
 
 
 # Path del permalink pubblico della scheda: lo stesso che il server mette nei
-# link `alternate` delle risposte di ricerca. L'endpoint `item` non espone quei
-# link, per cui il permalink va costruito dall'id.
+# link `alternate` delle risposte di ricerca (verificato sul portale ufficiale).
+# L'endpoint `item` non espone quei link, per cui il permalink va costruito
+# dall'id. È fisso e non segue `OPENRNDT_BASE_URL`: il portale e l'API stanno su
+# path diversi, e per un mirror non esiste un permalink da dedurre.
 CATALOG_PERMALINK = "https://geodati.gov.it/geoportal-catalog/rest/metadata/item"
 
 
@@ -446,7 +448,7 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
     ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
     di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
-    della scheda), ``indexed`` (indicizzazione nel catalogo), 
+    della scheda), ``indexed`` (indicizzazione nel catalogo),
     ``open`` e ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda)
     e ``resources`` (tipi di servizio/download fruibili), ``email`` (punto di contatto
     designato, vedi :func:`contact_point`) e ``download`` (URL dichiarati, vedi
@@ -478,7 +480,6 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     return records
-
 
 
 def organization_names(payload: dict[str, Any]) -> list[str]:

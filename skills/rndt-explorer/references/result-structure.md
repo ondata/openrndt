@@ -46,7 +46,8 @@ significa zero risultati.
 > Per ottenere JSON, XML o HTML di un metadato i comandi dedicati restano la via più comoda:
 >
 > ```bash
-> openrndt --format json get <id>     # JSON (_source completo)
+> openrndt --format json get <id>     # documento normalizzato (_source in coda)
+> openrndt get <id> --raw             # sola busta Elasticsearch
 > openrndt get <id> --xml             # XML ISO 19139
 > openrndt get <id> --html            # HTML
 > ```
@@ -184,12 +185,16 @@ openrndt get ispra_rm:01CLCALL_SDT --raw | jq '._source | keys'
 ## Campi del check di `resources`
 
 `openrndt --format json resources <id>` restituisce per ogni risorsa `type`,
-`url`, `source` e, quando il check è attivo, gli esiti della probe. Attenzione:
+`url`, `source` e, quando il check è attivo, gli esiti della probe. Lo stesso
+array (senza gli esiti) è il campo `resources` del documento normalizzato di
+`get`, e la dedup per URL lascia passare la prima fonte che presenta
+l'indirizzo. Attenzione:
 qui le chiavi sono `type`/`url`, mentre in `links[]` di `search`/`get` le stesse
 informazioni stanno in `dctype`/`href`.
 
 | Campo | Significato |
 |---|---|
+| `source` | da dove viene la risorsa, in ordine di affidabilità: `resources_nst` (tipo assegnato dal catalogo), `links` (`dctype` dichiarato nel metadato), `webServices_s` e `links_s` (URL nude, tipo dedotto dall'URL). Con `resources_nst` il `type` è affermato, altrove è un'inferenza |
 | `ok` / `status_code` | esito della probe sul GetCapabilities (o sull'URL del file). `ok=true` non prova che un WMS sappia disegnare: vedi `ogc-services.md` |
 | `final_url` / `redirect_url` | ultimo URL contattato e prima destinazione di redirect |
 | `redirected` / `redirect_count` | i redirect sono seguiti solo verso host pubblici; verso loopback, IP privati o DNS riservati si fermano con `error=redirect-blocked:…` (un endpoint `http` che rimanda al proprio `https`, es. `gaia.arpa.veneto.it`, risulta quindi `ok=true`) |

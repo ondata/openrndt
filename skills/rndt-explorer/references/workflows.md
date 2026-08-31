@@ -23,10 +23,10 @@ openrndt --format json search \
 # 3. dettaglio del primo risultato
 ID=$(openrndt --format json search --q "catasto" --data-category planningCadastre \
       --bbox 7.0,44.0,8.5,45.0 --num 1 | jq -r '.results[0].id')
-openrndt --format json get "$ID" | jq '._source | {title, contact_organizations_s, INSPIRETheme_s}'
+openrndt --format json get "$ID" | jq '{title, org, contact, data_date, lineage}'
 
 # 4. risorse scaricabili
-openrndt --format json get "$ID" | jq -r '._source.links_s[]?'
+openrndt --format json get "$ID" | jq -r '.resources[] | "\(.type)\t\(.url)"'
 ```
 
 ## 2. Tutti i WMS di un tema INSPIRE
@@ -205,13 +205,15 @@ openrndt --format json search --id "ispra_rm:01IdroHazard_DT" \
 
 # 3. licenza, ente e data per la citazione della fonte
 openrndt --format json get "ispra_rm:01IdroHazard_DT" \
-  | jq '{licenza: ._source.isOpendata, ente: ._source.EnteResponsabile_s,
-         aggiornato: ._source.apiso_Modified_dt}'
-# → {"licenza": ["open data", "Dato concesso con licenza CC-BY-4.0"],
+  | jq '{licenza: .license, aperto: .open, ente: .org, aggiornato: .updated,
+         fonte: .url}'
+# → {"licenza": "Dato concesso con licenza CC-BY-4.0", "aperto": true,
 #    "ente": "Istituto Superiore per la Protezione e la Ricerca Ambientale",
-#    "aggiornato": "2015-02-13T00:00:00Z"}
-# `isOpendata` è un ARRAY (marcatore + licenza), non una stringa: chi si aspetta
-# uno scalare sbaglia il parsing. `EnteResponsabile_s` è il nome esteso.
+#    "aggiornato": "2015-02-13T00:00:00Z",
+#    "fonte": "https://geodati.gov.it/geoportal-catalog/rest/metadata/item/ispra_rm%3A01IdroHazard_DT/html"}
+# La CLI ha già separato il marcatore dalla licenza: in `_source.isOpendata`
+# i due valori stanno in un ARRAY, e chi lo legge a mano aspettandosi uno
+# scalare sbaglia il parsing.
 
 # 4. dal WFS ai dati tabellari (GeoPackage, apribile anche in QGIS)
 ogr2ogr -f GPKG alluvioni.gpkg "WFS:https://sdi.isprambiente.it/geoserver/nz1/wfs" <feature_type>
@@ -221,11 +223,12 @@ Note verificate live (2026-07-17):
 
 - Il campo `resources` di `compact` e il comando `resources` non contano le
   stesse cose: il primo elenca i tipi dei `links` (qui `WFS`, `WMS`), il
-  secondo legge anche `links_s`/`webServices_s` e sullo stesso record trova in
-  più un `download` (.gpkg). Per la lista completa usa il comando.
+  secondo legge anche `resources_nst`, `links_s` e `webServices_s`, e sullo
+  stesso record trova in più un `download` (.gpkg). Per la lista completa usa
+  il comando, o il campo `resources` di `get`, che è lo stesso estrattore.
 - `resources: []` nel compact è frequente: il record non linka servizi
-  fruibili. In quel caso fai `get` e guarda `_source.links_s` — spesso il
-  download è dietro un portale regionale (es. Geoscopio Toscana), non un
+  fruibili. In quel caso fai `get` e guarda il suo campo `resources` - spesso
+  il download è dietro un portale regionale (es. Geoscopio Toscana), non un
   link diretto.
 - Il download diretto (`rel=enclosure` / `dctype=download`) è raro: la
   maggior parte dei dataset si prende via WFS (vettoriale) con `ogr2ogr` —

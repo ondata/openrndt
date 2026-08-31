@@ -17,7 +17,7 @@ Interroga l'endpoint [/rest/metadata/item/{id}](/api/rndt-rest-api.md). L'ID (es
 | `--html` | HTML pronto da renderizzare. |
 | `--raw` | Busta Elasticsearch grezza (`_source` + flag), comportamento ante 3.3.0. |
 
-`--xml` e `--html` sono mutuamente esclusivi. Con `--format json` (default) dalla 3.3.0 `get` restituisce il **documento normalizzato**: gli stessi campi delle risposte di `search` più email di contatto, bbox, lineage e data del dato (schema in [result-structure.md](/skill/rndt-explorer/references/result-structure.md)); `_source` è preservato per chi lo usa. `--raw` ripristina la busta Elasticsearch completa, vista che contiene i `links` alle risorse fruibili (WMS, WFS, download diretto).
+`--xml` e `--html` sono mutuamente esclusivi, e `--raw` non si combina con nessuno dei due (riguarda solo l'output JSON). Con `--format json` (default) dalla 3.3.0 `get` restituisce il **documento normalizzato**: gli stessi campi delle risposte di `search` più email di contatto, bbox, lineage e data del dato (schema in [result-structure.md](/skill/rndt-explorer/references/result-structure.md)); `_source` è preservato per chi lo usa. `--raw` ripristina la busta Elasticsearch completa, vista che contiene i `links` alle risorse fruibili (WMS, WFS, download diretto).
 
 # Examples
 
