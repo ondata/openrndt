@@ -199,3 +199,9 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 ## 2026-08-31 - verifica sull'email di contatto
 
 - L'email non va risolverla dalle URI pointOfContact: sta già nella scheda XML del record (`gmd:contactInfo/gmd:electronicMailAddress`; nella scheda Corine CLC cinque indirizzi per ruolo distinti). Il mirror CKAN ne proietta una in `contact_email`. Idea: aprire gli indirizzi email del punto di contatto nei campi normalizzati di openrndt.
+
+## 2026-08-31 - campi utili confermati in `_source` (search/get API)
+
+- Campione: prime 500 schede di `search?q=*:*` (sort di default, non casuale) su 23.738. Presenze: `PuntoDiContattoEmail_s` 500/500 (email designata del dataset, 107 distinte; è quella che il mirror CKAN proietta in `contact_email`), `envelope_geo` 500/500 (bbox), `apiso_Lineage_txt` 431/500, `url_download_s`/`url_http_download_s` 488/500. In `_source` compaiono anche `resources_nst`, `PuntoDiContatto_s` (nome) e `PuntoDiContattoSitoWeb_s`.
+- Verificato dopo: email e licenza del mirror CKAN sono proiezioni del RNDT grezzo (XML: `gmd:electronicMailAddress`, `gmd:resourceConstraints`); le URI `resource/pointOfContact/...` sono identificatori, rispondono 404.
+- Idea: esporre nei campi normalizzati di openrndt email, bbox (`envelope_geo`), lineage e URL di download tipizzati, invece di lasciarli solo nel JSON grezzo.
