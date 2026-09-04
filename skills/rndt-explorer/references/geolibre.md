@@ -1,7 +1,7 @@
 # Guida: visualizzare i risultati di openrndt con GeoLibre
 
 Il RNDT dice **dove** stanno i dati, non li mostra. [GeoLibre](https://geolibre.app)
-apre progetti `.geolibre.json` nell'app desktop, sul web e dentro Jupyter, e ha
+apre progetti `.geolibre` nell'app desktop, sul web e dentro Jupyter, e ha
 una propria skill e un proprio server MCP: la skill descrive i comandi, il
 server MCP scrive i progetti (`create_project`, `add_ogc_layer`,
 `add_vector_layer`, `add_geojson_layer`, `classify_layer`, `add_legend`,
@@ -53,7 +53,9 @@ openrndt footprints --q "uso del suolo" --num 40 > footprints.geojson
 ```
 
 Poi `add_geojson_layer` sul file. Accetta gli stessi filtri di `search`, quindi
-la mappa può essere quella di una ricerca già raffinata.
+la mappa può essere quella di una ricerca già raffinata. Prima di aggiungerlo
+togli i bbox mondiali: bastano tre schede sbagliate per coprire la mappa e
+rendere inutile lo zoom del layer - vedi «Il bbox sbagliato nella scheda».
 
 Per **colorare per un attributo**, `classify_layer` vuole una colonna
 **numerica**: `resources` è un array e `open` un booleano, quindi vanno
@@ -234,9 +236,92 @@ pre-check.
 | GetCapabilities 200 ma nessuna tile arriva, o arriva un XML | il server serve il capabilities ma non le mappe (PCN: `ServiceException`, database non raggiungibile) | una GetMap a mano: `Content-Type` deve essere `image/*` (vedi `ogc-services.md`) |
 | Layer nell'elenco, mappa vuota, nessuna richiesta | risorsa non leggibile | `ogrinfo` sullo stesso path che usa GeoLibre |
 | «GDAL Error (4): does not exist in the file system» | zip remoto senza `Range`, o path locale | `curl -I -H "Range: bytes=0-99"`: deve dare `206` |
-| Lo «zoom to fit» non fa nulla | manca `source.bounds` | guarda il layer nel `.geolibre.json` |
+| Lo «zoom to fit» funziona solo sui layer GeoJSON | i layer WMS/WMTS nascono senza `source.bounds` | `jq -r '.layers[] \| "\(.name)\t\(.source.bounds // "-")"' progetto.geolibre` - vedi «Dare un'estensione ai layer WMS» |
 | Lo swipe mostra lo stesso layer sui due lati | manca lo style id nei lati | vedi la nota su `add_swipe` |
 | Dati fuori posto o invisibili a scala giusta | CRS non geografico | il `coordinateSystem` che riporta `ogrinfo` |
+| Un poligono del footprint copre il mondo, lo zoom del layer inquadra il pianeta | la scheda ISO dichiara `-180/-90/180/90` | `openrndt get <id> --xml \| grep -A8 EX_GeographicBoundingBox` - vedi «Il bbox sbagliato nella scheda» |
+
+## Dare un'estensione ai layer WMS
+
+`add_ogc_layer` scrive endpoint, layer e formato, non l'estensione: nel progetto
+quei layer restano senza `source.bounds`. GeoLibre calcola l'estensione dalle
+feature solo per i layer GeoJSON inline, quindi lo «zoom to fit» funziona sul
+footprint e non fa nulla su un WMS - e chi apre il progetto non ha modo di
+raggiungere un layer regionale partendo dalla vista nazionale.
+
+Il bbox va scritto a mano. Due fonti, in quest'ordine:
+
+- il metadato RNDT: `openrndt --format json get <id> | jq -c .bbox` dà
+  `{"xmin":…,"ymin":…,"xmax":…,"ymax":…}`, già in WGS84;
+- il GetCapabilities del servizio, quando il record non ha bbox o l'ha
+  nazionale mentre il layer è locale.
+
+Dal GetCapabilities prendi **`EX_GeographicBoundingBox`**, non `<BoundingBox
+CRS="EPSG:4326">`: in WMS 1.3.0 l'EPSG:4326 ha l'asse invertito e diversi
+server ci scrivono dentro numeri già scambiati (Valle d'Aosta:
+`minx="45.465446"` su un `minx` che dovrebbe essere una longitudine).
+`EX_GeographicBoundingBox` è sempre lon/lat e non ha questo problema.
+
+```bash
+curl -s "<endpoint>?service=WMS&request=GetCapabilities&version=1.3.0" \
+  | grep -A4 EX_GeographicBoundingBox | head -5
+```
+
+Poi scrivilo nel progetto, come `[minlon, minlat, maxlon, maxlat]`:
+
+```bash
+jq '.layers |= map(if .name == "Sardegna - aree percorse dal fuoco 2021"
+      then .source.bounds = [8.14, 38.85, 9.83, 41.31] else . end)' \
+   progetto.geolibre > tmp && mv tmp progetto.geolibre
+```
+
+Con più layer conviene un file `nome -> bbox` e un solo passaggio:
+
+```bash
+jq --slurpfile b bounds.json \
+   '.layers |= map(if ($b[0][.name]) then .source.bounds = $b[0][.name] else . end)' \
+   progetto.geolibre > tmp && mv tmp progetto.geolibre
+```
+
+GeoLibre legge `source.bounds` e ricade su `metadata.bounds` se il primo non è
+valido, quindi puoi anche tenere il bbox nel blocco `metadata` insieme a record
+e permalink RNDT. Rigenera l'HTML dopo: `export_html` fotografa il progetto al
+momento della chiamata.
+
+## Il bbox sbagliato nella scheda
+
+Un footprint può contenere poligoni che coprono il mondo intero: la scheda ISO
+dichiara `-180/-90/180/90`. Non è un difetto di `footprints`, che riporta quello
+che c'è: la sorgente XML ha davvero quei numeri, e lo verifichi con
+
+```bash
+openrndt get <id> --xml | grep -A8 EX_GeographicBoundingBox
+```
+
+Sono pochi ma costosi: coprono la mappa, e lo «zoom to fit» del layer inquadra
+il pianeta invece dell'Italia. Sui 277 record di una ricerca su «incendi» ce ne
+sono 3, tutti della Provincia autonoma di Trento (Servizio Foreste e fauna,
+Servizio Geologico).
+
+Non buttarli: separali in un layer proprio, spento, così restano documentati e
+lo zoom del layer principale torna utile.
+
+```bash
+jq '{type:"FeatureCollection",features:[.features[]
+      | (((.geometry.coordinates[0]|map(.[0])|max) - (.geometry.coordinates[0]|map(.[0])|min))) as $w
+      | .properties.estensione = (if $w > 300 then "mondiale (bbox errata)"
+          elif $w > 10 then "nazionale" elif $w > 2 then "regionale" else "locale" end)]}' \
+   footprints.geojson > fp_cls.geojson
+
+jq '{type:"FeatureCollection",features:[.features[]|select(.properties.estensione != "mondiale (bbox errata)")]}' fp_cls.geojson > fp_ok.geojson
+jq '{type:"FeatureCollection",features:[.features[]|select(.properties.estensione == "mondiale (bbox errata)")]}' fp_cls.geojson > fp_mondo.geojson
+```
+
+La soglia `> 300` gradi isola solo il bbox mondiale ed è diversa da quelle di
+[`workflows.md`](./workflows.md) §10, che separano locale, regionale e
+nazionale: quelle scremano il rumore di una ricerca, questa toglie un errore di
+compilazione. L'attributo `estensione` che resta sulle feature serve poi a
+`classify_layer` o a un filtro nell'app.
 
 ## Citare la fonte
 
@@ -258,9 +343,10 @@ gratis:
 
 Alla fine del lavoro hai tre oggetti possibili, e non sono intercambiabili:
 
-- **il file progetto** (`.geolibre.json`, o `.geolibre` dalla release che
-  include [opengeos/GeoLibre#2163](https://github.com/opengeos/GeoLibre/pull/2163),
-  che registra l'estensione nel sistema: doppio clic e si apre nell'app). È la
+- **il file progetto** (`.geolibre`: dalla
+  [v2.9.0](https://github.com/opengeos/GeoLibre/releases/tag/v2.9.0) è
+  l'estensione nativa, registrata nel sistema - doppio clic e si apre nell'app.
+  `.geolibre.json` resta letto, ma non è più la forma da consegnare). È la
   fonte: pochi KB di JSON leggibile con endpoint, layer, bounds e il blocco
   `metadata` con record e permalink RNDT. Chi lo riceve può cambiare stile,
   aggiungere un layer, spostare la vista. Va a chi ha GeoLibre Desktop o lo può
@@ -289,9 +375,19 @@ Il vincolo comune alle tre: i layer li scarica il browser di chi guarda, in
 MapLibre, con `fetch`. La pagina HTML non «contiene» i dati e aprirla da un file
 locale non aiuta (origine `null`): un WMS o un WFS che non manda
 `Access-Control-Allow-Origin` non si vede né nell'HTML né via URL. Il pre-check
-CORS non è un dettaglio della consegna 3, è la condizione di tutte. Finché
-`geolibre-mcp` chiede un path che finisce in `.json`, salva come `.geolibre.json`:
-resta compatibile anche dopo.
+CORS non è un dettaglio della consegna 3, è la condizione di tutte.
+
+**Salva come `.geolibre`.** I tool di `geolibre-mcp` che *scrivono la struttura*
+del progetto rifiutano ancora quell'estensione (`expected a file ending in .json
+or .geolibre.json`): `create_project` e `remove_layer` di sicuro. Chi legge o
+aggiunge - `add_*_layer`, `update_layer`, `set_view`, `describe_project`,
+`export_html` - accetta il path già rinominato. Quindi: crea con
+`.geolibre.json`, rinomina quando hai finito, e se poi devi rimuovere un layer
+rinomina indietro per quella chiamata.
+
+```bash
+mv progetto.geolibre.json progetto.geolibre
+```
 
 **Nella desktop il vincolo vale a metà** (misurato il 2026-08-30 con un progetto
 di cinque layer, file `test-cors-desktop.geolibre.json`):
@@ -319,7 +415,7 @@ Due forme:
 
 ```text
 https://web.geolibre.app/?data=<URL del dato>          # GeoJSON, GeoParquet, PMTiles, COG, ZIP di GeoJSON, endpoint REST che risponde FeatureCollection
-https://web.geolibre.app/?url=<URL del .geolibre.json>  # un progetto pubblico: vista, layer e stile sono i suoi
+https://web.geolibre.app/?url=<URL del .geolibre>       # un progetto pubblico: vista, layer e stile sono i suoi
 ```
 
 `data` si ripete per più dataset; `layout=viewer` o `maponly` tolgono l'interfaccia
@@ -329,7 +425,7 @@ parametro di GeoLibre. Da shell: `jq -sRr @uri`.
 
 Cosa entra da RNDT, in ordine di affidabilità:
 
-- **un progetto**: lo stesso `.geolibre.json` della consegna 1, messo su un URL
+- **un progetto**: lo stesso `.geolibre` della consegna 1, messo su un URL
   pubblico e aperto con `?url=`. La vista è quella salvata. È il caso buono: il
   file lo ospiti tu.
 - **un `footprints.geojson` pubblicato** (gist, bucket, pagina del progetto). Non

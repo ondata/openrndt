@@ -196,6 +196,8 @@ verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 
 ## Fase 3 — Detail (singolo metadato)
 
+L'ID del catalogo è `prefisso:uuid` (es. `r_sicili:7832b30d-…`): `get`, `resources` e `search --id` risolvono da soli un UUID nudo via ricerca; se corrisponde a più schede ricevi un errore esplicito con i candidati.
+
 Con un `id` interessante:
 
 ```bash
@@ -321,7 +323,7 @@ soglie ogni volta.
 
 Il RNDT dice dove stanno i dati, non li mostra. Per guardarli senza aprire QGIS
 si può usare [GeoLibre](https://geolibre.app), che ha una propria skill e un
-proprio server MCP per scrivere progetti `.geolibre.json`. Tre cose diverse da
+proprio server MCP per scrivere progetti `.geolibre`. Tre cose diverse da
 mettere su mappa, con comandi e limiti diversi:
 
 - **dove stanno i dataset trovati**: `openrndt footprints` produce il GeoJSON
@@ -334,14 +336,16 @@ mettere su mappa, con comandi e limiti diversi:
 
 Il passaggio non è automatico: il nome del layer non sta nel metadato, molti
 endpoint sono catalogati in `http`, un WFS senza `srsName` risponde in
-coordinate proiettate, non tutte le risorse sono leggibili da URL, e GeoLibre
+coordinate proiettate, un layer WMS nasce senza estensione e va corredato a mano
+di `source.bounds` o lo «zoom to fit» non lo raggiunge, non tutte le risorse
+sono leggibili da URL, e GeoLibre
 (MapLibre) scarica le tile con `fetch`: il server WMS deve rispondere con **un
 solo** header `Access-Control-Allow-Origin`. Un servizio che a curl dà 200 può
 fallire in pagina con `Failed to fetch (0)` (visto sull'ArcGIS ISPRA, che manda
 due header): non è un difetto di GeoLibre né tuo, e una pagina Leaflet, che carica
 le tile come `<img>`, lo mostra comunque. Tre consegne,
 scelte in base a cosa deve poterci fare chi riceve: il file progetto
-`.geolibre.json` (la fonte, per chi ha l'app), la pagina di `export_html` (che
+`.geolibre` (la fonte, per chi ha l'app), la pagina di `export_html` (che
 non è una figura ma l'applicazione dentro una pagina: l'altro può aggiungere
 layer, confrontare, interrogare, senza installare nulla) e un URL
 `web.geolibre.app/?url=…` o `?data=…` a un progetto o a un GeoJSON
