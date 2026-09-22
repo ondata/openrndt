@@ -35,3 +35,6 @@ out.txt
 # con il path assoluto della macchina. Non descrive il progetto.
 skills-lock.json
 skills/rndt-explorer-workspace/
+references/
+docs/*.docx
+docs/segnalazioni-rndt-agid.md
