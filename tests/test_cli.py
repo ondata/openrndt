@@ -830,6 +830,50 @@ def test_public_api_exports_item_helpers():
     """Gli helper del documento normalizzato sono importabili dal package, non solo dal modulo."""
     import openrndt
 
-    for name in ("item_record", "contact_point", "download_urls", "bbox_from_envelope"):
+    for name in ("item_record", "contact_point", "download_urls", "bbox_from_envelope", "resolve_item_id"):
         assert name in openrndt.__all__
         assert callable(getattr(openrndt, name))
+
+_UUID = "7832b30d-8e4a-4900-836d-1d4e960c3325"
+
+
+@respx.mock
+def test_cli_get_resolves_bare_uuid():
+    """`get <uuid-nudo>`: risoluzione via ricerca, poi scheda dell'ID completo."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": f"r_sicili:{_UUID}"}]})
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/r_sicili%3A{_UUID}").mock(
+        return_value=httpx.Response(
+            200,
+            json={"_id": f"r_sicili:{_UUID}", "found": True, "_source": {"title": "PAI Regione Siciliana"}},
+        )
+    )
+    result = runner.invoke(app, ["--format", "json", "get", _UUID])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["id"] == f"r_sicili:{_UUID}"
+
+
+@respx.mock
+def test_cli_get_bare_uuid_not_found_shows_message():
+    """`get <uuid-nudo>` senza corrispondenze: exit 1 e messaggio leggibile."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
+    result = runner.invoke(app, ["get", _UUID])
+    assert result.exit_code == 1
+    assert "non trovato" in result.output.lower()
+
+
+@respx.mock
+def test_cli_search_id_bare_uuid_resolved_before_search():
+    """`search --id <uuid-nudo>`: risolto nell'ID completo prima della chiamata filtrata."""
+    search_route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": f"r_sicili:{_UUID}"}], "total": 1})
+    )
+    result = runner.invoke(app, ["--format", "json", "search", "--id", _UUID, "--num", "1"])
+    assert result.exit_code == 0, result.output
+    params = search_route.calls.last.request.url.params
+    assert params["id"] == f"r_sicili:{_UUID}"
+    assert search_route.calls[0].request.url.params["q"] == _UUID

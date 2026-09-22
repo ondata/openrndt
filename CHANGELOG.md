@@ -4,6 +4,12 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`get`, `get --xml`/`--html` e `resources` accettano un UUID nudo** (es. `openrndt get 7832b30d-8e4a-4900-836d-1d4e960c3325`, senza il prefisso d'ente). L'endpoint item risolve solo la forma `prefisso:uuid`: prima la CLI rispondeva «Metadato non trovato» per un ID che invece esiste. Ora l'UUID viene risolto con una ricerca e si tiene l'unico risultato che lo contiene nell'ID (la ricerca testuale su un UUID porta anche falsi positivi): zero risultati → `ItemNotFoundError`, più di uno → nuova `AmbiguousItemIdError` con i candidati. `search --id` con UUID nudo viene risolto allo stesso modo prima della chiamata filtrata. `resolve_item_id` è esportato anche come API di libreria. Gli ID già in forma `prefisso:uuid` restano invariati (nessuna chiamata aggiuntiva).
+
 ## [3.3.0] - 2026-08-31
 
 **La modifica a `get` è additiva**: nessuna chiave preesistente cambia nome o

@@ -10,7 +10,14 @@ import typer
 
 from openrndt import codelists, config, output
 from openrndt._version import __version__
-from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
+from openrndt.item import (
+    AmbiguousItemIdError,
+    ItemNotFoundError,
+    get_item,
+    get_item_html,
+    get_item_xml,
+    resolve_item_id,
+)
 from openrndt.resources import check_resources, extract_resources
 from openrndt.search import (
     ORG_EXACT_FIELD,
@@ -513,6 +520,8 @@ def search(
                 err=True,
             )
     try:
+        if item_id is not None:
+            item_id = resolve_item_id(item_id)
         payload = do_search(
             q=q,
             bbox=bbox,
@@ -534,6 +543,9 @@ def search(
         )
     except json.JSONDecodeError:
         typer.echo("Risposta RNDT inattesa (JSON non valido).", err=True)
+        raise typer.Exit(1)
+    except (AmbiguousItemIdError, ItemNotFoundError) as exc:
+        typer.echo(str(exc), err=True)
         raise typer.Exit(1)
     except ValueError as exc:
         typer.echo(str(exc), err=True)
@@ -731,7 +743,7 @@ def get(
             output.emit_text(get_item_html(item_id))
             return
         payload = get_item(item_id)
-    except ItemNotFoundError as exc:
+    except (AmbiguousItemIdError, ItemNotFoundError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1)
     except json.JSONDecodeError:
@@ -761,7 +773,7 @@ def resources(
         entry: dict[str, Any] = {"id": item_id}
         try:
             payload = get_item(item_id)
-        except ItemNotFoundError as exc:
+        except (AmbiguousItemIdError, ItemNotFoundError) as exc:
             entry["error"] = str(exc)
             entries.append(entry)
             continue

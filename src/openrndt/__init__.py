@@ -2,7 +2,14 @@
 
 from openrndt._version import __version__
 from openrndt.cli import main
-from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
+from openrndt.item import (
+    AmbiguousItemIdError,
+    ItemNotFoundError,
+    get_item,
+    get_item_html,
+    get_item_xml,
+    resolve_item_id,
+)
 from openrndt.search import (
     bbox_from_envelope,
     compact_results,
@@ -31,6 +38,8 @@ __all__ = [
     "get_item",
     "get_item_xml",
     "get_item_html",
+    "resolve_item_id",
     "ItemNotFoundError",
+    "AmbiguousItemIdError",
     "__version__",
 ]

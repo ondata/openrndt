@@ -7,7 +7,14 @@ import pytest
 import respx
 
 from openrndt.config import DEFAULT_BASE_URL
-from openrndt.item import ItemNotFoundError, get_item, get_item_html, get_item_xml
+from openrndt.item import (
+    AmbiguousItemIdError,
+    ItemNotFoundError,
+    get_item,
+    get_item_html,
+    get_item_xml,
+    resolve_item_id,
+)
 
 
 @respx.mock
@@ -46,3 +53,72 @@ def test_get_item_not_found_raises():
     )
     with pytest.raises(ItemNotFoundError):
         get_item("inesistente")
+
+_UUID = "7832b30d-8e4a-4900-836d-1d4e960c3325"
+
+
+@respx.mock
+def test_get_item_resolves_bare_uuid():
+    """Un UUID nudo si risolve via ricerca, tenendo l'unico risultato che lo contiene nell'ID."""
+    search_route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"id": "cmto:3aff0e39-b60f-4900-bff8-1931f1278a5f"},
+                    {"id": f"r_sicili:{_UUID}"},
+                ]
+            },
+        )
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/r_sicili%3A{_UUID}").mock(
+        return_value=httpx.Response(200, json={"_id": f"r_sicili:{_UUID}", "found": True, "_source": {}})
+    )
+    payload = get_item(_UUID)
+    assert payload["_id"] == f"r_sicili:{_UUID}"
+    assert search_route.calls.last.request.url.params["q"] == _UUID
+
+
+@respx.mock
+def test_get_item_bare_uuid_not_found():
+    """UUID nudo senza corrispondenze: ItemNotFoundError."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": "age:altro-metadato"}]})
+    )
+    with pytest.raises(ItemNotFoundError):
+        get_item(_UUID)
+
+
+@respx.mock
+def test_get_item_bare_uuid_ambiguous():
+    """Lo stesso UUID in più namespace: AmbiguousItemIdError."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(
+            200,
+            json={"results": [{"id": f"r_sicili:{_UUID}"}, {"id": f"age:{_UUID}"}]},
+        )
+    )
+    with pytest.raises(AmbiguousItemIdError):
+        get_item(_UUID)
+
+
+@respx.mock
+def test_resolve_item_id_case_insensitive():
+    """UUID in maiuscolo: regex e confronto insensitive, hit sull'ID minuscolo."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": f"r_sicili:{_UUID}"}]})
+    )
+    assert resolve_item_id(_UUID.upper()) == f"r_sicili:{_UUID}"
+
+
+@respx.mock
+def test_resolve_item_id_passthrough_without_search(item_response_json):
+    """ID già namespaced: nessuna ricerca, richiesta item diretta."""
+    search_route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    assert resolve_item_id("age:D_E973_MARSAGLIA") == "age:D_E973_MARSAGLIA"
+    assert search_route.call_count == 0
