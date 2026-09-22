@@ -99,7 +99,27 @@ Il percorso più corto: nessun download, il server disegna.
    pochi millisecondi, con `status 0` e un messaggio generico su CORS o TLS che
    manda fuori strada. Molti server rispondono in https, alcuni fanno già 301.
 
-4. **`add_ogc_layer`**, poi aggiungi a mano `source.bounds` sul layer:
+4. **Controlla CRS e CORS prima di aggiungere il layer.** MapLibre chiede le
+   tile WMS solo in Web Mercator (`{bbox-epsg-3857}`) e non sa riproiettarle,
+   quindi il layer deve dichiarare `EPSG:3857` nel GetCapabilities (in un
+   `<Layer>` antenato o nel suo). Se non c'è, il server risponde 200 con un
+   `ServiceExceptionReport` in XML al posto dell'immagine e il layer resta vuoto
+   senza errori (`add_ogc_layer` 3.0.0 scrive `SRS=EPSG:3857` senza controllare).
+   Serve anche l'intestazione CORS per il web e per `export_html` (vedi più
+   sotto); nella desktop dalla 2.9.0 le tile WMS passano per via nativa.
+
+   ```bash
+   curl -s "<endpoint>?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities" \
+     | grep -c '<CRS>EPSG:3857</CRS>'     # 0 = niente WMS in GeoLibre
+   ```
+
+   Caso reale: il WMS catastale dell'Agenzia delle Entrate dichiara solo
+   `EPSG:6706`, `EPSG:4258` e le UTM, e non manda CORS: nel web non si vede per
+   due ragioni indipendenti, nella desktop per la prima. Per il catasto la strada è il WFS, scaricato in
+   GeoJSON (sezione C e [`ogc-services.md`](./ogc-services.md)); per vedere il
+   WMS, QGIS.
+
+5. **`add_ogc_layer`**, poi aggiungi a mano `source.bounds` sul layer:
    `wms_layer` non lo scrive, e senza estensione dichiarata lo «zoom to fit»
    non ha su cosa inquadrare (non succede nulla). Il valore sta nel
    `BoundingBox CRS:84` di quel layer nel GetCapabilities, nell'ordine
@@ -390,7 +410,10 @@ mv progetto.geolibre.json progetto.geolibre
 ```
 
 **Nella desktop il vincolo vale a metà** (misurato il 2026-08-30 con un progetto
-di cinque layer, file `test-cors-desktop.geolibre.json`):
+di cinque layer, file `test-cors-desktop.geolibre.json`, su una versione
+precedente alla 2.9.0: dalla 2.9.0 la desktop scarica anche le tile WMS per via
+nativa, [PR #2169](https://github.com/opengeos/GeoLibre/pull/2169), e le righe
+WMS senza CORS della tabella sono da rimisurare):
 
 | Layer | CORS del server | Web / HTML | Desktop |
 | --- | --- | --- | --- |

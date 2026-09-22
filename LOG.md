@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-09-22 (skill 3.4.4: WMS senza EPSG:3857, WFS catastale, issue #20)
+
+- **`references/geolibre.md`, sezione B**: nuovo passo prima di `add_ogc_layer`, cioè controllare che il layer WMS dichiari `EPSG:3857`. Issue #20, riprodotta con geolibre 3.0.0: `add_ogc_layer` scrive sempre `SRS=EPSG:3857` e `{bbox-epsg-3857}`, e il WMS catastale dell'Agenzia delle Entrate (solo `EPSG:6706`, `EPSG:4258` e UTM) risponde 200 con un `ServiceExceptionReport`, per cui il layer resta vuoto. MapLibre non riproietta le tile raster. Corretta la parte sul CORS in desktop: dalla 2.9.0 le tile WMS passano per via nativa (PR #2169, nata dalla nostra issue #2166), quindi la tabella del 2026-08-30 è da rimisurare per le righe WMS.
+- **`references/ogc-services.md`**: CRS del WMS catastale e retry sul WFS (`&_=1`), con uno snippet provato dal vivo.
+
 ## 2026-09-22 (rilascio 3.3.1, skill 3.4.3)
 
 - **CLI 3.3.1**: contiene solo il fix del 3 settembre, cioè `get`/`resources`/`search --id` con UUID senza prefisso. La skill ne parlava già dal commit `b8dc6e6`, pur dichiarando `>= 3.3.0`: ora la skill 3.4.3 dichiara `>= 3.3.1`.

@@ -161,3 +161,37 @@ Servizio nazionale (copre tutta Italia, isole comprese). Scheda RNDT:
   fabbricati NON sono nel WFS**: edifici disponibili solo come WMS (raster).
 - **Interrogabili (GetFeatureInfo)**: solo `Cartografia_Catastale`,
   `CP.CadastralZoning`, `CP.CadastralParcel`. `fabbricati` **non** è queryable.
+- **CRS del WMS**: solo `EPSG:6706`, `EPSG:4258` e le UTM (25832-25834,
+  3044-3046). Una GetMap in `EPSG:3857` o `EPSG:4326` risponde 200 con un
+  `ServiceExceptionReport` XML; in `EPSG:6706` (bbox in gradi, lon,lat con WMS
+  1.1.1) restituisce il PNG. Nessuna intestazione CORS: niente uso in
+  applicazioni web (vedi `geolibre.md`).
+
+### Il WFS catastale rifiuta alcune richieste: ripeti con un parametro innocuo
+
+Una parte delle GetFeature (circa una su dieci in un campione del 2026-09-22)
+risponde **HTTP 200** con:
+
+```xml
+<ServiceExceptionReport version="1.1.1"><ServiceException code="InvalidFormat"><![CDATA[Richiesta non valida ]]></ServiceException></ServiceExceptionReport>
+```
+
+L'esito dipende dalla stringa esatta della richiesta ed è sempre lo stesso per
+la stessa stringa: non da `MAXFEATURES`, dal feature type o dalla versione
+(fallisce sia in 1.1.0 sia in 2.0.0). Cambiare un carattere qualsiasi lo fa
+sparire, e il modo pulito è ripetere con un parametro in più (`&_=1`, poi
+`&_=2`). Riconosci l'errore dal corpo, non dallo status.
+
+```bash
+W='https://wfs.cartografia.agenziaentrate.gov.it/inspire/wfs/owfs01.php'
+Q='service=WFS&version=2.0.0&request=GetFeature&typeNames=CP:CadastralZoning&bbox=38.1288,14.8336,38.1438,14.8536,urn:ogc:def:crs:EPSG::6706'
+for k in "" "&_=1" "&_=2"; do
+  curl -s "$W?$Q$k" -o zone.gml
+  grep -q ServiceExceptionReport zone.gml || break
+  sleep 5
+done
+```
+
+Buone pratiche per questo servizio: WFS 2.0.0 con il CRS come URN in coda al
+bbox (ordine lat,lon), bbox di pochi km² e aree grandi divise in tile, qualche
+secondo di pausa fra le chiamate, niente `MAXFEATURES`.
