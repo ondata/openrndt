@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-09-22 (skill 3.4.2: da toponimo a bbox, issue #21)
+
+- **Nuova sottosezione «Da un toponimo al bbox»** nella Fase 2 della skill. Issue #21: senza indicazioni un agente ricavava le coordinate di una frazione (Morghen, Ceppo Morelli) con web search e fetch su siti aggregatori, uno in 404. Ora una chiamata a Nominatim, bbox riordinato da `[lat_min, lat_max, lon_min, lon_max]` a `xmin,ymin,xmax,ymax`, regole d'uso (1 req/s, User-Agent dell'applicazione, niente geocodifica massiva), ISTAT per il perimetro ufficiale. Verificato dal vivo: il bbox di Morghen più `"Ceppo Morelli"` trova `age:D_C478_CEPPO_MORELLI`.
+
 ## 2026-09-04 (documento unico delle segnalazioni ad AgID, riverifica completa)
 
 - **Rotundo ha risposto** (4 settembre, due mail): nel RNDT è obbligatorio un ente `owner` con nome coincidente con IPA, verificato in caricamento, e il codice IPA è il prefisso degli id; se il titolare non è dichiarato (Bologna) il sistema non può saperlo, la questione è girata a Regione E-R. Sui punti di luglio «ci hanno lavorato». Ha chiesto il documento unico con la scaletta dei punti.

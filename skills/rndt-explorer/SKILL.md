@@ -21,7 +21,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.1"
+  version: "3.4.2"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -189,6 +189,27 @@ la risposta: «chi pubblica davvero» è quell'elenco, non il primo ente trovato
 Cita sempre `id` o `url` delle schede: una tabella di soli titoli non è
 verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 [`references/workflows.md`](./references/workflows.md) §12.
+
+### Da un toponimo al bbox
+
+`--bbox` vuole coordinate: per una frazione, una località o un indirizzo usa
+Nominatim (OpenStreetMap) con **una** chiamata, non web search o scraping di siti
+aggregatori (lenti, fragili, non ufficiali). Nominatim restituisce il bbox come
+`[lat_min, lat_max, lon_min, lon_max]`: va riordinato in `xmin,ymin,xmax,ymax`.
+
+```bash
+B=$(curl -s -A "openrndt-skill" \
+  "https://nominatim.openstreetmap.org/search?q=Morghen,Ceppo+Morelli&format=jsonv2&limit=1&countrycodes=it" \
+  | jq -r '.[0].boundingbox as [$s,$n,$w,$e] | "\($w),\($s),\($e),\($n)"')
+openrndt --format compact search --bbox "$B" --q "\"Ceppo Morelli\""
+# → age:D_C478_CEPPO_MORELLI  Cartografia catastale - Comune di CEPPO MORELLI
+```
+
+Regole d'uso di Nominatim: massimo una richiesta al secondo, User-Agent che
+identifica l'applicazione (non dati personali dell'utente), niente geocodifica
+massiva. Controlla `addresstype` (`hamlet`, `village`, …) e il nome del comune nel
+risultato: toponimi uguali in regioni diverse sono frequenti. Se serve il perimetro
+ufficiale di una località, la fonte è ISTAT (località abitate), non OSM.
 
 **`--sort` che dà errore HTTP**: la CLI ricorda su stderr i campi ordinabili (solo `title` e `apiso_Modified_dt`, forma `campo:asc|desc`; `dateAscending`/`dateDescending`/`relevance` sono ignorati). Un campo sconosciuto (`--sort description`) non dà errore: viene ignorato in silenzio e l'ordine resta quello del no-sort, quindi controlla che i primi id cambino davvero. Non insistere sul campo: filtra lato server e ordina lato client (vedi `search-syntax.md`).
 

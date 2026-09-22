@@ -4,7 +4,7 @@ title: rndt-explorer
 description: Agent Skill che guida l'esplorazione conversazionale del catalogo RNDT tramite la CLI openrndt.
 resource: skills/rndt-explorer/SKILL.md
 tags: [skill, agenti, esplorazione]
-timestamp: 2026-08-30T00:00:00Z
+timestamp: 2026-09-22T00:00:00Z
 ---
 
 La skill `rndt-explorer` (in `skills/rndt-explorer/` nel repository) insegna a un agente AI a usare la [CLI](/cli/index.md) per trovare dati geografici italiani a partire da una domanda in linguaggio naturale — anche quando l'utente non nomina RNDT, geoportali o metadati.
@@ -12,7 +12,7 @@ La skill `rndt-explorer` (in `skills/rndt-explorer/` nel repository) insegna a u
 # Le fasi
 
 1. **Discovery (offline, sempre prima)** — [discover](/cli/discover.md) per conoscere codelist, parametri e campi Lucene senza rete.
-2. **Ricerca progressiva** — [search](/cli/search.md) con filtri via via più stretti; `--format compact` per scremare molti risultati a basso costo di token.
+2. **Ricerca progressiva** — [search](/cli/search.md) con filtri via via più stretti; `--format compact` per scremare molti risultati a basso costo di token; per un toponimo (frazione, località) il bbox si ricava con una chiamata a Nominatim, non con web search.
 3. **Dettaglio** — [get](/cli/get.md) sull'ID scelto; nel JSON i `links` puntano alle risorse fruibili.
 4. **Fruizione** — segnalare all'utente le risorse scaricabili (WMS, WFS, download diretto); per l'ispezione dei servizi OGC la skill rimanda a GDAL/OGR con output JSON (`gdalinfo`/`ogrinfo -json`).
 5. **Visualizzazione (opzionale)** — portare su una mappa [GeoLibre](https://geolibre.app) i risultati della ricerca (footprint), il dato via servizio (WMS/WFS) o un file scaricabile, con la skill e il server MCP di quel progetto.
