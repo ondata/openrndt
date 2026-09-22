@@ -510,6 +510,22 @@ Da quel momento Claude Code attiva la skill da solo quando chiedi dati
 territoriali italiani — «mi serve il catasto della mia zona», «trova un WMS
 con le ortofoto della Sardegna» — senza che tu debba nominarla.
 
+### Vedere i dati su una mappa: GeoLibre (consigliato)
+
+La skill ha una fase opzionale di visualizzazione che usa
+[GeoLibre](https://geolibre.app): porta su una mappa i risultati della ricerca,
+un servizio WMS/WFS o un file scaricabile. Non serve per usare la CLI, ma per
+questa fase ne consigliamo l'installazione:
+
+- **l'app**, da <https://geolibre.app/downloads/>, con le istruzioni per ogni
+  sistema operativo;
+- **il server MCP**, con cui l'agente costruisce i progetti di mappa:
+
+```bash
+uv tool install "geolibre[mcp]"
+claude mcp add geolibre -- geolibre-mcp --root ~/maps
+```
+
 ## Riferimenti
 
 - Pagina ufficiale REST API: <https://geodati.gov.it/geoportale/eng/strumenti-en/rest-api>
