@@ -15,13 +15,14 @@ description: >
   contatti e PEC degli enti, o per navigare il portale di un singolo ente.
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt >= 3.3.0 (comandi: search, footprints, get,
+  Richiede la CLI openrndt >= 3.3.1 (comandi: search, footprints, get,
   resources, discover). Dalla 3.3.0 `get` emette il documento normalizzato e
-  accetta `--raw`: con una CLI precedente le ricette che li usano falliscono.
+  accetta `--raw`, dalla 3.3.1 `get`, `resources` e `search --id` accettano un
+  UUID senza prefisso: con una CLI precedente le ricette che li usano falliscono.
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.2"
+  version: "3.4.3"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo

@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-09-22 (rilascio 3.3.1, skill 3.4.3)
+
+- **CLI 3.3.1**: contiene solo il fix del 3 settembre, cioè `get`/`resources`/`search --id` con UUID senza prefisso. La skill ne parlava già dal commit `b8dc6e6`, pur dichiarando `>= 3.3.0`: ora la skill 3.4.3 dichiara `>= 3.3.1`.
+- **Issue #21 chiusa, #22 commentata** e lasciata aperta. Sulla #22 l'errore «Richiesta non valida» (HTTP 200, `ServiceExceptionReport`) del WFS dell'Agenzia delle Entrate non dipende da `MAXFEATURES`, dal feature type o dalla versione: il wrapper rifiuta alcune stringhe di richiesta, sempre le stesse per la stessa stringa. Su 20 tile di circa 3 km², 2 fallimenti in 1.1.0 e 3 in 2.0.0; ripetere con un parametro innocuo (`&_=1`) ha risolto tutti i 7 casi falliti riprovati.
+
 ## 2026-09-22 (skill 3.4.2: da toponimo a bbox, issue #21)
 
 - **Nuova sottosezione «Da un toponimo al bbox»** nella Fase 2 della skill. Issue #21: senza indicazioni un agente ricavava le coordinate di una frazione (Morghen, Ceppo Morelli) con web search e fetch su siti aggregatori, uno in 404. Ora una chiamata a Nominatim, bbox riordinato da `[lat_min, lat_max, lon_min, lon_max]` a `xmin,ymin,xmax,ymax`, regole d'uso (1 req/s, User-Agent dell'applicazione, niente geocodifica massiva), ISTAT per il perimetro ufficiale. Verificato dal vivo: il bbox di Morghen più `"Ceppo Morelli"` trova `age:D_C478_CEPPO_MORELLI`.
