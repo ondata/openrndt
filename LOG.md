@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-09-23 (skill 3.4.5: niente geocodifica di indirizzi, issue #21)
+
+- **«Da un toponimo al bbox»**: Nominatim solo per comune, frazione o località, non per indirizzi. Caso dalla #21: `Via Padre Annibale Maria di Francia 17, Desenzano del Garda` non si trova perché in OSM la via è senza «Maria»; il civico mancante non conta (Nominatim ripiega sulla via). openrndt non è un geocoder e l'estensione dei metadati RNDT è un rettangolo grossolano (regione, provincia, comune): la scala della via non ha senso per il catalogo. Misurato: bbox della via 1184 metadati, bbox di Desenzano 2165, ma 946 dei 981 in più sono di `r_veneto`/`arpa_ve`, perché il rettangolo del comune sconfina in Veneto oltre il lago.
+
 ## 2026-09-22 (README: GeoLibre consigliato, issue #19)
 
 - **Nuova sottosezione «Vedere i dati su una mappa: GeoLibre (consigliato)»** nel README, dopo la skill: GeoLibre è citato nella fase di visualizzazione della skill ma il README non lo nominava (issue #19). Link alla pagina di download dell'app e installazione del server MCP (`uv tool install "geolibre[mcp]"`, `claude mcp add`). Presentato come facoltativo: la CLI non ne ha bisogno.

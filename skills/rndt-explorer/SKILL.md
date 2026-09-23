@@ -22,7 +22,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.4"
+  version: "3.4.5"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -193,10 +193,15 @@ verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 
 ### Da un toponimo al bbox
 
-`--bbox` vuole coordinate: per una frazione, una località o un indirizzo usa
+`--bbox` vuole coordinate: per un comune, una frazione o una località usa
 Nominatim (OpenStreetMap) con **una** chiamata, non web search o scraping di siti
 aggregatori (lenti, fragili, non ufficiali). Nominatim restituisce il bbox come
 `[lat_min, lat_max, lon_min, lon_max]`: va riordinato in `xmin,ymin,xmax,ymax`.
+
+Non geocodificare indirizzi o civici: l'estensione dei metadati RNDT è un
+rettangolo grossolano (regione, provincia, comune o area fra più enti), quindi la scala della via
+non ha senso per il catalogo e aggiunge solo un punto di rottura (nomi di via
+degli atti diversi da OSM, civici assenti). Parti dal comune o dalla frazione.
 
 ```bash
 B=$(curl -s -A "openrndt-skill" \
