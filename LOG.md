@@ -1,8 +1,8 @@
 # LOG
 
-## 2026-09-23 (skill 3.4.5: niente geocodifica di indirizzi, issue #21)
+## 2026-09-23 (skill 3.4.5-3.4.6: niente geocodifica di indirizzi per search, issue #21)
 
-- **«Da un toponimo al bbox»**: Nominatim solo per comune, frazione o località, non per indirizzi. Caso dalla #21: `Via Padre Annibale Maria di Francia 17, Desenzano del Garda` non si trova perché in OSM la via è senza «Maria»; il civico mancante non conta (Nominatim ripiega sulla via). openrndt non è un geocoder e l'estensione dei metadati RNDT è un rettangolo grossolano (regione, provincia, comune): la scala della via non ha senso per il catalogo. Misurato: bbox della via 1184 metadati, bbox di Desenzano 2165, ma 946 dei 981 in più sono di `r_veneto`/`arpa_ve`, perché il rettangolo del comune sconfina in Veneto oltre il lago.
+- **«Da un toponimo al bbox»**: Nominatim solo per comune, frazione o località, non per indirizzi. Caso dalla #21: `Via Padre Annibale Maria di Francia 17, Desenzano del Garda` non si trova perché in OSM la via è senza «Maria»; il civico mancante non conta (Nominatim ripiega sulla via). openrndt non è un geocoder e l'estensione dei metadati RNDT è un rettangolo grossolano (regione, provincia, comune): la scala della via non ha senso per il catalogo. Misurato: bbox della via 1184 metadati, bbox di Desenzano 2165, ma 946 dei 981 in più sono di `r_veneto`/`arpa_ve`, perché il rettangolo del comune sconfina in Veneto oltre il lago. La regola vale solo per `search --bbox`: per il WFS catastale, che si interroga solo per bbox, la via geocodificata serve.
 
 ## 2026-09-22 (README: GeoLibre consigliato, issue #19)
 

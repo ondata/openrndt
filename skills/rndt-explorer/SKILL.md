@@ -22,7 +22,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.5"
+  version: "3.4.6"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -198,10 +198,18 @@ Nominatim (OpenStreetMap) con **una** chiamata, non web search o scraping di sit
 aggregatori (lenti, fragili, non ufficiali). Nominatim restituisce il bbox come
 `[lat_min, lat_max, lon_min, lon_max]`: va riordinato in `xmin,ymin,xmax,ymax`.
 
-Non geocodificare indirizzi o civici: l'estensione dei metadati RNDT è un
-rettangolo grossolano (regione, provincia, comune o area fra più enti), quindi la scala della via
-non ha senso per il catalogo e aggiunge solo un punto di rottura (nomi di via
-degli atti diversi da OSM, civici assenti). Parti dal comune o dalla frazione.
+Per `search --bbox` non geocodificare indirizzi o civici: l'estensione dei
+metadati RNDT è un rettangolo grossolano (regione, provincia, comune o area fra
+più enti), quindi la scala della via non ha senso per il catalogo e aggiunge solo
+un punto di rottura (nomi di via degli atti diversi da OSM, civici assenti).
+Parti dal comune o dalla frazione.
+
+Dopo, per interrogare un servizio del dataset trovato, la via torna utile: il WFS
+catastale dell'Agenzia delle Entrate si interroga solo per bbox (non per foglio o
+particella), quindi per scaricare le particelle attorno a un indirizzo serve
+geocodificarlo. Se il civico non c'è, geocodifica la via; se non si trova, prova
+il nome senza secondi nomi o titoli (in OSM «Via Padre Annibale Di Francia», non
+«Via Padre Annibale Maria di Francia»).
 
 ```bash
 B=$(curl -s -A "openrndt-skill" \
