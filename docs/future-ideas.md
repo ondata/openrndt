@@ -3,6 +3,12 @@
 Spunti raccolti per evoluzioni di openrndt. Non sono impegni: vanno valutati
 caso per caso rispetto al design (CLI snella, read-only, niente cache locale).
 
+## Bbox dei limiti amministrativi ISTAT, offline (2026-09-23)
+
+Nata dalla issue #21: per `search --bbox` l'agente deve ricavare il bbox di un comune o di una provincia, e oggi lo fa con una chiamata a Nominatim. Una tabella distribuita con il pacchetto, come le codelist di `codelists.py`, con codice ISTAT, nome, livello (regione, provincia, comune) e `xmin,ymin,xmax,ymax` calcolati una volta dai confini ISTAT (fonte ufficiale, aggiornamento annuale), permetterebbe `--comune 017067` o `--provincia 017` senza rete e senza ambiguità fra toponimi omonimi. Circa 8000 righe. Da esporre anche nella libreria Python.
+
+Limiti misurati: il bbox di Desenzano del Garda è identico in Nominatim e in Overpass (`ref:ISTAT=017067`, `out bb`), quindi la tabella non cambia i risultati, toglie solo la dipendenza dalla rete. Il rettangolo di un comune può sconfinare: quello di Desenzano attraversa il lago e prende 946 metadati di `r_veneto` e `arpa_ve` su 2165. Senza un filtro sulla geometria, che RNDT non offre, il problema resta. Da valutare rispetto al design: è un dato statico da rigenerare ogni anno, non una cache.
+
 ## Probe GetMap reale in `resources` (2026-08-30)
 
 Il check attuale dice se il GetCapabilities risponde. Sul PCN (`wms.pcn.minambiente.it`, Carta Geologica) è 200 mentre ogni GetMap fallisce con `ServiceException`. Un'opzione `--probe getmap` potrebbe leggere dal GetCapabilities il primo layer e la sua bbox, chiedere una tile 64x64 e controllare `Content-Type: image/*`. Costo: una richiesta in più per WMS e il parsing del GetCapabilities. Analogamente per WFS: `GetFeature` con `count=1`.
