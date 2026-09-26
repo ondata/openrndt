@@ -18,6 +18,11 @@ uv tool install "geolibre[mcp]"
 claude mcp add -s local geolibre -- geolibre-mcp --root <cartella dei progetti>
 ```
 
+Il parametro `crs` di `add_ogc_layer` (WMS senza `EPSG:3857`, punto B.4)
+richiede `geolibre` 3.1.0 e GeoLibre Desktop 3.1.0. Dopo l'aggiornamento
+(`uv tool install "geolibre[mcp]" --reinstall`) il server MCP va riavviato:
+quello già in esecuzione non vede i parametri nuovi.
+
 Lo scope `local` (default) limita il server all'utente e al progetto corrente;
 `-s project` lo scrive in un `.mcp.json` condiviso. Il server legge e scrive
 **solo dentro `--root`**: progetti e dati locali devono stare lì, altrimenti
@@ -99,31 +104,37 @@ Il percorso più corto: nessun download, il server disegna.
    pochi millisecondi, con `status 0` e un messaggio generico su CORS o TLS che
    manda fuori strada. Molti server rispondono in https, alcuni fanno già 301.
 
-4. **Controlla CRS e CORS prima di aggiungere il layer.** MapLibre chiede le
-   tile WMS solo in Web Mercator (`{bbox-epsg-3857}`) e non sa riproiettarle,
-   quindi il layer deve dichiarare `EPSG:3857` nel GetCapabilities (in un
-   `<Layer>` antenato o nel suo). Se non c'è, il server risponde 200 con un
-   `ServiceExceptionReport` in XML al posto dell'immagine e il layer resta vuoto
-   senza errori (`add_ogc_layer` 3.0.0 scrive `SRS=EPSG:3857` senza controllare).
-   Serve anche l'intestazione CORS per il web e per `export_html` (vedi più
-   sotto); nella desktop dalla 2.9.0 le tile WMS passano per via nativa.
+4. **Controlla il CRS prima di aggiungere il layer.** MapLibre disegna in Web
+   Mercator: se il layer espone `EPSG:3857` nel GetCapabilities va bene così.
+   Se non lo espone, di solito il server risponde 200 con un
+   `ServiceExceptionReport` in XML e il layer resta vuoto senza errori (alcuni
+   server lo accettano lo stesso, per esempio ArcGIS di ISPRA: una GetMap a mano
+   in `EPSG:3857` lo dice). Da GeoLibre 3.1.0 (app desktop e
+   pacchetto `geolibre[mcp]`) lo si vede lo stesso, ma solo nella desktop, che
+   riproietta: passa ad `add_ogc_layer` `crs` con un CRS che sia insieme
+   esposto dal layer e fra quelli che GeoLibre sa riproiettare, cioè i
+   geografici `EPSG:4326`, `EPSG:4258`, `EPSG:6706`, `CRS:84`. Se il layer
+   espone solo CRS proiettati (UTM, Gauss-Boaga o altri) non c'è un CRS in
+   comune e il layer non si vede: `add_ogc_layer` rifiuta quei valori con un
+   `ValueError`. Nel campione del catalogo RNDT misurato il 2026-09-26 (un
+   endpoint per host, 54 risposte) i 14 server senza `EPSG:3857` esponevano
+   tutti anche un CRS geografico.
 
    ```bash
    curl -s "<endpoint>?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities" \
-     | grep -c '<CRS>EPSG:3857</CRS>'     # 0 = niente WMS in GeoLibre
+     | grep -o '<CRS>[^<]*</CRS>' | sort -u
    ```
 
-   Caso reale: il WMS catastale dell'Agenzia delle Entrate dichiara solo
-   `EPSG:6706`, `EPSG:4258` e le UTM, e non manda CORS: nel web non si vede per
-   due ragioni indipendenti, nella desktop per la prima. Per il catasto la strada è il WFS, scaricato in
-   GeoJSON (sezione C e [`ogc-services.md`](./ogc-services.md)); per vedere il
-   WMS, QGIS.
+   Web ed `export_html` restano limitati a `EPSG:3857` e vogliono anche
+   l'intestazione CORS (vedi più sotto); nella desktop dalla 2.9.0 le tile WMS
+   passano per via nativa. L'Add Data dell'app scrive sempre `EPSG:3857`: il
+   `crs` si imposta solo nel progetto (MCP, libreria Python o a mano).
 
-5. **`add_ogc_layer`**, poi aggiungi a mano `source.bounds` sul layer:
-   `wms_layer` non lo scrive, e senza estensione dichiarata lo «zoom to fit»
-   non ha su cosa inquadrare (non succede nulla). Il valore sta nel
+5. **`add_ogc_layer`** con `bounds`, l'estensione del layer: senza, lo «zoom
+   to fit» non ha su cosa inquadrare (non succede nulla). Il valore sta nel
    `BoundingBox CRS:84` di quel layer nel GetCapabilities, nell'ordine
-   `[west, south, east, north]`.
+   `[west, south, east, north]`. Con versioni precedenti di `geolibre` che non
+   accettano `bounds`, va aggiunto a mano come `source.bounds` sul layer.
 
    Attenzione: su un source raster `bounds` limita anche le richieste di tile,
    quindi un servizio che dichiara un'estensione più stretta del dato reale fa
@@ -253,6 +264,7 @@ pre-check.
 | --- | --- | --- |
 | Layer nell'elenco, mappa vuota, tile fallite in 0-4 ms | endpoint in `http` | riprova l'URL in `https` |
 | `AJAXError: Failed to fetch (0)` sulla tile, ma `curl` sullo stesso URL dà 200 `image/png` | CORS: manca `Access-Control-Allow-Origin`, oppure il server ne manda **due** (ArcGIS ISPRA: uno riflesso e uno `*`), valore che i browser rifiutano | `curl -sI -H "Origin: https://geolibre.app" "<tile url>" \| grep -i access-control`: deve esserci **una** riga. Non è risolvibile lato GeoLibre: MapLibre usa `fetch`. Una pagina Leaflet (`<img>`) mostra la stessa tile |
+| Layer WMS vuoto, nessun errore, la GetMap a mano in `EPSG:3857` dà un `ServiceExceptionReport` | il layer non espone `EPSG:3857` | CRS del GetCapabilities, poi `crs` geografico in `add_ogc_layer` (punto B.4, solo desktop) |
 | GetCapabilities 200 ma nessuna tile arriva, o arriva un XML | il server serve il capabilities ma non le mappe (PCN: `ServiceException`, database non raggiungibile) | una GetMap a mano: `Content-Type` deve essere `image/*` (vedi `ogc-services.md`) |
 | Layer nell'elenco, mappa vuota, nessuna richiesta | risorsa non leggibile | `ogrinfo` sullo stesso path che usa GeoLibre |
 | «GDAL Error (4): does not exist in the file system» | zip remoto senza `Range`, o path locale | `curl -I -H "Range: bytes=0-99"`: deve dare `206` |

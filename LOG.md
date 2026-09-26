@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-09-26 (skill 3.4.7: WMS senza EPSG:3857 in GeoLibre 3.1.0, issue #20)
+
+- **`references/geolibre.md`, punto B.4 riscritto**: da GeoLibre 3.1.0 (PR opengeos/GeoLibre#2562) la desktop mostra un WMS senza `EPSG:3857` se `add_ogc_layer` riceve `crs` con un CRS geografico che il layer espone (`EPSG:4326`, `EPSG:4258`, `EPSG:6706`, `CRS:84`); i CRS proiettati sono rifiutati. Web, `export_html` e l'Add Data dell'app restano su `EPSG:3857`. Provato sul catasto di Desenzano: particelle e fabbricati in `EPSG:6706` combaciano con il GeoJSON del WFS.
+- **Campione RNDT**: un endpoint WMS per host (72, 54 risposte): 40 espongono `EPSG:3857`, 14 no ma hanno un CRS geografico, 0 solo proiettati. Il campo `apiso_CRS` dei metadati è il CRS del dataset, non quelli del servizio.
+- **B.5**: `bounds` ora è un parametro di `add_ogc_layer`. Nuova riga di diagnosi e nota su versione minima e riavvio del server MCP.
+- **Tile che mancano a macchia** (500 intermittenti del WMS catastale, di più con richieste parallele): PR opengeos/GeoLibre#2685 con i nuovi tentativi sulle 5xx, issue opengeos/GeoLibre#2684.
+
 ## 2026-09-23 (skill 3.4.5-3.4.6: niente geocodifica di indirizzi per search, issue #21)
 
 - **«Da un toponimo al bbox»**: Nominatim solo per comune, frazione o località, non per indirizzi. Caso dalla #21: `Via Padre Annibale Maria di Francia 17, Desenzano del Garda` non si trova perché in OSM la via è senza «Maria»; il civico mancante non conta (Nominatim ripiega sulla via). openrndt non è un geocoder e l'estensione dei metadati RNDT è un rettangolo grossolano (regione, provincia, comune): la scala della via non ha senso per il catalogo. Misurato: bbox della via 1184 metadati, bbox di Desenzano 2165, ma 946 dei 981 in più sono di `r_veneto`/`arpa_ve`, perché il rettangolo del comune sconfina in Veneto oltre il lago. La regola vale solo per `search --bbox`: per il WFS catastale, che si interroga solo per bbox, la via geocodificata serve.
