@@ -1,5 +1,14 @@
 # LOG
 
+## 2026-09-26 (form Ricerca Dettagliata, CSW e GeoLibre, verso un pannello RNDT)
+
+- **Nuovo `knowledge/api/advanced-search-form.md`**: come la Ricerca Dettagliata del geoportale traduce ogni campo in una query per la REST, ricavato dal codice della pagina (`adaptSerialize`). Il form non ha un'API propria: passa da un proxy PHP alla stessa `rest/metadata/search`. «Testo» è Lucene grezzo, non una frase esatta; le aree amministrative sono rettangoli EPSG:3857 in tre JSON statici (il file dei comuni pesa 7,3 MB).
+- **Issue #9 probabilmente corretta a monte**: il codice attuale filtra sul solo campo data scelto e con «Considera valori vuoti» aggiunge `OR (NOT _exists_:campo)`; sulla REST il caso dell'issue dà 111 invece di 15. Non riprovato nell'interfaccia: l'issue resta aperta.
+- **CSW**: `constraint` in KVP ignorato anche con la richiesta del client CSW di GeoLibre (23.831 per qualunque termine), ma `q=` in GET filtra (1.129 per `idrografia`, come la REST). Riga aggiornata in `known-issues.md`.
+- **`--org` perde record**: `apiso_OrganizationName_txt` include l'ente del contatto del metadato; per la Regione Piemonte dà 363 contro i 612 di `EnteResponsabile_s` (249 record hanno come contatto CSI Piemonte). Documentato in `known-issues.md` con l'alternativa per espressione regolare case-insensitive su `EnteResponsabile_s`, già usata dal plugin, e misurato su 14 enti. CLI non ancora cambiata: issue #23.
+- **Plugin `openrndt-geolibre` 0.1.0-alpha.1** (repo privato `ondata/openrndt-geolibre`): pannello di ricerca sul RNDT per GeoLibre, con aggiunta di WMS e WFS. La fixture `tests/fixtures/queries.json` del plugin è pensata come oracolo comune con openrndt. Due fatti utili anche qui: `INSPIRETheme_s` vuole le etichette italiane del registro INSPIRE (verificate tutte e 34), e il firewall del RNDT risponde 500 "App offline" allo user agent `HeadlessChrome`.
+- **GeoLibre**: nessun supporto specifico per INSPIRE, ma un client CSW 2.0.2 generico. Per sfogliare RNDT la strada è un plugin esterno (template ufficiale, marketplace con plugin simili); mancano all'API dei plugin `crs` per il WMS, un aiuto per il WFS e l'apertura di «Add Data» già compilato. Piano in `tasks/todo-geolibre-rndt-panel.md`.
+
 ## 2026-09-26 (skill 3.4.7: WMS senza EPSG:3857 in GeoLibre 3.1.0, issue #20)
 
 - **`references/geolibre.md`, punto B.4 riscritto**: da GeoLibre 3.1.0 (PR opengeos/GeoLibre#2562) la desktop mostra un WMS senza `EPSG:3857` se `add_ogc_layer` riceve `crs` con un CRS geografico che il layer espone (`EPSG:4326`, `EPSG:4258`, `EPSG:6706`, `CRS:84`); i CRS proiettati sono rifiutati. Web, `export_html` e l'Add Data dell'app restano su `EPSG:3857`. Provato sul catasto di Desenzano: particelle e fabbricati in `EPSG:6706` combaciano con il GeoJSON del WFS.
