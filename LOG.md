@@ -2,6 +2,7 @@
 
 ## 2026-10-04 (rilascio 3.5.0, skill 3.6.0)
 
+- **README: sezione sul plugin openrndt-geolibre** in fondo, prima dei riferimenti: cos'è, cosa fa, come provarlo in GeoLibre web e Desktop, il legame con `geolibre_url`. Il repo del plugin ora è pubblico. Aperta #27 per il link a una ricerca intera.
 - **Pubblicata**: PR #26 mergiata in rebase dopo tre giri di review di Greptile (un rilievo, `results` non lista, corretto), tag `v3.5.0`, GitHub Release, PyPI. Issue #24 chiusa a mano: «Chiude #24» nel corpo della PR non è una parola chiave di GitHub, serve «Closes». Smoke test sulla CLI reinstallata da PyPI: `geolibre_url` presente in `get`, `compact` e JSON. Subito dopo l'upload `/pypi/openrndt/json` dava ancora 3.4.0 per la cache, mentre `/pypi/openrndt/3.5.0/json` e l'installazione con `==3.5.0` erano già a posto.
 - **CLI 3.5.0**: `geolibre_url` accanto a `url` in tutti gli output (#24, PR #26). Provato in locale prima del rilascio. Il link con l'id codificato (`%3A`) è stato verificato nel browser su web.geolibre.app con il plugin 0.2.0: apre la scheda come la forma con `:`, anche partendo da un browser senza plugin, e lo Share del plugin produce lo stesso formato (report in `openrndt-geolibre/tmp/web-test/report.md`, caso 12). Dallo stesso test è nata ondata/openrndt-geolibre#33 (chip di tema e open data mostrati con Services).
 

@@ -531,6 +531,19 @@ uv tool install "geolibre[mcp]"
 claude mcp add geolibre -- geolibre-mcp --root ~/maps
 ```
 
+## Il plugin per GeoLibre: openrndt-geolibre
+
+[openrndt-geolibre](https://github.com/ondata/openrndt-geolibre) è un plugin di [GeoLibre](https://geolibre.app) che porta la ricerca nel RNDT dentro la mappa. È la controparte grafica di questa CLI e usa la stessa API REST del catalogo.
+
+Dal pannello si cerca per testo, tipo di risorsa, area (la vista della mappa, un riquadro o le forme disegnate), servizi disponibili (WMS, WFS, ArcGIS REST), tema INSPIRE, ente e date. I risultati compaiono come footprint sulla mappa; la scheda di un record elenca i suoi layer WMS e WFS, che si aggiungono alla mappa con un clic. Una ricerca o un record si condividono come link, e **Copy for an agent** copia la ricerca in Markdown, con il comando `curl` e il modo di proseguire con `openrndt`.
+
+Per provarlo:
+
+- **GeoLibre web**: <https://web.geolibre.app/?plugin=openrndt-geolibre>. Chi non ha il plugin lo installa dopo la richiesta «Trust and load».
+- **GeoLibre Desktop** (dalla 3.2.0): **Settings > Manage Plugins**, poi **RNDT catalogue** e **Install**.
+
+Il collegamento con la CLI è `geolibre_url`: ogni record in uscita da `search`, `get` e `footprints` ha l'indirizzo che lo apre nel plugin su GeoLibre web (vedi sopra, nella sezione sui campi). Il plugin è in beta; problemi e idee vanno nelle [issue del suo repository](https://github.com/ondata/openrndt-geolibre/issues).
+
 ## Riferimenti
 
 - Pagina ufficiale REST API: <https://geodati.gov.it/geoportale/eng/strumenti-en/rest-api>
