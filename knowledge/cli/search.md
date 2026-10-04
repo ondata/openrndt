@@ -3,7 +3,7 @@ type: CLI Command
 title: openrndt search
 description: Cerca metadati nel RNDT con testo Lucene, bbox, categoria ISO 19115, intervalli temporali e ordinamento.
 tags: [cli, search, lucene]
-timestamp: 2026-08-09T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 Interroga l'endpoint [/rest/metadata/search](/api/rndt-rest-api.md) del RNDT.
@@ -12,7 +12,8 @@ Interroga l'endpoint [/rest/metadata/search](/api/rndt-rest-api.md) del RNDT.
 
 | Opzione | Significato |
 |---------|-------------|
-| `--q`, `-q` | Testo di ricerca, sintassi Lucene/Elasticsearch (**OR implicito** fra termini separati da spazio: per restringere scrivere `AND`; `-termine`, `"frase"`, wildcard `*`/`?`, `campo:valore`, range su `_dt`/`_i`). |
+| `--q`, `-q` | Testo di ricerca. Le parole di testo libero sono unite in **AND** (vedi `--q-mode`). Una `q` con sintassi Lucene passa intatta, e lì l'API usa l'**OR implicito** fra termini separati da spazio: per restringere scrivere `AND`. Sintassi riconosciuta: `-termine`, `"frase"`, wildcard `*`/`?`, `campo:valore`, range su `_dt`/`_i`). |
+| `--q-mode` | Come la CLI costruisce la clausola testo: `all` (default) unisce le parole in AND con escape dei caratteri speciali Lucene, tenendo le wildcard `*`/`?`; `any` le unisce in OR (il comportamento dell'API fino alla 3.3.1); `lucene` passa la `q` intatta. In `all` e `any` una `q` che contiene `:`, virgolette, parentesi, `AND`/`OR`/`NOT` o un `-`/`+` a inizio parola passa comunque intatta. Motivo: con l'OR dell'API `copertura del suolo` trovava 23.820 record, l'intero catalogo; in AND ne trova 1.415 ([known-issues](/api/known-issues.md)). |
 | `--bbox` | Bounding box WGS84 `xmin,ymin,xmax,ymax`, semantica *overlaps*. Validata prima della chiamata: quattro valori numerici, longitudini in -180..180, latitudini in -90..90, `xmin < xmax`, `ymin < ymax`. Una bbox malformata esce con codice 2 e non interroga l'API, che la ignorerebbe restituendo il catalogo intero. |
 | `--bbox-crs` | CRS esplicito della bbox. Supportati: `EPSG:4326` (default implicito), `CRS:84`, `WGS84`. |
 | `--org` | Ente responsabile: frase su `apiso_OrganizationName_txt` (campo analizzato, quindi case-insensitive e insensibile all'ordine dei token). In AND con gli altri filtri. Su zero risultati la CLI fa una query esplorativa e stampa i nomi di ente presenti in catalogo che somigliano a quello cercato. |

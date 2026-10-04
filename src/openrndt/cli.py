@@ -429,9 +429,27 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _q_mode_option() -> Any:
+    return typer.Option(
+        "all",
+        "--q-mode",
+        help="Modalità del testo di --q: 'all' (default, parole in AND), 'any' (OR), "
+        "'lucene' (sintassi passata intatta). Una q con sintassi Lucene (`:`, "
+        "virgolette, parentesi, AND/OR/NOT, -/+ a inizio parola) passa intatta "
+        "qualunque sia la modalità.",
+    )
+
+
 @app.command()
 def search(
-    q: str | None = typer.Option(None, "--q", "-q", help="Testo di ricerca (Lucene/Elasticsearch)."),
+    q: str | None = typer.Option(
+        None,
+        "--q",
+        "-q",
+        help="Testo di ricerca: parole unite in AND di default (vedi --q-mode); "
+        "la sintassi Lucene tipo `keywords_s:VAL` passa intatta.",
+    ),
+    q_mode: str = _q_mode_option(),
     bbox: str | None = typer.Option(None, "--bbox", help="Bounding box WGS84 xmin,ymin,xmax,ymax."),
     bbox_crs: str | None = typer.Option(
         None,
@@ -524,6 +542,7 @@ def search(
             item_id = resolve_item_id(item_id)
         payload = do_search(
             q=q,
+            q_mode=q_mode,
             bbox=bbox,
             bbox_crs=bbox_crs,
             org=org,
@@ -589,7 +608,13 @@ def search(
 
 @app.command()
 def footprints(
-    q: str | None = typer.Option(None, "--q", "-q", help="Testo di ricerca (Lucene/Elasticsearch)."),
+    q: str | None = typer.Option(
+        None,
+        "--q",
+        "-q",
+        help="Testo di ricerca: parole unite in AND di default (vedi --q-mode).",
+    ),
+    q_mode: str = _q_mode_option(),
     bbox: str | None = typer.Option(None, "--bbox", help="Bounding box WGS84 xmin,ymin,xmax,ymax."),
     bbox_crs: str | None = typer.Option(
         None,
@@ -656,6 +681,7 @@ def footprints(
     try:
         payload = do_search(
             q=q,
+            q_mode=q_mode,
             bbox=bbox,
             bbox_crs=bbox_crs,
             org=org,

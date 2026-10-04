@@ -64,9 +64,12 @@ OUTPUT_FORMATS: dict[str, str] = {
 # Parametri principali dell'endpoint /rest/metadata/search.
 SEARCH_PARAMS: dict[str, str] = {
     "q": (
-        "Testo libero o query Lucene. ⚠️ Fra termini e clausole separati da spazio "
-        "l'operatore implicito è OR (verificato 2026-08-30: `catasto siciliana` = "
-        "`catasto OR siciliana`): per restringere scrivi AND esplicito. "
+        "Testo libero o query Lucene. Dalla 3.4.0 la CLI unisce in AND le parole di "
+        "testo libero (`--q-mode all`, default; `any` per l'OR, `lucene` per passare "
+        "la q intatta). Una q con sintassi Lucene (`campo:valore`, virgolette, "
+        "parentesi, AND/OR/NOT, -termine, +termine) passa intatta, e lì l'API usa "
+        "l'OR fra termini separati da spazio (verificato 2026-08-30: `catasto "
+        "siciliana` = `catasto OR siciliana`): in una query Lucene scrivi AND esplicito. "
         "-termine per escludere, virgolette per frase esatta, wildcard * (zero o più "
         "char) e ? (un char), anche iniziale e anche su campo esplicito (*palerm*, "
         "EnteResponsabile_s:*Siciliana). I campi _s sono case-sensitive, i _txt no. "
