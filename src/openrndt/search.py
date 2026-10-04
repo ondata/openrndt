@@ -123,9 +123,18 @@ def _looks_like_lucene(q: str) -> bool:
     Gli operatori booleani contano solo in maiuscolo e come parola a sé, come
     in Lucene: `catasto AND siciliana` passa intatta, `e`/`o` restano parole.
     Anche `-termine`/`+termine` a inizio parola (esclusione/obbligo) passano
-    intatti; il trattino dentro una parola (`Emilia-Romagna`) no.
+    intatti; il trattino dentro una parola (`Emilia-Romagna`) no. Così pure
+    fuzzy e boost attaccati a una parola (`catasto~1`, `catasto^2`).
     """
-    return bool(re.search(r'[:"()]|\b(?:AND|OR|NOT)\b|(?:^|\s)[+-]\S', q))
+    return bool(re.search(r'[:"()]|\b(?:AND|OR|NOT)\b|(?:^|\s)[+-]\S|\S[~^]', q))
+
+
+_Q_MODES = ("all", "any", "lucene")
+
+
+def _check_q_mode(mode: str) -> None:
+    if mode not in _Q_MODES:
+        raise ValueError(f"`q_mode` non valido: {mode!r} (usare 'all', 'any' o 'lucene').")
 
 
 def _build_text_clause(q: str, mode: str) -> str:
@@ -138,8 +147,7 @@ def _build_text_clause(q: str, mode: str) -> str:
     In ``all``/``any`` una `q` che contiene già sintassi Lucene (`:`, virgolette,
     parentesi) passa intatta, per retrocompatibilità con ``keywords_s:VAL``.
     """
-    if mode not in {"all", "any", "lucene"}:
-        raise ValueError(f"`q_mode` non valido: {mode!r} (usare 'all', 'any' o 'lucene').")
+    _check_q_mode(mode)
     text = q.strip()
     if not text:
         raise ValueError("`q` non può essere vuoto o di soli spazi.")
@@ -229,6 +237,7 @@ def search(
     if modified is not None and (updated_from is not None or updated_to is not None):
         raise ValueError("Usa `modified` oppure `updated_from/updated_to`, non entrambi.")
 
+    _check_q_mode(q_mode)
     params: dict[str, Any] = {"f": fmt, "start": start, "num": num}
     non_q_clauses: list[str] = []
     org_clause = _build_org_clause(org, org_exact)

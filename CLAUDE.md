@@ -16,7 +16,7 @@ CLI Python per il Repertorio Nazionale dei Dati Territoriali (RNDT), modellata s
 
 ## Bug noti dell'API RNDT
 - Il parametro `dataCategory` documentato sulla pagina ufficiale **non filtra**: ritorna sempre il catalogo intero. Il filtro vero è `q=keywords_s:VAL`. La CLI traduce `--data-category` in questa clausola Lucene. Dettagli in `ref/rest-api-rndt.md`.
-- Il motore Elasticsearch usa l'**OR di default** sul testo libero: una query multi-parola comune (`copertura del suolo`) matcha l'intero catalogo. La CLI unisce le parole in AND (`--q-mode all|any|lucene`) e passa intatta una `q` con sintassi Lucene (`:`, virgolette, parentesi, `AND`/`OR`/`NOT`, `-`/`+` a inizio parola).
+- Il motore Elasticsearch usa l'**OR di default** sul testo libero: una query multi-parola comune (`copertura del suolo`) matcha l'intero catalogo. La CLI unisce le parole in AND (`--q-mode all|any|lucene`) e passa intatta una `q` con sintassi Lucene (`:`, virgolette, parentesi, `AND`/`OR`/`NOT`, `-`/`+` a inizio parola, fuzzy `~` e boost `^`).
 
 ## Comandi
 - `openrndt search` — ricerca metadati.
