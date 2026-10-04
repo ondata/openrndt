@@ -14,7 +14,7 @@ Tutti i punti seguenti sono stati verificati empiricamente contro l'API di produ
 |---------------------------|---------------------|---------------------------|
 | Il parametro `dataCategory` filtra per categoria. | Non filtra: ritorna sempre il catalogo intero. Dal 31/07/2026 non è più elencato nella pagina ufficiale. | `--data-category` è tradotto nella clausola Lucene `q=keywords_s:VAL` (`OR` per valori multipli). |
 | `sort=dateDescending` / `dateAscending` ordinano per data. | Ignorati: ordine identico fra loro (riconfermato 2026-09-04). Dal 31/07/2026 la pagina ufficiale documenta solo `apiso_Modified_dt:asc\|desc`, `title:asc\|desc` e `relevance`. | `discover --what sort_values` marca i valori rotti; la sintassi funzionante è `campo:asc\|desc` su campo sortable (es. `apiso_Modified_dt:desc`). |
-| — | `sort=title` senza direzione risponde 400 con l'errore Elasticsearch "Fielddata is disabled on [title]" (riverificato 2026-09-04); `title:asc` e `title:desc` ordinano (ordine per byte: minuscole dopo le maiuscole). Dal 31/07/2026 la pagina ufficiale dice che la direzione è obbligatoria. | Documentato nelle codelist; i campi garantiti sortable restano `_s`/`_dt`/`_i`. |
+| — | `sort=title` senza direzione risponde con l'errore Elasticsearch "Fielddata is disabled on [title]": HTTP 400 fino al 2026-09-04, 500 il 2026-10-03; `title:asc` e `title:desc` ordinano (ordine per byte: minuscole dopo le maiuscole). Dal 31/07/2026 la pagina ufficiale dice che la direzione è obbligatoria. | Documentato nelle codelist; i campi garantiti sortable restano `_s`/`_dt`/`_i`. |
 | Esiste una data di pubblicazione ordinabile. | `apiso_PublicationDate_dt` **esiste** (8.457/23.738 record, ~36%; riverificato 2026-08-29) ed è **filtrabile** via `q=apiso_PublicationDate_dt:[range]`, ma **non ordinabile** (`sort=…` ignorato, come `apiso_RevisionDate_dt`). Verificato live 2026-07-17 — corregge la nota precedente che lo dava per "inesistente". `apiso_CreationDate_dt` spesso null/parziale. | Proxy per "più recenti": `apiso_Modified_dt:desc`. Per *filtrare* (non ordinare) per data di pubblicazione: `q=apiso_PublicationDate_dt:[…]` (issue #4). |
 | Il filtro per data della Ricerca Dettagliata rispetta il tipo di data scelto. | Mette in AND tutti e 3 i campi data; i record privi di uno di essi sono scartati anche con "Considera valori vuoti" spuntato. Es. "incendi creati dal 2024": 15 reali, portale 0. **Probabilmente corretto**: il codice della pagina letto il 2026-09-26 genera `(<campo>:[da TO a] OR (NOT _exists_:<campo>))` sul solo campo scelto, e sulla REST quella query dà 111 (i 15 più i record senza data di creazione). Non ancora riprovato nell'interfaccia. Dettagli in [form Ricerca Dettagliata](advanced-search-form.md). | Bug del frontend ufficiale, non della CLI (issue #9). |
 | L'endpoint CSW supporta `SortBy` (INSPIRE Discovery Services v3.1). | `SortBy` ignorato: non conforme. | Nessuna: documentato (issue #5 del repository). |
@@ -60,6 +60,16 @@ Un ente assente da tutti e tre non è un difetto di query: il Comune di Bologna 
 # Problemi di qualità dei dati (non dell'API)
 
 - Alcuni record dichiarano una bbox errata che copre tutta l'Italia (`6.6,35.5,18.5,47.1`): compaiono come rumore in qualunque ricerca `--bbox`. Il filtro bbox in sé funziona (semantica overlaps, verificata).
+- Estensioni dichiarate sbagliate (misurate il 2026-10-02 sui `bbox` di tutti i 23.852 record). L'API restituisce quello che dichiara il metadato ISO (`EX_GeographicBoundingBox`): l'errore è nella scheda, non nell'indice. Dettaglio e tabelle in [openrndt-geolibre#13](https://github.com/ondata/openrndt-geolibre/issues/13).
+  - 110 record non intersecano l'Italia (riquadro `5.5,35,19.5,48`), quindi nessuna ricerca `--bbox` sul territorio giusto li trova:
+    - Comune di Capannori, tutti i 100 record: riquadro in Etiopia (38.4-39.3 E, 12.6-13.3 N). Non è uno scambio latitudine/longitudine. Con `bbox=9.6,42.2,12.4,44.5` (Toscana) l'ente dà 0 su 100. Il WMS dello stesso ente dichiara l'estensione corretta (per «alberi monumentali» 10.507-10.649 E, 43.797-43.902 N);
+    - scambio latitudine/longitudine: Provincia di Rovigo 5 (44.75-45.17 come longitudine, 11.13-12.6 come latitudine), Regione Autonoma della Sardegna 1;
+    - longitudine fuori dall'Italia: Regione Lombardia 1 (4.07-4.44 E), Comune di Grosseto 1 (-4.36 E);
+    - valori nulli o quasi: Comune di Monte Argentario 1 (-4.36, 0);
+    - 1 è corretto: OGS `laurabassi_pnra39`, campagna antartica (latitudine da -78.7 a -43.6). «Fuori dall'Italia» non vuol dire quindi «sbagliato».
+  - 39 record con ovest maggiore di est (`xmin > xmax`): AVEPA 35 (tutti i suoi record, es. `12.2,45.1,11.39,45.69`), Regione Autonoma della Sardegna 2, Comune di Sovizzo 1, Provincia di Rovigo 1. La ricerca per area li trova lo stesso: AVEPA con `bbox=10.4,44.6,13.5,47.1` (Veneto) dà 35 su 35.
+  - 25 record di enti locali (nome che inizia per Comune, Provincia, Città, Unione) con estensione larga almeno 12° e alta almeno 10°: Provincia Autonoma di Trento 16 (il mondo intero, `-180,-90,180,90`), Comune di Livorno 5 e Comune di Selvazzano Dentro 2 (tutta l'Italia), Comune di Firenze 1 (i quattro valori in ordine sbagliato: `11.15,11.35,43.72,43.84`), Comune di Modena 1 (riquadro che parte da `0,0`). Sono il rumore del punto precedente.
+  - Le forme dell'errore sono troppe per una correzione automatica: il riquadro di Capannori scambiato cade nel Tirreno, dentro il riquadro dell'Italia, e un controllo «scambiato rientra in Italia» lo prenderebbe per uno scambio (100 falsi su 106).
 
 # Citations
 
@@ -68,18 +78,18 @@ Un ente assente da tutti e tre non è un difetto di query: il Comune di Bologna 
 
 # Segnalazioni ad AgID e loro stato
 
-Inviate a `info@rndt.gov.it` con Antonio Rotundo in copia il **18 luglio 2026** (punti 1-6) e il **10 agosto 2026** (punto 7). Risposte di Rotundo: 20 luglio («le analizzeremo con il fornitore»), 4 settembre (regola dell'owner con nome IPA obbligatorio e verificato; il caso Bologna girato a Regione E-R; sui punti precedenti «ci hanno lavorato»; documento unico gradito). Documento unico in `docs/segnalazioni-rndt-agid.md` (Quarto → docx con `references/reference.docx`, entrambi gitignored), da riverificare nella prima settimana di ottobre 2026.
+Inviate a `info@rndt.gov.it` con Antonio Rotundo in copia il **18 luglio 2026** (punti 1-6) e il **10 agosto 2026** (punto 7). Risposte di Rotundo: 20 luglio («le analizzeremo con il fornitore»), 4 settembre (regola dell'owner con nome IPA obbligatorio e verificato; il caso Bologna girato a Regione E-R; sui punti precedenti «ci hanno lavorato»; documento unico gradito). Documento unico in `docs/segnalazioni-rndt-agid.md` (Quarto → docx con `references/reference.docx`, entrambi gitignored), riverificato il 22 settembre e il 3 ottobre 2026 senza cambiamenti di stato; prossima riverifica nella prima settimana di novembre 2026.
 
-Riverificate una per una il **2026-09-04** (catalogo a 23.741 record):
+Riverificate una per una il **2026-10-03** (catalogo a 23.875 record); stati identici a quelli del 2026-09-04 e del 2026-09-22, cambiano solo i conteggi:
 
-| # | Segnalazione | Stato al 2026-09-04 |
+| # | Segnalazione | Stato al 2026-10-03 |
 |---|---|---|
 | 1 | «Considera valori vuoti» della Ricerca Dettagliata esclude i record con date vuote invece di includerli | aperta: solo campo creazione 15, tre campi in AND 0 |
-| 2 | `sort` su `apiso_PublicationDate_dt` non ha effetto; valori documentati non funzionanti | **documentazione risolta** (pagina del 31/07 con i soli valori reali); resta l'assenza di un ordinamento per data del dato; `sort=title` nudo ancora 400 |
-| 3 | Gli esempi della guida operativa CSW non funzionano; `SortBy` ignorato | **in parte risolta**: esempio §2.2.1 → 824, queryables apiso dichiarati e funzionanti, conteggio a vuoto `"0"`; restano `SortBy`, nessun operatore di intervallo, `constraint` KVP ignorato (nuovo: a luglio dava 0, ora catalogo intero), guida ancora v1.0 |
+| 2 | `sort` su `apiso_PublicationDate_dt` non ha effetto; valori documentati non funzionanti | **documentazione risolta** (pagina del 31/07 con i soli valori reali); resta l'assenza di un ordinamento per data del dato; `sort=title` nudo ancora in errore (500 dal 2026-10-03, prima 400) |
+| 3 | Gli esempi della guida operativa CSW non funzionano; `SortBy` ignorato | **in parte risolta**: esempio §2.2.1 → 830, queryables apiso dichiarati e funzionanti, conteggio a vuoto `"0"`; restano `SortBy`, nessun operatore di intervallo, `constraint` KVP ignorato (nuovo: a luglio dava 0, ora catalogo intero), guida ancora v1.0 |
 | 4 | I link `rel="alternate"` contengono l'IP privato `192.168.3.34:8080` | **risolta** |
 | 5 | `dataCategory` non filtra | **risolta per via documentale**: il parametro non filtra ancora ma non è più in pagina |
-| 6 | Nessun modo affidabile di selezionare i dati a licenza aperta; nessuna aggregazione | aperta: 16.762 / 10.536 / 3.761 / 14.053; `facet` ignorato |
+| 6 | Nessun modo affidabile di selezionare i dati a licenza aperta; nessuna aggregazione | aperta: 16.830 / 10.584 / 3.821 / 14.151; `facet` ignorato |
 | 7 | La ricerca per ente funziona solo se l'ente si è dichiarato; ruolo scollegato dall'organizzazione | chiarita la regola owner/IPA; aperta la parte API (ruolo → organizzazione, campo IPA, facet). Bologna 0, Torino 271, Genova 144 |
 
 Nel documento unico sono entrate anche quattro osservazioni nuove (bbox malformata ignorata: `non,valido` e tre valori → 200 e catalogo intero, invertita → 500; `updated` = `sys_modified_dt`; operatore implicito OR; item inesistente → 200 `found:false`) e tre note sulla pagina aggiornata: `keyword_s` e `isOpenData` scritti male (i nomi reali sono `keywords_s` e `isOpendata`, case-sensitive, con quelli in pagina → 0); il nuovo parametro `modified=da,a` filtra su `sys_modified_dt` e non su `apiso_Modified_dt` (`2025-01-01,2025-12-31` → 0 contro 10.424; `2026-04-25,2026-04-26` → 19.050 = ultima reindicizzazione); `num` dichiarato max 5000 ma 6000 risponde 200 con 6.000 risultati.
