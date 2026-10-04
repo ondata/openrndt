@@ -279,8 +279,9 @@ def search(
     if fmt in {"json", "json-source"}:
         data: dict[str, Any] = response.json()
         # payload non oggetto: lo segnala il chiamante (es. la CLI), qui non si tocca
-        if isinstance(data, dict):
-            for result in data.get("results") or []:
+        results = data.get("results") if isinstance(data, dict) else None
+        if isinstance(results, list):
+            for result in results:
                 if isinstance(result, dict):
                     result["geolibre_url"] = geolibre_url(result.get("id"))
         return data

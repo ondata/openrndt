@@ -650,3 +650,11 @@ def test_compact_and_get_carry_geolibre_url(search_response_json, item_response_
     rec = item_record(item_response_json)
     assert rec["geolibre_url"] == geolibre_url(rec["id"])
     assert rec["geolibre_url"] is not None
+
+
+@pytest.mark.parametrize("payload", [{"results": 1}, {"results": None}, {"total": 0}, [1, 2]])
+@respx.mock
+def test_search_json_malformed_results_left_untouched(payload):
+    # risposta malformata: niente geolibre_url, niente eccezione; la segnala chi chiama
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json=payload))
+    assert search(q="catasto") == payload
