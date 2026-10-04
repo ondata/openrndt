@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-04 (rilascio 3.4.0, skill 3.5.0)
+
+- **CLI 3.4.0**: `--q-mode` con AND di default, e il passaggio intatto delle query con operatori booleani ed esclusioni. Contiene solo questo: la ricerca ibrida (`index`, `find`) resta sul branch `hybrid-search`.
+
 ## 2026-10-04 (q-mode: operatori booleani ed esclusioni, documentazione)
 
 - **Bug trovato prima del rilascio**: una `q` con operatori scritti a mano veniva ri-unita in AND, `catasto AND siciliana` diventava `(catasto AND AND AND siciliana)` e il server rispondeva 500; `catasto -siciliana` diventava `catasto AND \-siciliana` e dava 1 record invece di 8.852. Ora `AND`/`OR`/`NOT` (maiuscoli, parola a sé) e `-`/`+` a inizio parola fanno passare la `q` intatta, come `campo:valore`, virgolette e parentesi. Verificato dal vivo: 1, 8.915, 8.852, 63 record, come con `--q-mode lucene`; `Emilia-Romagna uso suolo` resta in AND (222). 7 test nuovi.

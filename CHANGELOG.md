@@ -4,6 +4,19 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.4.0] - 2026-10-04
+
+**Cambia il risultato di `search` e `footprints` per le query di più parole.** Chi ha script con `--q "a b"` e si aspettava l'OR può aggiungere `--q-mode any`.
+
+### Changed
+
+- **Le parole di `--q` sono unite in AND** (`--q-mode all`, default). L'API di RNDT usa l'OR fra termini separati da spazio, e una query comune di più parole trovava l'intero catalogo: `copertura del suolo` dava 23.820 record, ora 1.415. Le parole sono escapate (caratteri speciali Lucene), le wildcard `*`/`?` restano attive.
+
+### Added
+
+- **`--q-mode all|any|lucene`** su `search` e `footprints`, e `q_mode` nella funzione di libreria `search()`. `any` rimette l'OR, `lucene` passa la `q` intatta.
+- Una `q` con sintassi Lucene passa intatta in ogni modalità: `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT` in maiuscolo, `-termine` e `+termine`. Le query scritte per le versioni precedenti in sintassi Lucene restituiscono gli stessi risultati; in queste query lo spazio resta un OR.
+
 ## [3.3.1] - 2026-09-22
 
 ### Fixed
