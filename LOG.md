@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-04 (rilascio 3.5.0, skill 3.6.0)
+
+- **CLI 3.5.0**: `geolibre_url` accanto a `url` in tutti gli output (#24, PR #26). Provato in locale prima del rilascio. Il link con l'id codificato (`%3A`) è stato verificato nel browser su web.geolibre.app con il plugin 0.2.0: apre la scheda come la forma con `:`, anche partendo da un browser senza plugin, e lo Share del plugin produce lo stesso formato (report in `openrndt-geolibre/tmp/web-test/report.md`, caso 12). Dallo stesso test è nata ondata/openrndt-geolibre#33 (chip di tema e open data mostrati con Services).
+
 ## 2026-10-04 (issue #24, geolibre_url)
 
 - **`geolibre_url` in tutti gli output con `url`**, costruito da una sola funzione `geolibre_url()` accanto a `record_url`, id codificato (`c_l219:…` → `c_l219%3A…`). Su richiesta anche nel JSON di `search`: `search()` aggiunge la chiave a ogni risultato, unica aggiunta al payload grezzo dell'API. Colonna anche nei profili `gis` e `qgis`; esce dalla tabella come `url`. Trovato strada facendo: un payload JSON non oggetto mandava in errore il ciclo prima del controllo della CLI, ora resta intatto. 5 test nuovi (187 in tutto). Verificato dal vivo sulla CLI locale: stesso indirizzo in `get`, `compact`, JSON e `footprints` per `c_l219:a883ab12-…`.
