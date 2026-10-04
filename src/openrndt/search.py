@@ -107,6 +107,49 @@ def _escape_phrase(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
+# Caratteri speciali Lucene da escapare nel testo libero; `*` e `?` restano
+# utilizzabili come wildcard (comportamento mutuato dal plugin geolibre).
+_Q_LUCENE_SPECIAL = re.compile(r"[+\-&|!(){}\[\]^\"~:\\\/]")
+
+
+def _escape_term(word: str) -> str:
+    """Escapa i caratteri speciali Lucene di una singola parola, tenendo `*` e `?`."""
+    return _Q_LUCENE_SPECIAL.sub(lambda c: f"\\{c.group(0)}", word)
+
+
+def _looks_like_lucene(q: str) -> bool:
+    """Vero se `q` contiene già sintassi Lucene (campo:valore, frasi, booleani).
+
+    Gli operatori booleani contano solo in maiuscolo e come parola a sé, come
+    in Lucene: `catasto AND siciliana` passa intatta, `e`/`o` restano parole.
+    Anche `-termine`/`+termine` a inizio parola (esclusione/obbligo) passano
+    intatti; il trattino dentro una parola (`Emilia-Romagna`) no.
+    """
+    return bool(re.search(r'[:"()]|\b(?:AND|OR|NOT)\b|(?:^|\s)[+-]\S', q))
+
+
+def _build_text_clause(q: str, mode: str) -> str:
+    """Costruisce la clausola testo per `q` secondo la modalità richiesta.
+
+    ``all`` (default): le parole sono unite in AND — il motore RNDT con la
+    query "nuda" usa l'OR e una query multi-parola comune ("copertura del
+    suolo") matcha l'intero catalogo (~24k record, verificato live).
+    ``any``: parole in OR. ``lucene``: pass-through per chi scrive la sintassi.
+    In ``all``/``any`` una `q` che contiene già sintassi Lucene (`:`, virgolette,
+    parentesi) passa intatta, per retrocompatibilità con ``keywords_s:VAL``.
+    """
+    if mode not in {"all", "any", "lucene"}:
+        raise ValueError(f"`q_mode` non valido: {mode!r} (usare 'all', 'any' o 'lucene').")
+    text = q.strip()
+    if not text:
+        raise ValueError("`q` non può essere vuoto o di soli spazi.")
+    if mode == "lucene" or _looks_like_lucene(text):
+        return f"({text})"
+    words = [ _escape_term(w) for w in text.split() ]
+    joiner = " AND " if mode == "all" else " OR "
+    return "(" + joiner.join(words) + ")"
+
+
 def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
     """Clausola Lucene per la ricerca per ente.
 
@@ -133,6 +176,7 @@ def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
 def search(
     *,
     q: str | None = None,
+    q_mode: str = "all",
     bbox: str | None = None,
     bbox_crs: str | None = None,
     org: str | None = None,
@@ -204,7 +248,7 @@ def search(
         non_q_clauses.append(published_clause)
     q_parts: list[str] = []
     if q:
-        q_parts.append(f"({q})" if non_q_clauses else q)
+        q_parts.append(_build_text_clause(q, q_mode))
     q_parts.extend(non_q_clauses)
     if q_parts:
         params["q"] = " AND ".join(q_parts) if len(q_parts) > 1 else q_parts[0]

@@ -1,5 +1,14 @@
 # LOG
 
+## 2026-10-04 (q-mode: operatori booleani ed esclusioni, documentazione)
+
+- **Bug trovato prima del rilascio**: una `q` con operatori scritti a mano veniva ri-unita in AND, `catasto AND siciliana` diventava `(catasto AND AND AND siciliana)` e il server rispondeva 500; `catasto -siciliana` diventava `catasto AND \-siciliana` e dava 1 record invece di 8.852. Ora `AND`/`OR`/`NOT` (maiuscoli, parola a sé) e `-`/`+` a inizio parola fanno passare la `q` intatta, come `campo:valore`, virgolette e parentesi. Verificato dal vivo: 1, 8.915, 8.852, 63 record, come con `--q-mode lucene`; `Emilia-Romagna uso suolo` resta in AND (222). 7 test nuovi.
+- **Documentazione allineata**: skill 3.5.0 (il testo libero è in AND, nelle query Lucene lo spazio resta OR e serve `AND` esplicito; compatibilità CLI >= 3.4.0), `references/search-syntax.md`, `discover --what search_params`, `knowledge/cli/search.md` e `footprints.md`, `knowledge/library/python-api.md`, `known-issues.md`, README.
+
+## 2026-10-03 (q con AND di default, --q-mode)
+
+- **Fix query-building di `search`/`footprints`**: il testo libero di `--q` andava al motore invariato e il default OR di Lucene faceva matchare l'intero catalogo per query multi-parola comuni (`"copertura del suolo"` → 23.820 record, verificato live; `title:(copertura AND suolo)` → 44). Ora le parole sono unite in AND (default `all`), con escape dei caratteri speciali e wildcard `*`/`?` preservate, sul modello di `textClause` del plugin openrndt-geolibre. Nuovo flag `--q-mode all|any|lucene`; una `q` che contiene già sintassi Lucene (`:`, virgolette, parentesi) passa intatta in ogni modalità, per retrocompatibilità con `keywords_s:VAL`. Live: default 1.415, `any` 23.820, `keywords_s:planningCadastre` 11.728. Verificato anche il quadro generale: `zzzzqqqq` → 0 (il full-text filtra davvero, diagnosi precedente errata), `fabbricati` 138 vs `edifici` 1.007 (sinonimi disgiunti → serve il motore ibrido locale, piano in `docs/hybrid-search-plan.md` da scrivere).
+
 ## 2026-10-03 (riverifica delle segnalazioni ad AgID)
 
 - **Terza riverifica completa, catalogo a 23.875**: nessun punto ha cambiato stato rispetto al 4 e al 22 settembre, cambiano solo i conteggi (esempio CSW §2.2.1 830, licenze 16.830 / 10.584 / 3.821 / 14.151, pubblicati nel 2024 356). Pagina REST ferma al 31/07/2026, guida CSW ancora v1.0, nessuna mail nuova di Rotundo dopo il 4 settembre. `docs/segnalazioni-rndt-agid.md` e il docx aggiornati al 3 ottobre; tabella in `knowledge/api/known-issues.md` allineata. Prossima riverifica: prima settimana di novembre.

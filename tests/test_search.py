@@ -498,3 +498,97 @@ def test_compact_results_carries_email_and_download(search_response_json):
     bare = compact_results({"results": [{"id": "x", "title": "T", "author": {"name": "a"}}]})[0]
     assert bare["email"] is None
     assert bare["download"] == []
+
+
+# --- q_mode: costruzione della clausola testo (default AND, any, lucene) -----
+
+
+@respx.mock
+def test_q_mode_default_joins_words_with_and():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="copertura del suolo")
+    sent = route.calls.last.request.url.params["q"]
+    assert sent == "(copertura AND del AND suolo)"
+
+
+@respx.mock
+def test_q_mode_any_joins_words_with_or():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="copertura del suolo", q_mode="any")
+    assert route.calls.last.request.url.params["q"] == "(copertura OR del OR suolo)"
+
+
+@respx.mock
+def test_q_mode_lucene_passes_through():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="title:(copertura AND suolo)", q_mode="lucene")
+    assert route.calls.last.request.url.params["q"] == "(title:(copertura AND suolo))"
+
+
+@respx.mock
+def test_q_with_lucene_syntax_passes_through_in_any_mode():
+    # retrocompatibilità: keywords_s:VAL e frasi tra virgolette restano intatte
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="keywords_s:planningCadastre", q_mode="any")
+    assert route.calls.last.request.url.params["q"] == "(keywords_s:planningCadastre)"
+
+
+@pytest.mark.parametrize(
+    "q",
+    ["catasto AND siciliana", "catasto OR siciliana", "catasto NOT siciliana", "catasto -siciliana", "catasto +siciliana"],
+)
+@respx.mock
+def test_q_with_boolean_operators_passes_through(q):
+    # gli operatori scritti a mano non vanno ri-uniti in AND: diventerebbero
+    # "catasto AND AND AND siciliana", che il server rifiuta con 500
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q=q)
+    assert route.calls.last.request.url.params["q"] == f"({q})"
+
+
+@respx.mock
+def test_q_lowercase_boolean_words_are_plain_words():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="strade and ponti")
+    assert route.calls.last.request.url.params["q"] == "(strade AND and AND ponti)"
+
+
+@respx.mock
+def test_q_mode_all_escapes_special_chars_keeps_wildcards():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="car-ta [beta] ~tilde *suo* na??ra")
+    sent = route.calls.last.request.url.params["q"]
+    assert sent == r"(car\-ta AND \[beta\] AND \~tilde AND *suo* AND na??ra)"
+
+
+@respx.mock
+def test_q_mode_invalid_raises():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    with pytest.raises(ValueError, match="q_mode"):
+        search(q="x", q_mode="boolean")
+
+
+@respx.mock
+def test_q_mode_combines_with_filters_in_and():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="copertura del suolo", org="comune di torino")
+    sent = route.calls.last.request.url.params["q"]
+    assert sent == '(copertura AND del AND suolo) AND apiso_OrganizationName_txt:"comune di torino"'

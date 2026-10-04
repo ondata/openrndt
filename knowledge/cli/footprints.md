@@ -10,7 +10,7 @@ Esegue una ricerca come [search](/cli/search.md) e converte ogni `results[].bbox
 
 # Opzioni
 
-Le opzioni di filtro sono allineate a `search` (`--q`, `--bbox`, `--bbox-crs`, `--org`, `--org-exact`, `--data-category`, `--time`, `--modified`, `--updated-from`, `--updated-to`, `--published-from`, `--published-to`, `--sort`, `--start`, `--num`).
+Le opzioni di filtro sono allineate a `search` (`--q`, `--q-mode`, `--bbox`, `--bbox-crs`, `--org`, `--org-exact`, `--data-category`, `--time`, `--modified`, `--updated-from`, `--updated-to`, `--published-from`, `--published-to`, `--sort`, `--start`, `--num`).
 
 # Examples
 

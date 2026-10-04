@@ -15,14 +15,15 @@ description: >
   contatti e PEC degli enti, o per navigare il portale di un singolo ente.
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt >= 3.3.1 (comandi: search, footprints, get,
+  Richiede la CLI openrndt >= 3.4.0 (comandi: search, footprints, get,
   resources, discover). Dalla 3.3.0 `get` emette il documento normalizzato e
   accetta `--raw`, dalla 3.3.1 `get`, `resources` e `search --id` accettano un
-  UUID senza prefisso: con una CLI precedente le ricette che li usano falliscono.
+  UUID senza prefisso, dalla 3.4.0 le parole di `--q` sono unite in AND: con una
+  CLI precedente le ricette che li usano falliscono.
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.4.7"
+  version: "3.5.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -113,7 +114,8 @@ Filtri principali:
 
 | Flag CLI            | Filtra su                                                  |
 |---------------------|------------------------------------------------------------|
-| `--q`               | testo, sintassi Lucene/Elasticsearch                        |
+| `--q`               | testo, parole in AND; sintassi Lucene/Elasticsearch passata intatta |
+| `--q-mode`          | `all` (default, parole in AND), `any` (OR), `lucene` (q intatta) |
 | `--bbox`            | bounding box WGS84 `xmin,ymin,xmax,ymax`                    |
 | `--bbox-crs`        | CRS dichiarato bbox: accetta `EPSG:4326`, `CRS:84`, `WGS84` (niente reproiezione) |
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
@@ -133,11 +135,14 @@ Filtri principali:
 > `q=keywords_s:VAL`. Dettagli in `ref/rest-api-rndt.md`.
 
 Sintassi `--q` (AND/OR/NOT, frasi esatte, wildcard, campi specifici):
-vedi [`references/search-syntax.md`](./references/search-syntax.md). **Lo spazio fra
-termini è un OR**, non un AND: `catasto siciliana` (8.903) vale `catasto OR siciliana`,
-mentre `catasto AND siciliana` dà 1. Se aggiungendo una clausola il totale *cresce*, è
-questo. Scrivi sempre `AND` esplicito per restringere. (`discover --what search_params`
-delle versioni ≤ 3.1.0 della CLI dice «AND implicito»: è sbagliato, corretto dalla 3.2.0.)
+vedi [`references/search-syntax.md`](./references/search-syntax.md). **Il testo libero
+è in AND**: dalla 3.4.0 la CLI unisce le parole, quindi `catasto siciliana` dà 1 come
+`catasto AND siciliana`. **Una `q` con sintassi Lucene passa invece intatta** (basta
+uno fra `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT`, `-termine`, `+termine`),
+e lì l'API tratta lo spazio come OR: `keywords_s:farming catasto` vale
+`keywords_s:farming OR catasto`. Nelle query Lucene scrivi sempre `AND` esplicito per
+restringere; se aggiungendo una clausola il totale *cresce*, è questo. `--q-mode any`
+rimette l'OR anche sul testo libero (`catasto siciliana` → 8.915).
 
 **Ricerca per campo** — usa `campo:valore` in `--q`. I campi interrogabili
 sono visibili con `openrndt discover --what lucene_fields`. Esempi utili:

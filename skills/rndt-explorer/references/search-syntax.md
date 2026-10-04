@@ -8,7 +8,7 @@ Syntax](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html).
 
 | Operatore         | Significato                                       | Esempio                                     |
 |-------------------|---------------------------------------------------|---------------------------------------------|
-| spazio            | **OR implicito** (non AND: `catasto siciliana` → 8.903 = `catasto OR siciliana`; con `AND` → 1). Se un filtro in più fa *crescere* il totale, è questo | `catasto urbano`                            |
+| spazio            | testo libero: **AND** (la CLI dalla 3.4.0 unisce le parole: `catasto siciliana` → 1). In una query con sintassi Lucene, che la CLI passa intatta: **OR implicito** (`keywords_s:farming catasto` = `keywords_s:farming OR catasto`). Se un filtro in più fa *crescere* il totale, è questo | `catasto urbano`                            |
 | `AND`             | entrambi i termini                                 | `title:(carta AND geologica)`               |
 | `OR`              | almeno uno dei termini                             | `WMS OR WFS`                                |
 | `NOT` o `-`       | esclusione                                         | `suolo -natura`                             |

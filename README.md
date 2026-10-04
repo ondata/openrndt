@@ -64,6 +64,9 @@ uv run openrndt --help
 # Ricerca testuale
 openrndt search --q "catasto" --num 5
 
+# Più parole sono in AND (--q-mode any per l'OR, lucene per passare la sintassi Lucene intatta)
+openrndt search --q "copertura del suolo" --num 5
+
 # Filtro per bounding box (Piemonte sud)
 openrndt search --q "cartografia" --bbox 7,44,8,45 --num 10
 

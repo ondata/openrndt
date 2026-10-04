@@ -12,7 +12,7 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 
 | Simbolo | Firma / significato |
 |---------|---------------------|
-| `search(*, q, bbox, bbox_crs, org, org_exact, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
+| `search(*, q, q_mode="all", bbox, bbox_crs, org, org_exact, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
 | `get_item(item_id)` | `dict` Elasticsearch del metadato (`_source` + flag). |
 | `get_item_xml(item_id)` | `str` XML ISO 19139. |
 | `get_item_html(item_id)` | `str` HTML. |
