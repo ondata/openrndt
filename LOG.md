@@ -1,5 +1,18 @@
 # LOG
 
+## 2026-10-03 (riverifica delle segnalazioni ad AgID)
+
+- **Terza riverifica completa, catalogo a 23.875**: nessun punto ha cambiato stato rispetto al 4 e al 22 settembre, cambiano solo i conteggi (esempio CSW §2.2.1 830, licenze 16.830 / 10.584 / 3.821 / 14.151, pubblicati nel 2024 356). Pagina REST ferma al 31/07/2026, guida CSW ancora v1.0, nessuna mail nuova di Rotundo dopo il 4 settembre. `docs/segnalazioni-rndt-agid.md` e il docx aggiornati al 3 ottobre; tabella in `knowledge/api/known-issues.md` allineata. Prossima riverifica: prima settimana di novembre.
+- **`sort=title` nudo ora risponde 500** invece di 400, stesso errore Fielddata; `title:asc|desc` funziona.
+- **`updated` = `sys_modified_dt`** confermato su 5.600 record; che sia «la data di indicizzazione» nel documento è ora un'ipotesi. Nuovo blocco di scritture: 3.724 record con `sys_modified_dt` al 1°-2 ottobre (p_TN, r_lombar fra gli altri, metadato non toccato), accanto ai 19.007 del 25-26 aprile. Una richiesta `num=5000` con `_source` completo ha risposto «Search error: Java heap space»: per le analisi in blocco usare pagine piccole.
+- WMS senza CORS: campione non rimisurato; Agenzia delle Entrate, ARPA Veneto e Regione FVG ancora senza `Access-Control-Allow-Origin`.
+
+
+## 2026-10-02 (estensioni dichiarate sbagliate)
+
+- **Estensioni sbagliate nei metadati**: classificati i `bbox` di tutti i 23.852 record. 110 non intersecano l'Italia (Comune di Capannori 100, in Etiopia; scambi latitudine/longitudine 6; 1 corretto, OGS in Antartide), 39 hanno ovest maggiore di est (AVEPA 35), 25 di enti locali dichiarano l'Italia o il mondo intero. La ricerca per area non trova i primi (Capannori in Toscana: 0 su 100), trova i secondi (AVEPA in Veneto: 35 su 35). Documentato in `knowledge/api/known-issues.md` (qualità dei dati); analisi in openrndt-geolibre#13.
+
+
 ## 2026-09-26 (form Ricerca Dettagliata, CSW e GeoLibre, verso un pannello RNDT)
 
 - **Nuovo `knowledge/api/advanced-search-form.md`**: come la Ricerca Dettagliata del geoportale traduce ogni campo in una query per la REST, ricavato dal codice della pagina (`adaptSerialize`). Il form non ha un'API propria: passa da un proxy PHP alla stessa `rest/metadata/search`. «Testo» è Lucene grezzo, non una frase esatta; le aree amministrative sono rettangoli EPSG:3857 in tre JSON statici (il file dei comuni pesa 7,3 MB).
