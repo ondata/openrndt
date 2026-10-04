@@ -12,6 +12,7 @@ from openrndt.search import (
     bbox_from_envelope,
     compact_results,
     download_urls,
+    geolibre_url,
     item_record,
     organization_names,
     record_dates,
@@ -196,6 +197,7 @@ def test_compact_results_extracts_high_signal_fields(search_response_json):
         "open",
         "license",
         "url",
+        "geolibre_url",
         "resources",
         "email",
         "download",
@@ -612,3 +614,39 @@ def test_q_mode_combines_with_filters_in_and():
     search(q="copertura del suolo", org="comune di torino")
     sent = route.calls.last.request.url.params["q"]
     assert sent == '(copertura AND del AND suolo) AND apiso_OrganizationName_txt:"comune di torino"'
+
+
+# --- geolibre_url (issue #24) ------------------------------------------------
+
+GEOLIBRE_ID = "c_l219:a883ab12-e713-41fe-b2a2-34c7756dc4e2"
+
+
+def test_geolibre_url_encodes_colon():
+    assert geolibre_url(GEOLIBRE_ID) == (
+        "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=c_l219%3Aa883ab12-e713-41fe-b2a2-34c7756dc4e2"
+    )
+
+
+def test_geolibre_url_without_id_is_none():
+    assert geolibre_url(None) is None
+    assert geolibre_url("") is None
+    assert geolibre_url(123) is None
+
+
+@respx.mock
+def test_search_json_adds_geolibre_url_to_each_result(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    payload = search(q="catasto")
+    for r in payload["results"]:
+        assert r["geolibre_url"] == geolibre_url(r["id"])
+
+
+def test_compact_and_get_carry_geolibre_url(search_response_json, item_response_json):
+    first = compact_results(search_response_json)[0]
+    assert first["geolibre_url"] == geolibre_url(first["id"])
+    assert list(first).index("geolibre_url") == list(first).index("url") + 1
+    rec = item_record(item_response_json)
+    assert rec["geolibre_url"] == geolibre_url(rec["id"])
+    assert rec["geolibre_url"] is not None

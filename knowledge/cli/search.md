@@ -66,6 +66,10 @@ Negli output `table`, `csv` e `compact`:
 
 Con `--format json` l'output è il payload grezzo dell'API e vale la convenzione dell'API: `updated` top-level è l'indicizzazione. La CLI lo ricorda su stderr quando la ricerca usa un filtro o un ordinamento sulle date.
 
+# Link a GeoLibre
+
+Dalla 3.5.0 ogni record porta `geolibre_url`, subito dopo `url`: `https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`, con l'id codificato per l'URL (`:` → `%3A`). Apre il record in GeoLibre web dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre), e a chi non ha il plugin GeoLibre lo propone con «Trust and load». È in `compact`, `csv`, nei profili `gis` e `qgis`, e anche nel JSON grezzo, aggiunto a ogni risultato (è l'unica chiave che la CLI aggiunge al payload dell'API). In `table` esce, come `url`. Funziona su web.geolibre.app, non ancora in GeoLibre Desktop 3.2.0 né con `layout=viewer` (opengeos/GeoLibre#2898). Lo costruisce una sola funzione, `geolibre_url()` in `search.py`, usata anche da [get](/cli/get.md) e [footprints](/cli/footprints.md).
+
 # Comportamento ed errori
 
 - 0 risultati con `--format` tabellare → avviso su stderr, exit 0.

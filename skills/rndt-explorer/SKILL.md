@@ -15,15 +15,16 @@ description: >
   contatti e PEC degli enti, o per navigare il portale di un singolo ente.
 license: MIT
 compatibility: >
-  Richiede la CLI openrndt >= 3.4.0 (comandi: search, footprints, get,
+  Richiede la CLI openrndt >= 3.5.0 (comandi: search, footprints, get,
   resources, discover). Dalla 3.3.0 `get` emette il documento normalizzato e
   accetta `--raw`, dalla 3.3.1 `get`, `resources` e `search --id` accettano un
-  UUID senza prefisso, dalla 3.4.0 le parole di `--q` sono unite in AND: con una
-  CLI precedente le ricette che li usano falliscono.
+  UUID senza prefisso, dalla 3.4.0 le parole di `--q` sono unite in AND, dalla
+  3.5.0 gli output portano `geolibre_url`: con una CLI precedente le ricette che
+  li usano falliscono.
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.5.0"
+  version: "3.6.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -43,7 +44,7 @@ openrndt --format compact search … # NDJSON: 1 riga/record, per scremare a bas
 
 Il formato `compact` (solo per `search`) emette una riga JSON per record con i
 campi ad alto segnale — `id`, `title`, `org`, `type`, `category`, `updated`, `indexed`,
-`open`, `license`, `url`, `resources`, `email`, `download` — ideale per individuare
+`open`, `license`, `url`, `geolibre_url`, `resources`, `email`, `download` — ideale per individuare
 il record giusto prima di chiedere il dettaglio con `get`. `open` e `license` sono ciò
 che l'ente ha dichiarato in `isOpendata` (non normalizzato, e assente su una scheda su
 tre: vedi la nota più sotto), `url` è il permalink citabile della scheda sul portale,
@@ -52,6 +53,8 @@ tre: vedi la nota più sotto), `url` è il permalink citabile della scheda sul p
 Se `resources` è `[]` o `download` è `[]` il record non linka servizi fruibili: fai
 `get <id>` e guarda il suo campo `resources`, che parte da `resources_nst` (i tipi
 assegnati dal catalogo) e ricade sui link solo dove quello manca.
+
+`geolibre_url` (dalla CLI 3.5.0) apre lo stesso record in GeoLibre web, dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre): il pannello si apre sulla scheda, con i servizi WMS/WFS pronti da aggiungere alla mappa, e a chi non ha il plugin GeoLibre lo propone con «Trust and load». Proponilo quando l'utente vuole vedere il dato su una mappa senza installare nulla. Due limiti: funziona su web.geolibre.app ma non ancora in GeoLibre Desktop (la 3.2.0 non legge `?plugin=` per i plugin del registro), e non con `layout=viewer`, dove i plugin del registro non si aprono da link (opengeos/GeoLibre#2898). È in tutti gli output tranne `--format table`, anche nel JSON di `search` accanto a ogni risultato.
 
 **Le tre date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
 `footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa
@@ -249,7 +252,7 @@ openrndt get <id> --html > meta.html       # HTML pronto
 
 Il documento normalizzato ha in cima i campi già pronti - `data_date` (la data
 del **dato**), `contact` (`{name, email, website}`), `bbox`, `lineage`,
-`resources`, `open`/`license`, `url` - e in coda `_source` inalterato. Prima di
+`resources`, `open`/`license`, `url`, `geolibre_url` - e in coda `_source` inalterato. Prima di
 ricostruire un valore a mano da `_source`, controlla se è già al primo livello.
 
 Struttura del payload e mappa dei campi `_source` (per costruire ricerche
@@ -347,7 +350,7 @@ openrndt footprints --q "catasto" --num 100 > footprints.geojson
 Il comando accetta gli stessi filtri principali di `search` (inclusi
 `--bbox-crs`, `--org`, `--updated-*`, `--published-*`) e restituisce una
 `FeatureCollection` con proprietà essenziali (`id`, `title`, `org`, `type`,
-`updated`, `indexed`, `open`, `license`, `url`, `resources`).
+`updated`, `indexed`, `open`, `license`, `url`, `geolibre_url`, `resources`).
 
 Due cose da sapere prima di aprirlo in QGIS: `resources` è un array, e QGIS lo
 legge male come attributo (appiattiscilo con `jq` in una stringa `WMS;WFS`); e il

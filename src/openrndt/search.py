@@ -205,7 +205,9 @@ def search(
     """Esegue una ricerca su /rest/metadata/search.
 
     Ritorna un dict (parsed JSON) se `fmt` è `json` o `json-source`,
-    altrimenti la stringa con il body grezzo (XML, CSV, KML, …).
+    altrimenti la stringa con il body grezzo (XML, CSV, KML, …). Nel dict ogni
+    risultato riceve in più la chiave ``geolibre_url`` (vedi :func:`geolibre_url`);
+    il resto è la risposta dell'API invariata.
 
     ``org`` e ``org_exact`` (mutuamente esclusivi) filtrano per ente: il primo
     sul campo analizzato ``apiso_OrganizationName_txt`` (case-insensitive), il
@@ -276,6 +278,11 @@ def search(
     response.raise_for_status()
     if fmt in {"json", "json-source"}:
         data: dict[str, Any] = response.json()
+        # payload non oggetto: lo segnala il chiamante (es. la CLI), qui non si tocca
+        if isinstance(data, dict):
+            for result in data.get("results") or []:
+                if isinstance(result, dict):
+                    result["geolibre_url"] = geolibre_url(result.get("id"))
         return data
     return response.text
 
@@ -372,6 +379,23 @@ def record_license(source: dict[str, Any]) -> tuple[bool, str | None]:
     return (True, "; ".join(named) if named else None)
 
 
+# GeoLibre web con il plugin openrndt-geolibre: `?rndt=<id>` apre il record nel
+# pannello (plugin >= 0.1.6), `?plugin=` installa il plugin a chi non ce l'ha.
+# GeoLibre Desktop 3.2.0 non legge ancora `?plugin=` per i plugin del registro.
+GEOLIBRE_WEB_URL = "https://web.geolibre.app/"
+GEOLIBRE_PLUGIN = "openrndt-geolibre"
+
+
+def geolibre_url(item_id: Any) -> str | None:
+    """Indirizzo che apre il record in GeoLibre web, nel plugin openrndt-geolibre.
+
+    L'id è codificato per l'URL (contiene `:`). ``None`` senza id.
+    """
+    if not isinstance(item_id, str) or not item_id:
+        return None
+    return f"{GEOLIBRE_WEB_URL}?plugin={GEOLIBRE_PLUGIN}&rndt={quote(item_id, safe='')}"
+
+
 def record_url(result: dict[str, Any]) -> str | None:
     """Permalink della scheda sul portale, dai link del record.
 
@@ -455,7 +479,8 @@ def item_record(payload: dict[str, Any]) -> dict[str, Any]:
     dettagli utili alla scheda: ``data_date`` (del dato, non della scheda),
     ``contact`` (nome/email/sito del punto di contatto designato), ``bbox``
     (da ``envelope_geo``), ``lineage``, ``resources`` (come ``resources``
-    senza check) e ``url`` (permalink citabile). ``_source`` e i flag della
+    senza check), ``url`` (permalink citabile) e ``geolibre_url`` (il record
+    aperto in GeoLibre web). ``_source`` e i flag della
     busta sono preservati inalterati per chi li usa già.
     """
     source = payload.get("_source") or {}
@@ -488,6 +513,7 @@ def item_record(payload: dict[str, Any]) -> dict[str, Any]:
             if item_id
             else None
         ),
+        "geolibre_url": geolibre_url(item_id),
     }
     for key in ("_index", "_id", "_version", "_seq_no", "_primary_term", "found", "_source"):
         if key in payload:
@@ -502,7 +528,8 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
     di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
     della scheda), ``indexed`` (indicizzazione nel catalogo),
-    ``open`` e ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda)
+    ``open`` e ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda),
+    ``geolibre_url`` (il record aperto in GeoLibre web, vedi :func:`geolibre_url`)
     e ``resources`` (tipi di servizio/download fruibili), ``email`` (punto di contatto
     designato, vedi :func:`contact_point`) e ``download`` (URL dichiarati, vedi
     :func:`download_urls`). Pensata per l'output ``--format compact`` (NDJSON), ma
@@ -527,6 +554,7 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "open": is_open,
                 "license": license_text,
                 "url": record_url(r),
+                "geolibre_url": geolibre_url(r.get("id")),
                 "resources": _resource_types(r.get("links") or []),
                 "email": _first_str(source.get("PuntoDiContattoEmail_s")),
                 "download": download_urls(source),

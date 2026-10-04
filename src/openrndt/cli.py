@@ -22,6 +22,7 @@ from openrndt.resources import check_resources, extract_resources
 from openrndt.search import (
     ORG_EXACT_FIELD,
     compact_results,
+    geolibre_url,
     item_record,
     organization_names,
     record_dates,
@@ -270,6 +271,7 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "open": is_open,
                 "license": license_text,
                 "url": record_url(r),
+                "geolibre_url": geolibre_url(r.get("id")),
                 "bbox": (
                     f"{bbox.get('xmin')},{bbox.get('ymin')},{bbox.get('xmax')},{bbox.get('ymax')}"
                     if bbox
@@ -310,6 +312,7 @@ def _gis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "open": compact.get("open"),
                 "license": compact.get("license"),
                 "url": compact.get("url"),
+                "geolibre_url": compact.get("geolibre_url"),
                 "resources": ",".join(compact.get("resources") or []),
                 "bbox": _bbox_text(bbox),
             }
@@ -353,6 +356,7 @@ def _qgis_result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "open": compact.get("open"),
                 "license": compact.get("license"),
                 "url": compact.get("url"),
+                "geolibre_url": compact.get("geolibre_url"),
                 "wms_url": links.get("WMS"),
                 "wfs_url": links.get("WFS"),
                 "download_url": links.get("DOWNLOAD"),
@@ -371,14 +375,14 @@ _TABLE_LICENSE_MAX = 60
 def _rows_for_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Adatta le righe alla lettura a terminale.
 
-    Solo per `--format table`: `url` esce (un permalink lungo rende illeggibile
-    la tabella), `open` diventa sì/no e `license` viene troncata, perché il
+    Solo per `--format table`: `url` e `geolibre_url` escono (un indirizzo
+    lungo rende illeggibile la tabella), `open` diventa sì/no e `license` viene troncata, perché il
     campo del RNDT contiene spesso interi paragrafi di disclaimer. In `csv`,
     `compact` e `footprints` i valori restano interi.
     """
     adapted: list[dict[str, Any]] = []
     for row in rows:
-        new_row = {k: v for k, v in row.items() if k != "url"}
+        new_row = {k: v for k, v in row.items() if k not in {"url", "geolibre_url"}}
         if isinstance(new_row.get("open"), bool):
             new_row["open"] = "sì" if new_row["open"] else "no"
         license_text = new_row.get("license")
@@ -409,6 +413,7 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
         "open": is_open,
         "license": license_text,
         "url": record_url(result),
+        "geolibre_url": geolibre_url(result.get("id")),
         "resources": sorted(_resource_url_map(result).keys()),
     }
     return {

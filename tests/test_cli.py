@@ -59,7 +59,7 @@ def test_cli_search_csv_gis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "gis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,indexed,open,license,url,resources,bbox" in result.output
+    assert "id,title,type,category,org,updated,indexed,open,license,url,geolibre_url,resources,bbox" in result.output
 
 
 @respx.mock
@@ -93,7 +93,7 @@ def test_cli_search_csv_qgis_profile(search_response_json):
     )
     result = runner.invoke(app, ["--format", "csv", "search", "--profile", "qgis", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert "id,title,type,category,org,updated,indexed,open,license,url,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
+    assert "id,title,type,category,org,updated,indexed,open,license,url,geolibre_url,wms_url,wfs_url,download_url,xmin,ymin,xmax,ymax" in result.output
 
 
 @respx.mock
@@ -154,6 +154,7 @@ def test_cli_search_profile_with_explicit_compact_warns(search_response_json):
                 "open",
                 "license",
                 "url",
+                "geolibre_url",
                 "resources",
                 "email",
                 "download",
@@ -877,3 +878,28 @@ def test_cli_search_id_bare_uuid_resolved_before_search():
     params = search_route.calls.last.request.url.params
     assert params["id"] == f"r_sicili:{_UUID}"
     assert search_route.calls[0].request.url.params["q"] == _UUID
+
+
+# --- geolibre_url (issue #24) ------------------------------------------------
+
+
+@respx.mock
+def test_cli_geolibre_url_in_json_csv_footprints_not_table(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    expected = "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=age%3AD_E973_MARSAGLIA"
+
+    out = runner.invoke(app, ["--format", "json", "search", "--num", "2"])
+    assert json.loads(out.stdout)["results"][0]["geolibre_url"] == expected
+
+    out = runner.invoke(app, ["--format", "csv", "search", "--num", "2"])
+    assert out.stdout.splitlines()[0].split(",").count("geolibre_url") == 1
+    assert expected in out.stdout
+
+    out = runner.invoke(app, ["footprints", "--num", "2"])
+    assert json.loads(out.stdout)["features"][0]["properties"]["geolibre_url"] == expected
+
+    out = runner.invoke(app, ["--format", "table", "search", "--num", "2"], env={"COLUMNS": "400"})
+    assert out.exit_code == 0, out.output
+    assert "geolibre" not in out.stdout

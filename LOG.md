@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-10-04 (issue #24, geolibre_url)
+
+- **`geolibre_url` in tutti gli output con `url`**, costruito da una sola funzione `geolibre_url()` accanto a `record_url`, id codificato (`c_l219:…` → `c_l219%3A…`). Su richiesta anche nel JSON di `search`: `search()` aggiunge la chiave a ogni risultato, unica aggiunta al payload grezzo dell'API. Colonna anche nei profili `gis` e `qgis`; esce dalla tabella come `url`. Trovato strada facendo: un payload JSON non oggetto mandava in errore il ciclo prima del controllo della CLI, ora resta intatto. 5 test nuovi (187 in tutto). Verificato dal vivo sulla CLI locale: stesso indirizzo in `get`, `compact`, JSON e `footprints` per `c_l219:a883ab12-…`.
+- `find`/`index` non toccati: stanno su `hybrid-search`, il campo va aggiunto lì quando si riprende l'ibrido.
+
 ## 2026-10-04 (rilascio 3.4.0, skill 3.5.0)
 
 - **Pubblicata**: [PR #25](https://github.com/ondata/openrndt/pull/25) mergiata in rebase dopo due giri di review di Greptile (fuzzy/boost e `q_mode` senza `q` corretti, `carta (geologica)`/`EPSG:4326` lasciati come Lucene per scelta), tag `v3.4.0`, GitHub Release, PyPI. Smoke test sulla CLI reinstallata da PyPI (`uv tool install openrndt==3.4.0 --reinstall --no-cache`): `copertura del suolo` 1.415, `catasto AND siciliana` 1, `catasto -siciliana` 8.852, `catasto~1` 8.859, `--q-mode any` 8.915, `--q-mode boh` esce 2.

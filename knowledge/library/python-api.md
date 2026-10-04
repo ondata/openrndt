@@ -20,8 +20,9 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 | `record_dates(result)` | In `openrndt.search`: tupla `(updated, indexed)` di un singolo risultato — `apiso_Modified_dt` e `sys_modified_dt`. |
 | `organization_names(payload)` | In `openrndt.search`: nomi di ente distinti nei risultati, ordinati per frequenza. L'API ignora `facet`: è l'unico modo di scoprire come un ente è scritto in catalogo. |
 | `record_license(source)` | In `openrndt.search`: tupla `(open, license)` dal campo `isOpendata` di `_source`. `open` è la presenza del campo, `license` i valori diversi dai marcatori `opendata`/`open data`, non normalizzati. |
+| `geolibre_url(item_id)` | In `openrndt.search`, esportata: indirizzo che apre il record in GeoLibre web nel plugin openrndt-geolibre (`https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`, id codificato), `None` senza id. `search()` lo aggiunge come chiave `geolibre_url` a ogni risultato; `compact_results` e `item_record` lo riportano dopo `url`. |
 | `record_url(result)` | In `openrndt.search`: permalink della scheda sul portale (link `rel="alternate"`, `type="text/html"`), `None` se assente. |
-| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated` = `apiso_Modified_dt`, `indexed` = `sys_modified_dt`, `open`, `license`, `url`, `resources`). |
+| `compact_results(payload)` | In `openrndt.search`: riduce il payload di `search()` a record sintetici (`id`, `title`, `org`, `type`, `category`, `updated` = `apiso_Modified_dt`, `indexed` = `sys_modified_dt`, `open`, `license`, `url`, `geolibre_url`, `resources`). |
 
 # Eccezioni propagate
 

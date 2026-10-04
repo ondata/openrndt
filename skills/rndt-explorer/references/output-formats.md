@@ -30,7 +30,7 @@
 Una riga JSON per record con i soli campi ad alto segnale: `id`, `title`,
 `org`, `type`, `category`, `updated` (data della scheda, `apiso_Modified_dt`),
 `indexed` (indicizzazione nel catalogo, `sys_modified_dt`), `open`, `license`,
-`url`, `resources`, `email` (punto di contatto designato,
+`url`, `geolibre_url`, `resources`, `email` (punto di contatto designato,
 `PuntoDiContattoEmail_s`) e `download` (URL dichiarati in `url_download_s` +
 `url_http_download_s`, riportati come sono).
 
@@ -46,7 +46,8 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
   significa «l'ente non l'ha dichiarato lì», non «dato chiuso» (alcune schede
   aperte hanno la licenza solo in `apiso_OtherConstraints_s`).
 - `url` è il permalink della scheda sul portale: usalo per citare la fonte.
-- In `--format table` `url` non viene stampata, `open` esce come `sì`/`no` e
+- `geolibre_url` apre lo stesso record in GeoLibre web, nel plugin openrndt-geolibre (solo web.geolibre.app, non Desktop 3.2.0 né `layout=viewer`). C'è anche nel JSON di `search`, accanto a ogni risultato.
+- In `--format table` `url` e `geolibre_url` non vengono stampate, `open` esce come `sì`/`no` e
   `license` è troncata a 60 caratteri; in `csv` e `compact` i valori sono interi.
 - `get --format compact` (come `csv`) è rifiutato: il dettaglio non è tabellare.
 
