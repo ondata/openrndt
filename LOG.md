@@ -2,6 +2,7 @@
 
 ## 2026-10-04 (rilascio 3.4.0, skill 3.5.0)
 
+- **Pubblicata**: [PR #25](https://github.com/ondata/openrndt/pull/25) mergiata in rebase dopo due giri di review di Greptile (fuzzy/boost e `q_mode` senza `q` corretti, `carta (geologica)`/`EPSG:4326` lasciati come Lucene per scelta), tag `v3.4.0`, GitHub Release, PyPI. Smoke test sulla CLI reinstallata da PyPI (`uv tool install openrndt==3.4.0 --reinstall --no-cache`): `copertura del suolo` 1.415, `catasto AND siciliana` 1, `catasto -siciliana` 8.852, `catasto~1` 8.859, `--q-mode any` 8.915, `--q-mode boh` esce 2.
 - **CLI 3.4.0**: `--q-mode` con AND di default, e il passaggio intatto delle query con operatori booleani ed esclusioni. Contiene solo questo: la ricerca ibrida (`index`, `find`) resta sul branch `hybrid-search`.
 
 ## 2026-10-04 (q-mode: operatori booleani ed esclusioni, documentazione)
