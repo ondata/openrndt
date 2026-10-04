@@ -543,7 +543,15 @@ def test_q_with_lucene_syntax_passes_through_in_any_mode():
 
 @pytest.mark.parametrize(
     "q",
-    ["catasto AND siciliana", "catasto OR siciliana", "catasto NOT siciliana", "catasto -siciliana", "catasto +siciliana"],
+    [
+        "catasto AND siciliana",
+        "catasto OR siciliana",
+        "catasto NOT siciliana",
+        "catasto -siciliana",
+        "catasto +siciliana",
+        "catasto~1",
+        "catasto^2 siciliana",
+    ],
 )
 @respx.mock
 def test_q_with_boolean_operators_passes_through(q):
@@ -573,6 +581,18 @@ def test_q_mode_all_escapes_special_chars_keeps_wildcards():
     search(q="car-ta [beta] ~tilde *suo* na??ra")
     sent = route.calls.last.request.url.params["q"]
     assert sent == r"(car\-ta AND \[beta\] AND \~tilde AND *suo* AND na??ra)"
+
+
+@respx.mock
+def test_q_mode_invalid_raises_without_q():
+    # senza q la modalità non serve, ma un valore sbagliato va segnalato:
+    # altrimenti la chiamata parte senza filtri e torna l'intero catalogo
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    with pytest.raises(ValueError, match="q_mode"):
+        search(q_mode="boolean")
+    assert not route.called
 
 
 @respx.mock

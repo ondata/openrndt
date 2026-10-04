@@ -15,7 +15,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il pr
 ### Added
 
 - **`--q-mode all|any|lucene`** su `search` e `footprints`, e `q_mode` nella funzione di libreria `search()`. `any` rimette l'OR, `lucene` passa la `q` intatta.
-- Una `q` con sintassi Lucene passa intatta in ogni modalità: `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT` in maiuscolo, `-termine` e `+termine`. Le query scritte per le versioni precedenti in sintassi Lucene restituiscono gli stessi risultati; in queste query lo spazio resta un OR.
+- Una `q` con sintassi Lucene passa intatta in ogni modalità: `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT` in maiuscolo, `-termine`, `+termine`, fuzzy (`termine~1`) e boost (`termine^2`). Un valore di `q_mode` non valido solleva `ValueError` (CLI: uscita 2) anche senza `q`. Le query scritte per le versioni precedenti in sintassi Lucene restituiscono gli stessi risultati; in queste query lo spazio resta un OR.
 
 ## [3.3.1] - 2026-09-22
 

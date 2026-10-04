@@ -435,7 +435,8 @@ def _q_mode_option() -> Any:
         "--q-mode",
         help="Modalità del testo di --q: 'all' (default, parole in AND), 'any' (OR), "
         "'lucene' (sintassi passata intatta). Una q con sintassi Lucene (`:`, "
-        "virgolette, parentesi, AND/OR/NOT, -/+ a inizio parola) passa intatta "
+        "virgolette, parentesi, AND/OR/NOT, -/+ a inizio parola, termine~1, "
+        "termine^2) passa intatta "
         "qualunque sia la modalità.",
     )
 

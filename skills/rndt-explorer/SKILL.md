@@ -138,7 +138,7 @@ Sintassi `--q` (AND/OR/NOT, frasi esatte, wildcard, campi specifici):
 vedi [`references/search-syntax.md`](./references/search-syntax.md). **Il testo libero
 è in AND**: dalla 3.4.0 la CLI unisce le parole, quindi `catasto siciliana` dà 1 come
 `catasto AND siciliana`. **Una `q` con sintassi Lucene passa invece intatta** (basta
-uno fra `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT`, `-termine`, `+termine`),
+uno fra `campo:valore`, virgolette, parentesi, `AND`/`OR`/`NOT`, `-termine`, `+termine`, fuzzy `termine~1`, boost `termine^2`),
 e lì l'API tratta lo spazio come OR: `keywords_s:farming catasto` vale
 `keywords_s:farming OR catasto`. Nelle query Lucene scrivi sempre `AND` esplicito per
 restringere; se aggiungendo una clausola il totale *cresce*, è questo. `--q-mode any`
