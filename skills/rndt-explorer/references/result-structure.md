@@ -173,6 +173,7 @@ di `search` più i dettagli utili alla scheda. `_source` e i flag della busta
 | `lineage`          | provenienza/qualità del dato (`apiso_Lineage_txt`)            |
 | `resources`        | risorse fruibili come `resources --no-check` (vedi sotto)     |
 | `url`              | permalink citabile della scheda (`…/rest/metadata/item/{id}/html`) |
+| `geolibre_url`     | il record aperto in GeoLibre web, nel plugin openrndt-geolibre (`https://web.geolibre.app/?plugin=openrndt-geolibre&rndt={id}`, id codificato) |
 
 La busta Elasticsearch grezza resta disponibile con `--raw` (comportamento
 ante 3.3.0), per chi lavora direttamente sui campi indicizzati:

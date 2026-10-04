@@ -4,6 +4,12 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **`geolibre_url` accanto a `url`** ([#24](https://github.com/ondata/openrndt/issues/24)): l'indirizzo che apre il record in GeoLibre web dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre), `https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>` con l'id codificato. A chi non ha il plugin GeoLibre lo propone con «Trust and load». È in `search` (`compact`, `csv`, profili `gis` e `qgis`, e nel JSON accanto a ogni risultato), in `get` e nelle proprietà di `footprints`; in `--format table` esce, come `url`. In libreria: `geolibre_url(item_id)`, e la chiave `geolibre_url` su ogni risultato di `search()`. Funziona su web.geolibre.app, non ancora in GeoLibre Desktop 3.2.0 né con `layout=viewer` (opengeos/GeoLibre#2898).
+
 ## [3.4.0] - 2026-10-04
 
 **Cambia il risultato di `search` e `footprints` per le query di più parole.** Chi ha script con `--q "a b"` e si aspettava l'OR può aggiungere `--q-mode any`.

@@ -107,7 +107,7 @@ openrndt discover
 Dalla 3.3.0 `get` con `--format json` (il default) non restituisce più la sola
 busta Elasticsearch: costruisce un documento con lo stesso vocabolario delle
 risposte di `search` (`id`, `title`, `org`, `type`, `category`, `updated`,
-`indexed`, `open`, `license`, `url`) più i campi che servono a usare davvero la
+`indexed`, `open`, `license`, `url`, `geolibre_url`) più i campi che servono a usare davvero la
 scheda: `data_date` (la data del **dato**, non della scheda), `contact`
 (`{name, email, website}` del punto di contatto designato), `bbox`
 (`{xmin, ymin, xmax, ymax}`), `lineage` e `resources` (le risorse fruibili già
@@ -150,7 +150,7 @@ Unica eccezione al default: `search --profile ...` senza `--format` esplicito es
 in `table`, dato che i preset di colonne valgono solo per gli output tabellari.
 Per `search` c'è anche `--format compact`: una riga NDJSON per record con i soli
 campi ad alto segnale (`id`, `title`, `org`, `type`, `category`, `updated`,
-`indexed`, `open`, `license`, `url`, `resources`, `email`, `download`), pensata
+`indexed`, `open`, `license`, `url`, `geolibre_url`, `resources`, `email`, `download`), pensata
 per agenti AI e pipe a basso consumo di token:
 
 ```bash
@@ -179,6 +179,8 @@ il solo marcatore `opendata`). `url` è il permalink della scheda sul portale, d
 mettere in nota quando si cita la fonte. In `--format table` `url` non viene
 stampata, `open` esce come sì/no e `license` è troncata: in `csv` e `compact`
 restano intere.
+
+`geolibre_url` apre lo stesso record in [GeoLibre](https://geolibre.app) web, dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre): `https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`. Il pannello si apre sulla scheda, con i servizi WMS/WFS pronti da aggiungere alla mappa; a chi non ha il plugin GeoLibre lo propone con «Trust and load». C'è in tutti gli output tranne `--format table`, anche nel JSON di `search` accanto a ogni risultato. Funziona su web.geolibre.app, non ancora in GeoLibre Desktop (la 3.2.0 non legge `?plugin=` per i plugin del registro) né con `layout=viewer` ([opengeos/GeoLibre#2898](https://github.com/opengeos/GeoLibre/issues/2898)).
 
 `updated` è la data della **scheda di metadato** (`apiso_Modified_dt`), la stessa
 su cui filtrano `--updated-from/--updated-to`; `indexed` è l'istante in cui il

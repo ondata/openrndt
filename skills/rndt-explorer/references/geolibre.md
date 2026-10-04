@@ -51,7 +51,7 @@ comandi, tempi e limiti.
 È il modo più rapido per capire *dove* è coperto un tema e quali record hanno
 davvero qualcosa di scaricabile. `footprints` restituisce una
 `FeatureCollection` con la bbox di ogni metadato e le proprietà `id`, `title`,
-`org`, `type`, `updated`, `indexed`, `open`, `license`, `url`, `resources`.
+`org`, `type`, `updated`, `indexed`, `open`, `license`, `url`, `geolibre_url`, `resources`. Con `geolibre_url` un clic su una feature porta alla scheda del record in GeoLibre web, nel plugin openrndt-geolibre.
 
 ```bash
 openrndt footprints --q "uso del suolo" --num 40 > footprints.geojson
