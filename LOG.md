@@ -1,5 +1,11 @@
 # LOG
 
+## 2026-10-08 (issue #28, licenze e `isOpendata`)
+
+- **#28 trattata come difetto a monte**: `open` resta legato a `isOpendata`, che è la definizione di RNDT (pagina API «Se non vuoto è un opendata», filtro «Dati aperti» del form → `_exists_:isOpendata`). Commento sulla issue con il caso DUSAF: la licenza c'è nel blocco INSPIRE `useConstraints`/`otherConstraints`, ma su 12 schede a caso `isOpendata` viene da `useLimitation` o da una parola chiave «open data», mai da lì. 2.979 schede CC senza `isOpendata`, Lombardia 0 su 461 (418 CC).
+- **Email a Rotundo** (thread «Alcune osservazioni…», 07:48): chiesto se `isOpendata` lo ricava RNDT in harvesting e con quale regola. Se sì, la mappatura sbaglia e si valuta una riclassificazione nostra. Aggiornati `known-issues.md` (riga licenze e punto 6) e la riga del form in `advanced-search-form.md`, cambiato dal 26 settembre.
+- **`isOpendata` quasi certamente ricavato da RNDT**, solo per dataset e serie: parola chiave «open data»/«opendata» → 7.555 dataset/serie su 7.555 con `isOpendata`, 0 servizi su 2.022 (0 su 3.163 in tutto). Stessa misura di openrndt-geolibre#33 del 2026-10-07. Aggiunta a `known-issues.md` e alla #28; la conferma resta ad AgID.
+
 ## 2026-10-04 (rilascio 3.5.0, skill 3.6.0)
 
 - **README: sezione sul plugin openrndt-geolibre** in fondo, prima dei riferimenti: cos'è, cosa fa, come provarlo in GeoLibre web e Desktop, il legame con `geolibre_url`. Il repo del plugin ora è pubblico. Aperta #27 per il link a una ricerca intera.

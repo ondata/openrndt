@@ -31,7 +31,7 @@ Tutte le clausole sono unite in `AND`.
 | Temi INSPIRE (solo con Dati) | `inspireThemes` | `INSPIRETheme_s:("a" OR "b")` |
 | Dataset prioritari (solo con Dati) | `tema-pdataset-prioritydataset` | `PriorityDataset_s:("…")` |
 | Temi open data (solo con Dati) | `tema-pdataset-opendata` | `OpenDataTheme_s:("…")` |
-| Solo open data (solo con Dati) | `tema_pdataset-checkbox-opendata_control` | `_exists_:isOpendata` |
+| Solo open data (solo con Dati) | `tema_pdataset-checkbox-opendata_control` | `_exists_:isOpendata`. Al 2026-10-08 la casella separata non c'è più: il campo nascosto `OpenData` è legato al menu «Dati aperti» dei temi, ma il gestore cerca `name=tema_pdataset-checkbox-opendata` mentre le caselle si chiamano `…-opendata[]`, quindi non è detto che scatti (letto nel codice, non provato nell'interfaccia) |
 | Ambito territoriale (solo con Dati) | `tema-pdataset-ambitoTerritoriale` | `AmbitoTerritoriale_s:("…")` |
 | Dati di elevato valore (solo con Dati) | `tema-pdataset-datiElevatoValore` | `DatiElevatoValore_s:("…")` |
 | Quando: tipo di data | `specialist-date`: `apiso_CreationDate_dt`, `apiso_PublicationDate_dt`, `apiso_RevisionDate_dt` (default Revisione) | `<campo>:[da TO a]`, con `1900-01-01` e `2100-12-31` se un estremo manca |
