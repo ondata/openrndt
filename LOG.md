@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-09 (idee da arcpi)
+
+- **Due idee in `docs/future-ideas.md`** da mraad/arcpi: ricette con la libreria Python nella skill (`references/chaining.md`, equivalente del codemode) e un riferimento ordinato per sintomo → causa → cosa fare (come il suo `errors.md`).
+
 ## 2026-10-08 (issue #28, licenze e `isOpendata`)
 
 - **#28 trattata come difetto a monte**: `open` resta legato a `isOpendata`, che è la definizione di RNDT (pagina API «Se non vuoto è un opendata», filtro «Dati aperti» del form → `_exists_:isOpendata`). Commento sulla issue con il caso DUSAF: la licenza c'è nel blocco INSPIRE `useConstraints`/`otherConstraints`, ma su 12 schede a caso `isOpendata` viene da `useLimitation` o da una parola chiave «open data», mai da lì. 2.979 schede CC senza `isOpendata`, Lombardia 0 su 461 (418 CC).
