@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-09 (rilascio 3.6.0)
+
+- **3.6.0**: `resources --layers` (#30) e trattino isolato in `--q` (#32). Rilasciata dopo il merge di opengeos/geolibre-plugins#101: nel registro c'è openrndt-geolibre 0.3.7, `rndtLayer` richiede la 0.3.5.
+
 ## 2026-10-09 (issue #30, `resources --layers`)
 
 - **`resources --layers`**: legge le GetCapabilities di ogni WMS della scheda e restituisce un elemento per layer con `geolibre_url` che usa `rndtLayer=<id>~wms~<nome>` (plugin 0.3.5). Dal vivo l'AGEA 2020 RGB dà il link della issue carattere per carattere. Sostituisce `--check`.
