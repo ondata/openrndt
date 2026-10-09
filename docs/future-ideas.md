@@ -3,6 +3,20 @@
 Spunti raccolti per evoluzioni di openrndt. Non sono impegni: vanno valutati
 caso per caso rispetto al design (CLI snella, read-only, niente cache locale).
 
+## Ricette con la libreria Python nella skill (2026-10-09)
+
+Spunto da [mraad/arcpi](https://github.com/mraad/arcpi), che toglie la bash all'agente e gli fa scrivere un solo script (codemode) per concatenare chiamate REST e tool MCP: i passi intermedi restano nello script e al modello torna solo un riassunto piccolo. Le ricette multi-passo stanno in `references/chaining.md` della sua skill.
+
+Oggi `rndt-explorer` insegna solo comandi CLI in sequenza: nessun file in `skills/` contiene `import openrndt`. Un flusso come search → resources → check → riassunto costa all'agente N chiamate, e ogni output ripassa dal contesto. Un `references/chaining.md` con 3-4 script Python che usano la libreria e restituiscono solo conteggi, id e path sarebbe l'equivalente per openrndt. È solo documentazione, e tiene allineate CLI e libreria.
+
+Casi candidati: quanti record di un ente hanno almeno un WMS che risponde; open data di un tema in un'area, con licenza e data della scheda; health-check dei servizi di una lista di id con il solo esito aggregato. Regola da scrivere insieme: niente bbox o geometrie grosse nel contesto, vanno su file (come già fa `footprints`).
+
+## Riferimento «sintomo → causa → cosa fare» nella skill (2026-10-09)
+
+Altro spunto da arcpi, che ha `references/errors.md`: per ogni messaggio d'errore dice la causa e cosa fare. Il materiale per openrndt c'è già, in `knowledge/api/known-issues.md` e nelle trappole sparse nella skill, ma è ordinato per bug noto, non per ciò che l'agente vede. Un riferimento ordinato per sintomo lo renderebbe consultabile nel momento in cui serve. Esempi: «0 risultati con `--org`», «GetCapabilities 200 ma mappa bianca», «la ricerca restituisce l'intero catalogo», «il parametro ufficiale `dataCategory` non filtra», «`dateDescending` non ordina».
+
+Si sovrappone in parte al comando `which` (più sotto): questa è la versione leggera, solo Markdown, senza codice. Se un giorno si fa `which`, la tabella degli intenti può partire da qui.
+
 ## Bbox dei limiti amministrativi ISTAT, offline (2026-09-23)
 
 Nata dalla issue #21: per `search --bbox` l'agente deve ricavare il bbox di un comune o di una provincia, e oggi lo fa con una chiamata a Nominatim. Una tabella distribuita con il pacchetto, come le codelist di `codelists.py`, con codice ISTAT, nome, livello (regione, provincia, comune) e `xmin,ymin,xmax,ymax` calcolati una volta dai confini ISTAT (fonte ufficiale, aggiornamento annuale), permetterebbe `--comune 017067` o `--provincia 017` senza rete e senza ambiguità fra toponimi omonimi. Circa 8000 righe. Da esporre anche nella libreria Python.
