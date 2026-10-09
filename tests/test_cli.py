@@ -512,6 +512,17 @@ def test_cli_resources_layers_json(item_response_json):
 
 
 @respx.mock
+def test_cli_resources_layers_bare_uuid_links_resolved_id(item_response_json, monkeypatch):
+    # get_item risolve l'UUID nudo; i link devono portare l'id risolto, che il plugin sa aprire
+    monkeypatch.setattr("openrndt.cli.get_item", lambda item_id: item_response_json)
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    result = runner.invoke(app, ["resources", "D_E973_MARSAGLIA", "--layers"])
+    assert result.exit_code == 0, result.output
+    (layer,) = json.loads(result.stdout)["layers"]
+    assert "rndt=age%3AD_E973_MARSAGLIA&" in layer["geolibre_url"]
+
+
+@respx.mock
 def test_cli_resources_layers_csv_batch(item_response_json):
     respx.get(url__regex=rf"{DEFAULT_BASE_URL}/rest/metadata/item/.*").mock(
         return_value=httpx.Response(200, json=item_response_json)

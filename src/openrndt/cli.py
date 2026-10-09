@@ -839,7 +839,8 @@ def resources(
         entry["checked"] = check
         entry["resources"] = rows_checked
         if layers:
-            entry["layers"] = list_layers(item_id, rows)
+            # id risolto (un UUID nudo diventa prefisso:uuid): è quello che il plugin apre
+            entry["layers"] = list_layers(payload.get("_id") or item_id, rows)
         entries.append(entry)
 
     if not batch:

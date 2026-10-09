@@ -415,11 +415,14 @@ def parse_wms_capabilities(xml: str | bytes) -> dict[str, Any]:
         root = ET.fromstring(_strip_doctype(raw))
     except ET.ParseError:
         declared = re.search(rb"""<\?xml[^>]*encoding=["']([\w.-]+)""", raw[:200])
-        text = raw.decode(declared.group(1).decode() if declared else "utf-8", errors="replace")
         try:
-            root = ET.fromstring(_repair_xml(text).encode("utf-8"))
-        except ET.ParseError as exc:
+            text = raw.decode(declared.group(1).decode() if declared else "utf-8", errors="replace")
+            # Testo già decodificato: la dichiarazione di encoding non conta più.
+            root = ET.fromstring(_repair_xml(text))
+        except (ET.ParseError, LookupError) as exc:
             raise ValueError("Il servizio non ha restituito XML valido.") from exc
+    except LookupError as exc:
+        raise ValueError("Il servizio dichiara un encoding sconosciuto.") from exc
     if _local(root.tag) in {"ServiceExceptionReport", "ExceptionReport"}:
         message = " ".join("".join(root.itertext()).split())
         raise ValueError(f"Errore del servizio: {message[:300]}")
@@ -455,8 +458,11 @@ def parse_wms_capabilities(xml: str | bytes) -> dict[str, Any]:
             walk(child, crs, bbox)
 
     capability = next((el for el in root.iter() if _local(el.tag) == "Capability"), None)
-    for top in _children(capability, "Layer") if capability is not None else []:
-        walk(top, [], None)
+    try:
+        for top in _children(capability, "Layer") if capability is not None else []:
+            walk(top, [], None)
+    except RecursionError as exc:
+        raise ValueError("Layer annidati troppo in profondità.") from exc
     return {"version": root.get("version") or "1.3.0", "layers": layers}
 
 
