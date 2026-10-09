@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (slash in `q` Lucene)
+
+- **`known-issues.md`: lo slash in una `q` Lucene va escapato**, altrimenti l'API risponde 500 (`links_s:*rest/services*` 500, `links_s:*rest\/services*` 1.728). In `all`/`any` la CLI lo escapa già; in Lucene passa intatto. Trovato cercando schede ArcGIS REST in https per openrndt-geolibre#49.
+
 ## 2026-10-09 (rilascio 3.6.0)
 
 - **Pubblicata**: tag `v3.6.0`, GitHub Release, PyPI (`/pypi/openrndt/json` a 3.6.0 al primo controllo). CLI reinstallata da PyPI con `==3.6.0`; smoke test dal vivo `resources r_emiro:2022-03-11T113115 --layers`: un layer, `Agea2020_RGB`, con `geolibre_url` e `rndtLayer`. Issue #30 e #32 già chiuse.
