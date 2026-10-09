@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-10-09 (issue #30, `resources --layers`)
+
+- **`resources --layers`**: legge le GetCapabilities di ogni WMS della scheda e restituisce un elemento per layer con `geolibre_url` che usa `rndtLayer=<id>~wms~<nome>` (plugin 0.3.5). Dal vivo l'AGEA 2020 RGB dà il link della issue carattere per carattere. Sostituisce `--check`.
+- **Regole copiate dal plugin** per non produrre link che falliscono in silenzio: un servizio per base URL (solo parametri di operazione tolti, `?map=` resta), CRS secondo `crsOf`/`pickWmsCrs` (anche i layer solo UTM), primo servizio che elenca il nome, DOCTYPE e prefissi non dichiarati riparati. `https` preferito se la scheda dichiara entrambi, nota per i servizi solo `http://`, CORS non controllato, encoding letto dalla dichiarazione XML. ArcGIS REST rimandato alla #33.
+- **Libreria**: `geolibre_url(id, layers=…)`, esportate `list_layers`, `parse_wms_capabilities`, `wms_layer_crs`, `capabilities_url`, `service_base_url`, `extract_resources`, `check_resources`. Fixture reali in `tests/fixtures/wms_caps_*.xml`.
+- **Release** solo dopo il merge di opengeos/geolibre-plugins#101 (plugin 0.3.6 nel registro).
+
 ## 2026-10-09 (issue #32, trattino isolato in `--q`)
 
 - **In `all`/`any` scartate le parole senza lettere né cifre**: il ` - ` di un titolo incollato diventava `\-` in AND e dava 0 risultati. Dal vivo «DTM LiDAR con risoluzione a terra 1 metro - Regione Sicilia» passa da 0 a 1 scheda. `lucene` e le `q` con sintassi Lucene invariate; una `q` di soli segni è un errore.

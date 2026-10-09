@@ -487,6 +487,43 @@ def test_cli_resources_json_with_check(item_response_json):
     assert payload["resources"][1]["ok"] is False
 
 
+AE_CAPS = "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php?SERVICE=WMS&REQUEST=GetCapabilities"
+AE_CAPS_XML = """<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms"><Capability>
+<Layer><CRS>EPSG:6706</CRS><Layer><Name>CP.CadastralParcel</Name><Title>Particelle</Title></Layer></Layer>
+</Capability></WMS_Capabilities>"""
+
+
+@respx.mock
+def test_cli_resources_layers_json(item_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    caps = respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    head = respx.head(url__regex=r".*").mock(return_value=httpx.Response(200))
+    result = runner.invoke(app, ["resources", "age:D_E973_MARSAGLIA", "--layers"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    # --layers sostituisce il controllo di raggiungibilità
+    assert payload["checked"] is False and not head.called
+    assert caps.call_count == 1
+    (layer,) = payload["layers"]
+    assert (layer["name"], layer["title"], layer["crs"]) == ("CP.CadastralParcel", "Particelle", "EPSG:6706")
+    assert layer["geolibre_url"].endswith("&rndtLayer=age%3AD_E973_MARSAGLIA~wms~CP.CadastralParcel")
+
+
+@respx.mock
+def test_cli_resources_layers_csv_batch(item_response_json):
+    respx.get(url__regex=rf"{DEFAULT_BASE_URL}/rest/metadata/item/.*").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    result = runner.invoke(app, ["--format", "csv", "resources", "a:1", "b:2", "--layers"])
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.strip().splitlines()
+    assert lines[0] == "id,service,name,title,crs,geolibre_url,note,error"
+    assert len(lines) == 3
+
+
 @respx.mock
 def test_cli_resources_no_check(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(

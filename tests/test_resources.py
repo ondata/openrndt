@@ -323,3 +323,203 @@ def test_check_resources_does_not_retry_get_after_head_timeout():
     assert checked[0]["error"] == "ReadTimeout"
     assert checked[0]["method"] == "HEAD"
     assert not get_route.called
+
+
+# --- layer dei servizi WMS (issue #30) ---------------------------------------
+
+from pathlib import Path  # noqa: E402
+
+import pytest  # noqa: E402
+
+from openrndt.resources import (  # noqa: E402
+    capabilities_url,
+    list_layers,
+    parse_wms_capabilities,
+    service_base_url,
+    wms_layer_crs,
+)
+
+FIXTURES = Path(__file__).parent / "fixtures"
+AGEA_ID = "r_emiro:2022-03-11T113115"
+AGEA_WMS = "https://servizigis.regione.emilia-romagna.it/wms/agea2020_rgb"
+AGEA_CAPS = f"{AGEA_WMS}?SERVICE=WMS&REQUEST=GetCapabilities"
+
+
+def _caps(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+def test_service_base_url_keeps_mapserver_map_param():
+    url = "http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/x.map&SERVICE=WMS&request=GetCapabilities&version=1.3.0"
+    assert service_base_url(url) == "http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/x.map"
+    assert capabilities_url(url) == f"{service_base_url(url)}&SERVICE=WMS&REQUEST=GetCapabilities"
+    assert capabilities_url(f"{AGEA_WMS}?request=GetCapabilities&service=WMS") == AGEA_CAPS
+
+
+def test_parse_wms_capabilities_real_agea():
+    caps = parse_wms_capabilities(_caps("wms_caps_agea2020_rgb.xml"))
+    assert caps["version"] == "1.3.0"
+    # `default` è il nome di uno stile, non di un layer
+    assert [layer["name"] for layer in caps["layers"]] == ["Agea2020_RGB"]
+
+
+def test_parse_wms_capabilities_real_pcn_mapserver():
+    caps = parse_wms_capabilities(_caps("wms_caps_pcn_messina.xml"))
+    names = [layer["name"] for layer in caps["layers"]]
+    assert names == ["OI.ORTOIMMAGINICOLORE.ALLUVIONE.MESSINA.33", "OI.DATEVOLO.ALLUVIONE.MESSINA.33"]
+    assert "EPSG:3857" in caps["layers"][0]["crs"]
+    assert caps["layers"][0]["bbox"] == [15.3871, 38.0182, 15.5482, 38.1634]
+
+
+WMS_111 = """<?xml version="1.0"?>
+<!DOCTYPE WMT_MS_Capabilities SYSTEM "x.dtd" [ <!ELEMENT VendorSpecificCapabilities EMPTY> ]>
+<WMT_MS_Capabilities version="1.1.1"><Capability>
+<Layer><Title>Radice</Title><SRS>EPSG:32633</SRS>
+  <LatLonBoundingBox minx="12" miny="37" maxx="16" maxy="39"/>
+  <Layer><Name>gruppo</Name><Title>Gruppo</Title><inspire_vs:x/>
+    <Layer><Name>foglia</Name><SRS>CRS:84</SRS></Layer>
+  </Layer>
+</Layer></Capability></WMT_MS_Capabilities>"""
+
+
+def test_parse_wms_capabilities_111_inherits_and_repairs():
+    # DOCTYPE con subset interno e prefisso non dichiarato: riparati come nel plugin
+    caps = parse_wms_capabilities(WMS_111)
+    assert caps["version"] == "1.1.1"
+    gruppo, foglia = caps["layers"]
+    assert (gruppo["name"], gruppo["group"], gruppo["crs"]) == ("gruppo", True, ["EPSG:32633"])
+    assert (foglia["title"], foglia["crs"], foglia["bbox"]) == ("foglia", ["EPSG:32633", "CRS:84"], [12.0, 37.0, 16.0, 39.0])
+
+
+def test_parse_wms_capabilities_service_exception():
+    xml = '<ServiceExceptionReport version="1.3.0"><ServiceException>msShapefileOpen(): Unable to access file.</ServiceException></ServiceExceptionReport>'
+    with pytest.raises(ValueError, match="Errore del servizio: msShapefileOpen"):
+        parse_wms_capabilities(xml)
+    with pytest.raises(ValueError, match="XML valido"):
+        parse_wms_capabilities("<html><body>Not found")
+
+
+@pytest.mark.parametrize(
+    ("crs", "version", "expected"),
+    [
+        (["EPSG:25832", "EPSG:3857"], "1.3.0", "EPSG:3857"),
+        (["EPSG:900913"], "1.1.1", "EPSG:3857"),
+        (["EPSG:32633", "EPSG:4326"], "1.3.0", "EPSG:4326"),
+        (["CRS:84", "EPSG:32633"], "1.1.1", "EPSG:32633"),  # CRS:84 solo in 1.3.0
+        (["EPSG:25833"], "1.3.0", "EPSG:25833"),  # solo UTM: il plugin lo aggiunge lo stesso
+        (["AUTO:42001"], "1.3.0", None),
+    ],
+)
+def test_wms_layer_crs_follows_plugin_rule(crs, version, expected):
+    assert wms_layer_crs({"crs": crs}, version) == expected
+
+
+@respx.mock
+def test_list_layers_one_service_per_base_url():
+    route = respx.get(AGEA_CAPS).mock(return_value=httpx.Response(200, text=_caps("wms_caps_agea2020_rgb.xml")))
+    rows = list_layers(
+        AGEA_ID,
+        [
+            {"type": "WMS", "url": f"{AGEA_WMS}?request=GetCapabilities&service=WMS", "source": "resources_nst"},
+            {"type": "WMS", "url": AGEA_WMS.replace("https", "http"), "source": "links_s"},
+            {"type": "WFS", "url": "https://example.test/wfs", "source": "links_s"},
+        ],
+        timeout=1,
+    )
+    assert route.call_count == 1
+    assert rows == [
+        {
+            "service": AGEA_WMS,
+            "name": "Agea2020_RGB",
+            "title": "Agea2020_RGB",
+            "crs": "EPSG:3857",
+            "geolibre_url": "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=r_emiro%3A2022-03-11T113115"
+            "&rndtLayer=r_emiro%3A2022-03-11T113115~wms~Agea2020_RGB",
+            "note": None,
+            "error": None,
+        }
+    ]
+
+
+@respx.mock
+def test_list_layers_reports_errors_http_and_duplicate_names():
+    respx.get("https://a.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(return_value=httpx.Response(500))
+    respx.get("http://b.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111.replace("<SRS>EPSG:32633</SRS>", "<SRS>AUTO:42001</SRS>"))
+    )
+    respx.get("https://c.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111)
+    )
+    rows = list_layers(
+        "x:1",
+        [
+            {"type": "WMS", "url": "https://a.test/wms", "source": "links_s"},
+            {"type": "WMS", "url": "http://b.test/wms", "source": "links_s"},
+            {"type": "WMS", "url": "https://c.test/wms", "source": "links_s"},
+        ],
+        timeout=1,
+    )
+    assert [(r["service"], r["name"], r["error"]) for r in rows] == [
+        ("https://a.test/wms", None, "HTTP 500"),
+        ("http://b.test/wms", "gruppo", None),
+        ("http://b.test/wms", "foglia", None),
+        ("https://c.test/wms", "gruppo", None),
+        ("https://c.test/wms", "foglia", None),
+    ]
+    gruppo_b, foglia_b, gruppo_c, foglia_c = rows[1:]
+    # nessun CRS utile: il plugin rifiuterebbe il layer
+    assert gruppo_b["geolibre_url"] is None and gruppo_b["note"] == "nessun CRS che GeoLibre sa disegnare"
+    # CRS:84 non vale in 1.1.1, AUTO nemmeno
+    assert foglia_b["geolibre_url"] is None
+    # nomi già visti: il plugin si ferma al primo servizio che li elenca
+    assert gruppo_c["geolibre_url"] is None and "servizio precedente" in gruppo_c["note"]
+    assert foglia_c["geolibre_url"] is None
+
+
+@respx.mock
+def test_list_layers_http_service_gets_note():
+    respx.get("http://b.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111)
+    )
+    rows = list_layers("x:1", [{"type": "WMS", "url": "http://b.test/wms", "source": "links_s"}], timeout=1)
+    assert rows[0]["geolibre_url"] is not None
+    assert rows[0]["note"].startswith("servizio in http://")
+
+
+def test_list_layers_blocks_private_hosts():
+    rows = list_layers("x:1", [{"type": "WMS", "url": "http://127.0.0.1/wms", "source": "links_s"}], timeout=1)
+    assert rows[0]["error"] == "url-blocked:loopback-not-allowed"
+
+
+@respx.mock
+def test_list_layers_blocks_redirect_to_private_host():
+    respx.get("https://a.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(302, headers={"location": "http://10.0.0.1/caps"})
+    )
+    rows = list_layers("x:1", [{"type": "WMS", "url": "https://a.test/wms", "source": "links_s"}], timeout=1)
+    assert rows[0]["error"].startswith("url-blocked:")
+
+
+def test_parse_wms_capabilities_reads_declared_encoding():
+    xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<WMS_Capabilities version="1.3.0"><Capability><Layer><CRS>EPSG:3857</CRS>
+<Layer><Name>c</Name><Title>Città</Title></Layer></Layer></Capability></WMS_Capabilities>""".encode("latin-1")
+    assert parse_wms_capabilities(xml)["layers"][0]["title"] == "Città"
+
+
+@respx.mock
+def test_list_layers_prefers_https_variant():
+    route = respx.get("https://a.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111)
+    )
+    rows = list_layers(
+        "x:1",
+        [
+            {"type": "WMS", "url": "http://a.test/wms", "source": "links_s"},
+            {"type": "WMS", "url": "https://a.test/wms?request=GetCapabilities", "source": "links_s"},
+        ],
+        timeout=1,
+    )
+    assert route.call_count == 1
+    assert {r["service"] for r in rows} == {"https://a.test/wms"}
+    assert all(r["note"] is None or "http://" not in r["note"] for r in rows)

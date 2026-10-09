@@ -97,6 +97,9 @@ openrndt get age:D_E973_MARSAGLIA --raw
 # Estrai e verifica endpoint WMS/WFS/download di un metadato
 openrndt resources age:D_E973_MARSAGLIA
 
+# Layer di ogni WMS, ognuno con un geolibre_url che lo apre già sulla mappa
+openrndt resources r_emiro:2022-03-11T113115 --layers
+
 # XML ISO 19139 grezzo
 openrndt get age:D_E973_MARSAGLIA --xml > meta.xml
 

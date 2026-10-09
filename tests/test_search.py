@@ -670,6 +670,16 @@ def test_geolibre_url_encodes_colon():
     )
 
 
+def test_geolibre_url_with_layers_adds_rndt_layer_in_order():
+    # il link della issue #30, carattere per carattere
+    assert geolibre_url("r_emiro:2022-03-11T113115", [("wms", "Agea2020_RGB")]) == (
+        "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=r_emiro%3A2022-03-11T113115"
+        "&rndtLayer=r_emiro%3A2022-03-11T113115~wms~Agea2020_RGB"
+    )
+    url = geolibre_url("a:b", [("wms", "ws:strade~1"), ("arcgis", "0")])
+    assert url.endswith("&rndtLayer=a%3Ab~wms~ws%3Astrade~1&rndtLayer=a%3Ab~arcgis~0")
+
+
 def test_geolibre_url_without_id_is_none():
     assert geolibre_url(None) is None
     assert geolibre_url("") is None

@@ -18,7 +18,7 @@ from openrndt.item import (
     get_item_xml,
     resolve_item_id,
 )
-from openrndt.resources import check_resources, extract_resources
+from openrndt.resources import check_resources, extract_resources, list_layers
 from openrndt.search import (
     ORG_EXACT_FIELD,
     compact_results,
@@ -797,8 +797,15 @@ def resources(
         "--check/--no-check",
         help="Verifica la raggiungibilità HTTP di ogni endpoint trovato.",
     ),
+    layers: bool = typer.Option(
+        False,
+        "--layers",
+        help="Legge le GetCapabilities di ogni WMS ed elenca i layer, ognuno con un geolibre_url che lo mette sulla mappa. Sostituisce --check.",
+    ),
 ) -> None:
     """Estrae risorse fruibili (WMS/WFS/download) e, opzionalmente, le verifica."""
+    if layers:
+        check = False
     batch = len(item_ids) > 1
     entries: list[dict[str, Any]] = []
     for item_id in item_ids:
@@ -831,6 +838,8 @@ def resources(
         entry["count"] = len(rows_checked)
         entry["checked"] = check
         entry["resources"] = rows_checked
+        if layers:
+            entry["layers"] = list_layers(item_id, rows)
         entries.append(entry)
 
     if not batch:
@@ -847,6 +856,12 @@ def resources(
         if not response.get("resources"):
             typer.echo("Nessuna risorsa fruibile trovata per il metadato.", err=True)
             return
+        if layers:
+            if not response["layers"]:
+                typer.echo("Nessun servizio WMS nel metadato.", err=True)
+                return
+            output.emit(response, table_rows=response["layers"], table_title=f"RNDT layers — {item_ids[0]}")
+            return
         output.emit(response, table_rows=response["resources"], table_title=f"RNDT resources — {item_ids[0]}")
         return
 
@@ -859,7 +874,7 @@ def resources(
         if "error" in entry:
             rows_all.append({"id": entry["id"], "error": entry["error"]})
             continue
-        for r in entry.get("resources") or []:
+        for r in entry.get("layers" if layers else "resources") or []:
             rows_all.append({"id": entry["id"], **r})
     if not rows_all:
         typer.echo("Nessuna risorsa fruibile trovata.", err=True)
