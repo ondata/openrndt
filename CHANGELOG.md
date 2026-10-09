@@ -4,6 +4,16 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **`resources --layers`** ([#30](https://github.com/ondata/openrndt/issues/30)): legge le GetCapabilities di ogni WMS della scheda e restituisce `layers`, un elemento per layer con nome, ognuno con un `geolibre_url` che apre GeoLibre web con quel layer già sulla mappa (`rndtLayer=<id>~wms~<nome>`, plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre) 0.3.5 o successivo). Se il layer non si può aggiungere, `geolibre_url` è `null` e `note` dice perché (nessun CRS disegnabile, nome già in un altro servizio della scheda); una `note` avvisa dei servizi solo `http://`. Sostituisce `--check`. In `table`/`csv` le righe sono i layer. In libreria: `geolibre_url(id, layers=…)` e, esportate, `list_layers`, `parse_wms_capabilities`, `wms_layer_crs`, `capabilities_url`, `service_base_url`, `extract_resources`, `check_resources`.
+
+### Fixed
+
+- **Un trattino isolato in `--q` non azzera più la ricerca** ([#32](https://github.com/ondata/openrndt/issues/32)): in `all` e `any` le parole senza lettere né cifre sono scartate. Il ` - ` di un titolo incollato diventava `\-` in AND e dava 0 risultati: «DTM LiDAR con risoluzione a terra 1 metro - Regione Sicilia» passa da 0 a 1 scheda. `lucene` e le `q` con sintassi Lucene restano invariate; una `q` di soli segni è un errore.
+
 ## [3.5.0] - 2026-10-04
 
 ### Added
