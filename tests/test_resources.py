@@ -507,6 +507,31 @@ def test_parse_wms_capabilities_reads_declared_encoding():
     assert parse_wms_capabilities(xml)["layers"][0]["title"] == "Città"
 
 
+def test_parse_wms_capabilities_repairs_without_breaking_declared_encoding():
+    xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<WMS_Capabilities version="1.3.0"><Capability><Layer><CRS>EPSG:3857</CRS><foo:x/>
+<Layer><Name>città</Name><Title>Città</Title></Layer></Layer></Capability></WMS_Capabilities>""".encode("latin-1")
+    layer = parse_wms_capabilities(xml)["layers"][0]
+    assert (layer["name"], layer["title"]) == ("città", "Città")
+
+
+def test_parse_wms_capabilities_unknown_encoding_and_deep_nesting_are_value_errors():
+    with pytest.raises(ValueError):
+        parse_wms_capabilities(b'<?xml version="1.0" encoding="x-nope"?><a/>')
+    deep = "<WMS_Capabilities version=\"1.3.0\"><Capability>" + "<Layer><Name>n</Name>" * 1200 + "</Layer>" * 1200
+    with pytest.raises(ValueError):
+        parse_wms_capabilities((deep + "</Capability></WMS_Capabilities>").encode())
+
+
+@respx.mock
+def test_list_layers_bad_service_is_an_error_row():
+    respx.get("https://a.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, content=b'<?xml version="1.0" encoding="x-nope"?><a/>')
+    )
+    rows = list_layers("x:1", [{"type": "WMS", "url": "https://a.test/wms", "source": "links_s"}], timeout=1)
+    assert rows[0]["name"] is None and rows[0]["error"]
+
+
 @respx.mock
 def test_list_layers_prefers_https_variant():
     route = respx.get("https://a.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
