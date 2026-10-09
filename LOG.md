@@ -2,6 +2,7 @@
 
 ## 2026-10-09 (rilascio 3.6.0)
 
+- **Pubblicata**: tag `v3.6.0`, GitHub Release, PyPI (`/pypi/openrndt/json` a 3.6.0 al primo controllo). CLI reinstallata da PyPI con `==3.6.0`; smoke test dal vivo `resources r_emiro:2022-03-11T113115 --layers`: un layer, `Agea2020_RGB`, con `geolibre_url` e `rndtLayer`. Issue #30 e #32 già chiuse.
 - **3.6.0**: `resources --layers` (#30) e trattino isolato in `--q` (#32). Rilasciata dopo il merge di opengeos/geolibre-plugins#101: nel registro c'è openrndt-geolibre 0.3.7, `rndtLayer` richiede la 0.3.5.
 
 ## 2026-10-09 (issue #30, `resources --layers`)
