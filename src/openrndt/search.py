@@ -391,14 +391,20 @@ GEOLIBRE_WEB_URL = "https://web.geolibre.app/"
 GEOLIBRE_PLUGIN = "openrndt-geolibre"
 
 
-def geolibre_url(item_id: Any) -> str | None:
+def geolibre_url(item_id: Any, layers: list[tuple[str, str]] | None = None) -> str | None:
     """Indirizzo che apre il record in GeoLibre web, nel plugin openrndt-geolibre.
 
     L'id è codificato per l'URL (contiene `:`). ``None`` senza id.
+    ``layers``: coppie ``(tipo, nome)`` con tipo ``wms`` o ``arcgis``, dal basso
+    verso l'alto; ognuna diventa un ``rndtLayer=<id>~<tipo>~<nome>`` e il plugin
+    (dalla 0.3.5) aggiunge il layer dal primo servizio della scheda che lo elenca.
     """
     if not isinstance(item_id, str) or not item_id:
         return None
-    return f"{GEOLIBRE_WEB_URL}?plugin={GEOLIBRE_PLUGIN}&rndt={quote(item_id, safe='')}"
+    url = f"{GEOLIBRE_WEB_URL}?plugin={GEOLIBRE_PLUGIN}&rndt={quote(item_id, safe='')}"
+    for kind, name in layers or []:
+        url += f"&rndtLayer={quote(f'{item_id}~{kind}~{name}', safe='')}"
+    return url
 
 
 def record_url(result: dict[str, Any]) -> str | None:

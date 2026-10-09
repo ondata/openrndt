@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
+	<Service>
+		<Name><![CDATA[WMS]]></Name>
+		<Title><![CDATA[WMS]]></Title>
+		<Abstract><![CDATA[WMS]]></Abstract>
+		<KeywordList><Keyword><![CDATA[ ]]></Keyword></KeywordList>
+		<OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://servizigis.regione.emilia-romagna.it/wms/agea2020_rgb"/>
+		<ContactInformation>
+			<ContactPersonPrimary>
+				<ContactPerson><![CDATA[ ]]></ContactPerson>
+				<ContactOrganization><![CDATA[ ]]></ContactOrganization>
+			</ContactPersonPrimary>
+			<ContactPosition><![CDATA[ ]]></ContactPosition>
+			<ContactAddress>
+				<AddressType><![CDATA[ ]]></AddressType>
+				<Address><![CDATA[ ]]></Address>
+				<City><![CDATA[ ]]></City>
+				<StateOrProvince><![CDATA[ ]]></StateOrProvince>
+				<PostCode><![CDATA[ ]]></PostCode>
+				<Country><![CDATA[ ]]></Country>
+			</ContactAddress>
+			<ContactVoiceTelephone><![CDATA[ ]]></ContactVoiceTelephone>
+			<ContactFacsimileTelephone><![CDATA[ ]]></ContactFacsimileTelephone>
+			<ContactElectronicMailAddress><![CDATA[ ]]></ContactElectronicMailAddress>
+		</ContactInformation>
+		<Fees><![CDATA[ ]]></Fees>
+		<AccessConstraints><![CDATA[ ]]></AccessConstraints>
+		<LayerLimit>1</LayerLimit>
+	</Service>
+	<Capability>
+		<Request>
+			<GetCapabilities>
+				<Format>text/xml</Format>
+				<DCPType>
+					<HTTP><Get><OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://servizigis.regione.emilia-romagna.it/wms/agea2020_rgb"/></Get></HTTP>
+				</DCPType>
+			</GetCapabilities>
+			<GetMap>
+				<Format>image/tiff</Format>
+				<Format>image/png</Format>
+				<Format>image/png24</Format>
+				<Format>image/png32</Format>
+				<Format>image/bmp</Format>
+				<Format>image/gif</Format>
+				<Format>image/jpeg</Format>
+				<Format>image/svg</Format>
+				<Format>image/bil</Format>
+				<DCPType>
+					<HTTP><Get><OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://servizigis.regione.emilia-romagna.it/wms/agea2020_rgb"/></Get></HTTP>
+				</DCPType>
+			</GetMap>
+		</Request>
+		<Exception>
+			<Format>XML</Format>
+			<Format>INIMAGE</Format>
+			<Format>BLANK</Format>
+		</Exception>
+		<Layer>
+			<Name>Agea2020_RGB</Name>
+			<Title>Agea2020_RGB</Title>
+			<Abstract>public/Agea2020_RGB</Abstract>
+			<CRS>CRS:84</CRS>
+			<CRS>EPSG:4326</CRS>
+			<CRS>EPSG:7791</CRS>
+			<CRS>EPSG:25832</CRS>
+			<CRS>EPSG:5659</CRS>
+			<CRS>EPSG:202003</CRS>
+			<CRS>EPSG:202032</CRS>
+			<CRS>EPSG:4230</CRS>
+			<CRS>EPSG:23032</CRS>
+			<CRS>EPSG:23033</CRS>
+			<CRS>EPSG:4265</CRS>
+			<CRS>EPSG:3003</CRS>
+			<CRS>EPSG:3004</CRS>
+			<CRS>EPSG:32632</CRS>
+			<CRS>EPSG:32633</CRS>
+			<CRS>EPSG:4258</CRS>
+			<CRS>EPSG:25833</CRS>
+			<CRS>EPSG:3857</CRS>
+			<CRS>EPSG:3034</CRS>
+			<CRS>EPSG:3035</CRS>
+			<CRS>EPSG:6706</CRS>
+			<CRS>EPSG:7792</CRS>
+			<EX_GeographicBoundingBox><westBoundLongitude>9.162128</westBoundLongitude><eastBoundLongitude>12.868166</eastBoundLongitude><southBoundLatitude>43.701243</southBoundLatitude><northBoundLatitude>45.153986</northBoundLatitude></EX_GeographicBoundingBox>
+			<BoundingBox CRS="CRS:84" minx="9.162128" miny="43.701243" maxx="12.868166" maxy="45.153986"/>
+			<BoundingBox CRS="EPSG:4326" minx="43.701243" miny="9.162128" maxx="45.153986" maxy="12.868166"/>
+			<BoundingBox CRS="EPSG:7791" minx="513050.000000" miny="4845629.766200" maxx="804400.200000" maxy="5000069.966200"/>
+			<BoundingBox CRS="EPSG:25832" minx="513050.000000" miny="4845629.766200" maxx="804400.200000" maxy="5000069.966200"/>
+			<BoundingBox CRS="EPSG:5659" minx="513103.605542" miny="845898.135449" maxx="804467.347665" maxy="1000343.343622"/>
+			<BoundingBox CRS="EPSG:202003" minx="513103.605542" miny="845898.135449" maxx="804467.347665" maxy="1000343.343622"/>
+			<BoundingBox CRS="EPSG:202032" minx="513050.605542" miny="845718.135449" maxx="804414.347665" maxy="1000163.343622"/>
+			<BoundingBox CRS="EPSG:4230" minx="43.701243" miny="9.162128" maxx="45.153986" maxy="12.868166"/>
+			<BoundingBox CRS="EPSG:23032" minx="513050.605542" miny="4845718.135449" maxx="804414.347665" maxy="5000163.343622"/>
+			<BoundingBox CRS="EPSG:23033" minx="30042.437940" miny="4841179.487567" maxx="332230.150181" maxy="5016731.942870"/>
+			<BoundingBox CRS="EPSG:4265" minx="43.701243" miny="9.162128" maxx="45.153986" maxy="12.868166"/>
+			<BoundingBox CRS="EPSG:3003" minx="1513050.605542" miny="4845718.135449" maxx="1804414.347665" maxy="5000163.343622"/>
+			<BoundingBox CRS="EPSG:3004" minx="2050042.437940" miny="4841179.487567" maxx="2352230.150181" maxy="5016731.942870"/>
+			<BoundingBox CRS="EPSG:32632" minx="513050.000000" miny="4845629.766318" maxx="804400.199998" maxy="5000069.966320"/>
+			<BoundingBox CRS="EPSG:32633" minx="30064.128291" miny="4841091.224497" maxx="332237.946662" maxy="5016637.897991"/>
+			<BoundingBox CRS="EPSG:4258" minx="43.701243" miny="9.162128" maxx="45.153986" maxy="12.868166"/>
+			<BoundingBox CRS="EPSG:25833" minx="30064.128287" miny="4841091.224378" maxx="332237.946661" maxy="5016637.897872"/>
+			<BoundingBox CRS="EPSG:3857" minx="1019923.467174" miny="5419324.583530" maxx="1432477.691764" maxy="5645796.145849"/>
+			<BoundingBox CRS="EPSG:3034" minx="1911176.119726" miny="3934376.516041" maxx="2064262.950935" maxy="4219037.771155"/>
+			<BoundingBox CRS="EPSG:3035" minx="2292171.856580" miny="4253368.833241" maxx="2449483.945367" maxy="4547115.342267"/>
+			<BoundingBox CRS="EPSG:6706" minx="9.162128" miny="43.701243" maxx="12.868166" maxy="45.153986"/>
+			<BoundingBox CRS="EPSG:7792" minx="30064.128287" miny="4841091.224378" maxx="332237.946661" maxy="5016637.897872"/>
+			<Style>
+				<Name>default</Name>
+				<Title>Agea2020_RGB</Title>
+				<LegendURL width="104" height="60">
+					<Format>image/png</Format>
+					<OnlineResource xlink:href="http://servizigis.regione.emilia-romagna.it/wms/agea2020_rgb?request=GetLegendGraphic%26version=1.3.0%26format=image/png%26layer=Agea2020_RGB" xlink:type="simple" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+				</LegendURL>
+			</Style>
+		</Layer>
+	</Capability>
+</WMS_Capabilities>

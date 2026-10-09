@@ -1,0 +1,262 @@
+<WMS_Capabilities xmlns="http://www.opengis.net/wms" xmlns:sld="http://www.opengis.net/sld" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.3.0" xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0" xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs/1.0" xsi:schemaLocation="http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd  http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd  http://mapserver.gis.umn.edu/mapserver http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;service=WMS&amp;version=1.3.0&amp;request=GetSchemaExtension http://inspire.ec.europa.eu/schemas/inspire_vs/1.0 http://inspire.ec.europa.eu/schemas/inspire_vs/1.0/inspire_vs.xsd">
+
+
+
+<Service>
+  <Name>WMS</Name>
+  <Title>Ortofoto a colori alluvione Messina con relative date del volo - Ottobre 2009</Title>
+  <Abstract>Ortofoto digitali a colori Della zona di Messina, colpita da un'alluvione il 1&#176; ottobre 2009, con i realtivi poligoni di ingombro riportanti le informazioni sulla data della ripresa aerea. Risoluzione 1:2.000. Il servizio &#232; visualizzabile solo a scale superiori a 1:100.000.</Abstract>
+  <KeywordList><Keyword vocabulary="ISO">infoMapAccessService</Keyword><Keyword vocabulary="GEMET">Orto immagini</Keyword><Keyword vocabulary="GEMET">Informazione</Keyword><Keyword vocabulary="GEMET">Fotografia aerea (immagine)</Keyword><Keyword>Ortofoto</Keyword></KeywordList><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" />
+  <ContactInformation>
+    <ContactPersonPrimary>
+      <ContactPerson>Geoportale Nazionale - Ministero dell'Ambiente e della Sicurezza Energetica</ContactPerson>
+      <ContactOrganization>Geoportale Nazionale - Ministero dell'Ambiente e della Sicurezza Energetica</ContactOrganization>
+    </ContactPersonPrimary>
+      <ContactPosition>distributor</ContactPosition>
+    <ContactAddress>
+        <AddressType>Postale</AddressType>
+        <Address>Via Cristoforo Colombo, 44</Address>
+        <City>Roma</City>
+        <StateOrProvince>RM</StateOrProvince>
+        <PostCode>00147</PostCode>
+        <Country>Italia</Country>
+    </ContactAddress>
+      <ContactVoiceTelephone />
+  <ContactElectronicMailAddress>gn@mase.gov.it</ContactElectronicMailAddress>
+  </ContactInformation>
+  <Fees>Nessuna condizione applicata</Fees>
+  <AccessConstraints>Nessuno</AccessConstraints>
+  <MaxWidth>2048</MaxWidth>
+  <MaxHeight>2048</MaxHeight>
+</Service>
+
+<Capability>
+  <Request>
+    <GetCapabilities>
+      <Format>text/xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Get>
+          <Post><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetCapabilities>
+    <GetMap>
+      <Format>image/png</Format>
+      <Format>image/jpeg</Format>
+      <Format>image/gif</Format>
+      <Format>image/png; mode=8bit</Format>
+      <Format>application/x-pdf</Format>
+      <Format>image/svg+xml</Format>
+      <Format>image/tiff</Format>
+      <Format>application/vnd.google-earth.kml+xml</Format>
+      <Format>application/vnd.google-earth.kmz</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Get>
+          <Post><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetMap>
+    <GetFeatureInfo>
+      <Format>text/plain</Format>
+      <Format>application/vnd.ogc.gml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Get>
+          <Post><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetFeatureInfo>
+    <sld:DescribeLayer>
+      <Format>text/xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Get>
+          <Post><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Post>
+        </HTTP>
+      </DCPType>
+    </sld:DescribeLayer>
+    <sld:GetLegendGraphic>
+      <Format>image/png</Format>
+      <Format>image/jpeg</Format>
+      <Format>image/gif</Format>
+      <Format>image/png; mode=8bit</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Get>
+          <Post><OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;" /></Post>
+        </HTTP>
+      </DCPType>
+    </sld:GetLegendGraphic>
+    </Request>
+  <Exception>
+    <Format>XML</Format>
+    <Format>INIMAGE</Format>
+    <Format>BLANK</Format>
+  </Exception>
+  <inspire_vs:ExtendedCapabilities><inspire_common:ResourceLocator xsi:type="inspire_common:resourceLocatorType"><inspire_common:URL>http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map</inspire_common:URL><inspire_common:MediaType>application/vnd.ogc.wms_xml</inspire_common:MediaType></inspire_common:ResourceLocator><inspire_common:ResourceType>service</inspire_common:ResourceType><inspire_common:TemporalReference><inspire_common:DateOfCreation>2011-12-06</inspire_common:DateOfCreation></inspire_common:TemporalReference><inspire_common:TemporalReference><inspire_common:DateOfPublication>2011-12-06</inspire_common:DateOfPublication></inspire_common:TemporalReference><inspire_common:TemporalReference><inspire_common:DateOfLastRevision>2013-01-23</inspire_common:DateOfLastRevision></inspire_common:TemporalReference><inspire_common:Conformity><inspire_common:Specification><inspire_common:Title>REGOLAMENTO (UE) N. 1089/2010 DELLA COMMISSIONE del 23 novembre 2010 recante attuazione della direttiva 2007/2/CE del Parlamento europeo e del Consiglio per quanto riguarda l'interoperabilit&#224; dei set di dati territoriali e dei servizi di dati territoriali</inspire_common:Title><inspire_common:DateOfPublication>2010-12-08</inspire_common:DateOfPublication><inspire_common:URI>OJ:L:2010:323:0011:0102:IT:PDF</inspire_common:URI><inspire_common:ResourceLocator><inspire_common:URL>http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2010:323:0011:0102:IT:PDF</inspire_common:URL><inspire_common:MediaType>application/pdf</inspire_common:MediaType></inspire_common:ResourceLocator></inspire_common:Specification><inspire_common:Degree>notConformant</inspire_common:Degree></inspire_common:Conformity><inspire_common:MetadataPointOfContact><inspire_common:OrganisationName>Ministero dell'Ambiente e della Sicurezza Energetica</inspire_common:OrganisationName><inspire_common:EmailAddress>gn@mase.gov.it</inspire_common:EmailAddress></inspire_common:MetadataPointOfContact><inspire_common:MetadataDate>2011-06-13</inspire_common:MetadataDate><inspire_common:SpatialDataServiceType>view</inspire_common:SpatialDataServiceType><inspire_common:MandatoryKeyword><inspire_common:KeywordValue>infoMapAccessService</inspire_common:KeywordValue></inspire_common:MandatoryKeyword><inspire_common:Keyword xsi:type="inspire_common:inspireTheme_ita"><inspire_common:OriginatingControlledVocabulary><inspire_common:Title>GEMET - INSPIRE themes</inspire_common:Title><inspire_common:DateOfPublication>2008-06-01</inspire_common:DateOfPublication></inspire_common:OriginatingControlledVocabulary><inspire_common:KeywordValue>Orto immagini</inspire_common:KeywordValue></inspire_common:Keyword><inspire_common:Keyword><inspire_common:KeywordValue>Mappe di base</inspire_common:KeywordValue></inspire_common:Keyword><inspire_common:Keyword><inspire_common:OriginatingControlledVocabulary><inspire_common:Title>GEMET - Themes, version 2.4</inspire_common:Title><inspire_common:DateOfPublication>2010-01-13</inspire_common:DateOfPublication></inspire_common:OriginatingControlledVocabulary><inspire_common:KeywordValue>Informazione</inspire_common:KeywordValue></inspire_common:Keyword><inspire_common:Keyword><inspire_common:OriginatingControlledVocabulary><inspire_common:Title>GEMET - Concepts, version 2.4</inspire_common:Title><inspire_common:DateOfPublication>2010-01-13</inspire_common:DateOfPublication></inspire_common:OriginatingControlledVocabulary><inspire_common:KeywordValue>Fotografia aerea (immagine)</inspire_common:KeywordValue></inspire_common:Keyword><inspire_common:Keyword><inspire_common:KeywordValue>Ortofoto</inspire_common:KeywordValue></inspire_common:Keyword><inspire_common:SupportedLanguages><inspire_common:DefaultLanguage><inspire_common:Language>ita</inspire_common:Language></inspire_common:DefaultLanguage><inspire_common:SupportedLanguage><inspire_common:Language>ita</inspire_common:Language></inspire_common:SupportedLanguage></inspire_common:SupportedLanguages><inspire_common:ResponseLanguage><inspire_common:Language>ita</inspire_common:Language></inspire_common:ResponseLanguage></inspire_vs:ExtendedCapabilities><sld:UserDefinedSymbolization InlineFeature="0" RemoteWCS="0" RemoteWFS="0" SupportSLD="1" UserLayer="0" UserStyle="1" />
+  <Layer>
+    <Title>Ortofoto a colori alluvione Messina con relative date del volo - Ottobre 2009</Title>
+    <Abstract>Ortofoto digitali a colori Della zona di Messina, colpita da un'alluvione il 1&#176; ottobre 2009, con i realtivi poligoni di ingombro riportanti le informazioni sulla data della ripresa aerea. Risoluzione 1:2.000. Il servizio &#232; visualizzabile solo a scale superiori a 1:100.000.</Abstract>
+    <CRS>EPSG:4326</CRS>
+    <CRS>EPSG:32632</CRS>
+    <CRS>EPSG:32633</CRS>
+    <CRS>EPSG:4258</CRS>
+    <CRS>EPSG:3004</CRS>
+    <CRS>EPSG:3003</CRS>
+    <CRS>EPSG:4265</CRS>
+    <CRS>EPSG:4806</CRS>
+    <CRS>EPSG:21781</CRS>
+    <CRS>EPSG:900913</CRS>
+    <CRS>EPSG:3857</CRS>
+    <CRS>EPSG:2056</CRS>
+    <CRS>EPSG:3035</CRS>
+    <CRS>EPSG:25832</CRS>
+    <EX_GeographicBoundingBox>
+        <westBoundLongitude>15.38</westBoundLongitude>
+        <eastBoundLongitude>15.56</eastBoundLongitude>
+        <southBoundLatitude>38</southBoundLatitude>
+        <northBoundLatitude>38.17</northBoundLatitude>
+    </EX_GeographicBoundingBox>
+    <BoundingBox CRS="EPSG:4326" maxx="38.17" maxy="15.56" minx="38" miny="15.38" />
+    <BoundingBox CRS="EPSG:32632" maxx="1.07626e+006" maxy="4.24507e+006" minx="1.05913e+006" miny="4.22507e+006" />
+    <BoundingBox CRS="EPSG:32633" maxx="549167" maxy="4.22483e+006" minx="533286" miny="4.20588e+006" />
+    <BoundingBox CRS="EPSG:4258" maxx="38.17" maxy="15.56" minx="38" miny="15.38" />
+    <BoundingBox CRS="EPSG:3004" maxx="2.56917e+006" maxy="4.22483e+006" minx="2.55329e+006" miny="4.20588e+006" />
+    <BoundingBox CRS="EPSG:3003" maxx="2.07629e+006" maxy="4.24507e+006" minx="2.05916e+006" miny="4.22507e+006" />
+    <BoundingBox CRS="EPSG:4265" maxx="38.1694" maxy="15.56" minx="37.9994" miny="15.38" />
+    <BoundingBox CRS="EPSG:4806" maxx="38.1694" maxy="3.10772" minx="37.9994" miny="2.92773" />
+    <BoundingBox CRS="EPSG:21781" maxx="1.32054e+006" maxy="-741644" minx="1.30269e+006" miny="-762271" />
+    <BoundingBox CRS="EPSG:900913" maxx="1.73213e+006" maxy="4.60347e+006" minx="1.71209e+006" miny="4.57943e+006" />
+    <BoundingBox CRS="EPSG:3857" maxx="1.73213e+006" maxy="4.60347e+006" minx="1.71209e+006" miny="4.57943e+006" />
+    <BoundingBox CRS="EPSG:2056" maxx="3.32054e+006" maxy="258356" minx="3.30269e+006" miny="237729" />
+    <BoundingBox CRS="EPSG:3035" maxx="1.69437e+006" maxy="4.8124e+006" minx="1.67453e+006" miny="4.79533e+006" />
+    <BoundingBox CRS="EPSG:25832" maxx="1.07626e+006" maxy="4.24507e+006" minx="1.05913e+006" miny="4.22507e+006" />
+    <AuthorityURL name="http://www.pcn.minambiente.it/">
+      <OnlineResource xlink:href="http://www.pcn.minambiente.it/" />
+    </AuthorityURL>
+    <Layer>
+      <Title>Ortofoto a colori alluvione Messina - Ottobre 2009</Title>
+      <Abstract>OI.ORTOIMMAGINICOLORE.ALLUVIONE.MESSINA</Abstract>
+    <Style>
+       <Name>default</Name>
+       <Title>default</Title>
+       <LegendURL height="5" width="35">
+          <Format>image/png</Format>
+          <OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;version=1.3.0&amp;service=WMS&amp;request=GetLegendGraphic&amp;sld_version=1.1.0&amp;layer=OI.ORTOIMMAGINICOLORE.ALLUVIONE.MESSINA&amp;format=image/png&amp;STYLE=default" xlink:type="simple" />
+       </LegendURL>
+    </Style>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>OI.ORTOIMMAGINICOLORE.ALLUVIONE.MESSINA.33</Name>
+        <Title>Ortofoto</Title>
+        <Abstract>La risorsa &#232; relativa alle ortofoto digitali a colori della zona di Messina colpita da un'alluvione il 1&#176; ottobre 2009. Le ortofoto digitali sono state acquisite mediante l'impiego della camera digitale Applanix DSS.</Abstract>
+        <KeywordList>
+            <Keyword>Orto immagini</Keyword>
+            <Keyword> informazione</Keyword>
+            <Keyword> fotografia aerea (immagine)</Keyword>
+            <Keyword> mosaico (immagine)</Keyword>
+        </KeywordList>
+        <CRS>EPSG:4326</CRS>
+        <CRS>EPSG:32632</CRS>
+        <CRS>EPSG:32633</CRS>
+        <CRS>EPSG:4258</CRS>
+        <CRS>EPSG:3004</CRS>
+        <CRS>EPSG:3003</CRS>
+        <CRS>EPSG:4265</CRS>
+        <CRS>EPSG:4806</CRS>
+        <CRS>EPSG:21781</CRS>
+        <CRS>EPSG:900913</CRS>
+        <CRS>EPSG:3857</CRS>
+        <CRS>EPSG:2056</CRS>
+        <CRS>EPSG:3035</CRS>
+        <CRS>EPSG:25832</CRS>
+        <EX_GeographicBoundingBox>
+            <westBoundLongitude>15.3871</westBoundLongitude>
+            <eastBoundLongitude>15.5482</eastBoundLongitude>
+            <southBoundLatitude>38.0182</southBoundLatitude>
+            <northBoundLatitude>38.1634</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="EPSG:4326" maxx="38.1634" maxy="15.5482" minx="38.0182" miny="15.3871" />
+        <BoundingBox CRS="EPSG:32632" maxx="1.07498e+006" maxy="4.24419e+006" minx="1.05987e+006" miny="4.22721e+006" />
+        <BoundingBox CRS="EPSG:32633" maxx="548020" maxy="4.22402e+006" minx="533980" miny="4.20798e+006" />
+        <BoundingBox CRS="EPSG:4258" maxx="38.1634" maxy="15.5482" minx="38.0182" miny="15.3871" />
+        <BoundingBox CRS="EPSG:3004" maxx="2.56802e+006" maxy="4.22402e+006" minx="2.55398e+006" miny="4.20798e+006" />
+        <BoundingBox CRS="EPSG:3003" maxx="2.07501e+006" maxy="4.24419e+006" minx="2.0599e+006" miny="4.22721e+006" />
+        <BoundingBox CRS="EPSG:4265" maxx="38.1628" maxy="15.5482" minx="38.0176" miny="15.3871" />
+        <BoundingBox CRS="EPSG:4806" maxx="38.1628" maxy="3.09588" minx="38.0176" miny="2.93485" />
+        <BoundingBox CRS="EPSG:21781" maxx="1.31918e+006" maxy="-742557" minx="1.30346e+006" miny="-760098" />
+        <BoundingBox CRS="EPSG:900913" maxx="1.73081e+006" maxy="4.60254e+006" minx="1.71289e+006" miny="4.582e+006" />
+        <BoundingBox CRS="EPSG:3857" maxx="1.73081e+006" maxy="4.60254e+006" minx="1.71289e+006" miny="4.582e+006" />
+        <BoundingBox CRS="EPSG:2056" maxx="3.31918e+006" maxy="257443" minx="3.30346e+006" miny="239901" />
+        <BoundingBox CRS="EPSG:3035" maxx="1.6935e+006" maxy="4.81113e+006" minx="1.67665e+006" miny="4.79607e+006" />
+        <BoundingBox CRS="EPSG:25832" maxx="1.07498e+006" maxy="4.24419e+006" minx="1.05987e+006" miny="4.22721e+006" />
+        <Identifier authority="www.pcn.minambiente.it">m_amte:299FN3:3b5073de-140f-42c5-b294-1a5e762ce895</Identifier>
+        <MetadataURL type="ISO19115:2003">
+          <Format>text/xml</Format>
+          <OnlineResource xlink:href="http://www.pcn.minambiente.it/geoportal/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&amp;elementSetName=full&amp;ID=m_amte:299FN3:0119183f-e838-4784-996f-41ba0a8763ba" xlink:type="simple" />
+        </MetadataURL>
+        <MaxScaleDenominator>100000</MaxScaleDenominator>
+      </Layer>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>OI.DATEVOLO.ALLUVIONE.MESSINA.33</Name>
+        <Title>Date ortofoto a colori alluvione Messina - Ottobre 2009</Title>
+        <Abstract>Poligoni di ingombro delle ortofoto della zona di Messina, colpita da un'alluvione il 1&#176; ottobre 2009, con le informazioni sulla data della ripresa aerea.</Abstract>
+        <KeywordList>
+            <Keyword>Orto immagini</Keyword>
+            <Keyword> informazione</Keyword>
+            <Keyword> fotografia aerea (immagine)</Keyword>
+            <Keyword> mosaico (immagine)</Keyword>
+        </KeywordList>
+        <CRS>EPSG:4326</CRS>
+        <CRS>EPSG:32632</CRS>
+        <CRS>EPSG:32633</CRS>
+        <CRS>EPSG:4258</CRS>
+        <CRS>EPSG:3004</CRS>
+        <CRS>EPSG:3003</CRS>
+        <CRS>EPSG:4265</CRS>
+        <CRS>EPSG:4806</CRS>
+        <CRS>EPSG:21781</CRS>
+        <CRS>EPSG:900913</CRS>
+        <CRS>EPSG:3857</CRS>
+        <CRS>EPSG:2056</CRS>
+        <CRS>EPSG:3035</CRS>
+        <CRS>EPSG:25832</CRS>
+        <EX_GeographicBoundingBox>
+            <westBoundLongitude>15.387</westBoundLongitude>
+            <eastBoundLongitude>15.548</eastBoundLongitude>
+            <southBoundLatitude>38.019</southBoundLatitude>
+            <northBoundLatitude>38.163</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="EPSG:4326" maxx="38.163" maxy="15.548" minx="38.019" miny="15.387" />
+        <BoundingBox CRS="EPSG:32632" maxx="1.07505e+006" maxy="4.24421e+006" minx="1.05979e+006" miny="4.22722e+006" />
+        <BoundingBox CRS="EPSG:32633" maxx="548101" maxy="4.22404e+006" minx="533902" miny="4.20799e+006" />
+        <BoundingBox CRS="EPSG:4258" maxx="38.163" maxy="15.548" minx="38.019" miny="15.387" />
+        <BoundingBox CRS="EPSG:3004" maxx="2.5681e+006" maxy="4.22404e+006" minx="2.5539e+006" miny="4.20799e+006" />
+        <BoundingBox CRS="EPSG:3003" maxx="2.07508e+006" maxy="4.24422e+006" minx="2.05982e+006" miny="4.22722e+006" />
+        <BoundingBox CRS="EPSG:4265" maxx="38.1624" maxy="15.548" minx="38.0184" miny="15.387" />
+        <BoundingBox CRS="EPSG:4806" maxx="38.1624" maxy="3.09572" minx="38.0184" miny="2.93473" />
+        <BoundingBox CRS="EPSG:21781" maxx="1.31926e+006" maxy="-742536" minx="1.30338e+006" miny="-760086" />
+        <BoundingBox CRS="EPSG:900913" maxx="1.7308e+006" maxy="4.60248e+006" minx="1.71287e+006" miny="4.58211e+006" />
+        <BoundingBox CRS="EPSG:3857" maxx="1.7308e+006" maxy="4.60248e+006" minx="1.71287e+006" miny="4.58211e+006" />
+        <BoundingBox CRS="EPSG:2056" maxx="3.31926e+006" maxy="257464" minx="3.30338e+006" miny="239914" />
+        <BoundingBox CRS="EPSG:3035" maxx="1.69352e+006" maxy="4.8112e+006" minx="1.67666e+006" miny="4.796e+006" />
+        <BoundingBox CRS="EPSG:25832" maxx="1.07505e+006" maxy="4.24421e+006" minx="1.05979e+006" miny="4.22722e+006" />
+        <Identifier authority="www.pcn.minambiente.it">m_amte:299FN3:ad90660e-8611-4398-d77f-1bc462f60027</Identifier>
+        <MetadataURL type="ISO19115:2003">
+          <Format>text/xml</Format>
+          <OnlineResource xlink:href="http://www.pcn.minambiente.it/geoportal/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&amp;elementSetName=full&amp;ID=m_amte:299FN3:f5245344-9568-4d89-f28f-a376c17ca719" xlink:type="simple" />
+        </MetadataURL>
+        <Style>
+          <Name>GN:Predefinito</Name>
+          <Title>GN:Predefinito</Title>
+          <LegendURL height="21" width="89">
+             <Format>image/png</Format>
+             <OnlineResource xlink:href="http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_alluvione_messina.map&amp;version=1.3.0&amp;service=WMS&amp;request=GetLegendGraphic&amp;sld_version=1.1.0&amp;layer=OI.DATEVOLO.ALLUVIONE.MESSINA.33&amp;format=image/png&amp;STYLE=GN:Predefinito" xlink:type="simple" />
+          </LegendURL>
+        </Style>
+    </Layer>
+  </Layer>
+</Capability>
+</WMS_Capabilities>

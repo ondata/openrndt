@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 import socket
 import ssl
 import time
+import xml.etree.ElementTree as ET
 from typing import Any
-from urllib.parse import parse_qs, urljoin, urlparse
+from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 import httpx
 
@@ -339,3 +341,215 @@ def check_resources(resources: list[dict[str, str]], *, timeout: float | None = 
         row["latency_ms"] = round(total_ms) if total_ms else None
         checked.append(row)
     return checked
+
+
+# --- layer dei servizi WMS (issue #30) ---------------------------------------
+
+# Parametri di operazione tolti per risalire alla base del servizio, come
+# `serviceBaseUrl` del plugin openrndt-geolibre: `?map=…` di MapServer resta.
+_OPERATION_PARAMS = {
+    "service", "request", "version", "acceptversions", "layers", "layer", "typename",
+    "typenames", "outputformat", "srs", "crs", "srsname", "bbox", "width", "height",
+    "format", "styles", "count", "maxfeatures", "startindex",
+}
+_MAX_CAPABILITIES_BYTES = 10 * 1024 * 1024
+_GEOGRAPHIC_CRS = ("EPSG:4326", "EPSG:4258", "EPSG:6706", "CRS:84")
+
+
+def service_base_url(url: str) -> str:
+    """URL del servizio senza i parametri di operazione (SERVICE, REQUEST, LAYERS, …)."""
+    parsed = urlparse(url)
+    kept = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k.lower() not in _OPERATION_PARAMS]
+    return urlunparse(parsed._replace(query=urlencode(kept, safe="/:"), fragment=""))
+
+
+def capabilities_url(url: str) -> str:
+    """GetCapabilities WMS del servizio a cui appartiene `url`."""
+    base = service_base_url(url)
+    return f"{base}{'&' if urlparse(base).query else '?'}SERVICE=WMS&REQUEST=GetCapabilities"
+
+
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1].split(":")[-1]
+
+
+def _child(el: ET.Element, name: str) -> ET.Element | None:
+    return next((c for c in el if _local(c.tag) == name), None)
+
+
+def _children(el: ET.Element, name: str) -> list[ET.Element]:
+    return [c for c in el if _local(c.tag) == name]
+
+
+def _text(el: ET.Element | None) -> str:
+    return (el.text or "").strip() if el is not None else ""
+
+
+def _repair_xml(xml: str) -> str:
+    """Toglie il DOCTYPE e dichiara i prefissi usati senza `xmlns`, come `repairXml` del plugin."""
+    xml = re.sub(r"<!DOCTYPE[^[>]*(\[[\s\S]*?\])?\s*>", "", xml, count=1, flags=re.IGNORECASE)
+    declared = set(re.findall(r"xmlns:([\w.-]+)\s*=", xml))
+    used = {a or b for a, b in re.findall(r"</?([\w.-]+):[\w.-]+|\s([\w.-]+):[\w.-]+\s*=", xml)}
+    missing = sorted(p for p in used if p and p not in {"xml", "xmlns"} and p not in declared)
+    if not missing:
+        return xml
+    decls = "".join(f' xmlns:{p}="urn:x-undeclared:{p}"' for p in missing)
+    return re.sub(r"<([A-Za-z_][\w.:-]*)", lambda m: m.group(0) + decls, xml, count=1)
+
+
+def _strip_doctype(xml: bytes) -> bytes:
+    return re.sub(rb"<!DOCTYPE[^[>]*(\[[\s\S]*?\])?\s*>", b"", xml, count=1, flags=re.IGNORECASE)
+
+
+def parse_wms_capabilities(xml: str | bytes) -> dict[str, Any]:
+    """Versione e layer con nome di un documento GetCapabilities WMS.
+
+    Ogni layer: ``name``, ``title``, ``crs`` (propri ed ereditati), ``bbox``
+    in gradi (``[ovest, sud, est, nord]`` o ``None``), ``group``. Solleva
+    ``ValueError`` su XML non valido o su un'eccezione OGC.
+    """
+    # In byte il parser legge l'encoding dalla dichiarazione XML: molti server
+    # della PA servono ISO-8859-1 senza charset nell'intestazione HTTP.
+    raw = xml.encode("utf-8") if isinstance(xml, str) else xml
+    try:
+        root = ET.fromstring(_strip_doctype(raw))
+    except ET.ParseError:
+        declared = re.search(rb"""<\?xml[^>]*encoding=["']([\w.-]+)""", raw[:200])
+        text = raw.decode(declared.group(1).decode() if declared else "utf-8", errors="replace")
+        try:
+            root = ET.fromstring(_repair_xml(text).encode("utf-8"))
+        except ET.ParseError as exc:
+            raise ValueError("Il servizio non ha restituito XML valido.") from exc
+    if _local(root.tag) in {"ServiceExceptionReport", "ExceptionReport"}:
+        message = " ".join("".join(root.itertext()).split())
+        raise ValueError(f"Errore del servizio: {message[:300]}")
+    if _local(root.tag) not in {"WMS_Capabilities", "WMT_MS_Capabilities"}:
+        raise ValueError("Il documento non è una GetCapabilities WMS.")
+
+    layers: list[dict[str, Any]] = []
+
+    def bbox_of(layer: ET.Element) -> list[float] | None:
+        geo = _child(layer, "EX_GeographicBoundingBox")
+        if geo is not None:
+            values = [_text(_child(geo, n)) for n in ("westBoundLongitude", "southBoundLatitude", "eastBoundLongitude", "northBoundLatitude")]
+        else:
+            ll = _child(layer, "LatLonBoundingBox")
+            if ll is None:
+                return None
+            values = [ll.get(a, "") for a in ("minx", "miny", "maxx", "maxy")]
+        try:
+            return [float(v) for v in values]
+        except ValueError:
+            return None
+
+    def walk(layer: ET.Element, crs: list[str], bbox: list[float] | None) -> None:
+        own = [c for el in _children(layer, "CRS") + _children(layer, "SRS") for c in _text(el).split()]
+        crs = list(dict.fromkeys(crs + own))
+        bbox = bbox_of(layer) or bbox
+        children = _children(layer, "Layer")
+        name = _text(_child(layer, "Name"))
+        if name:
+            title = _text(_child(layer, "Title")) or name
+            layers.append({"name": name, "title": title, "crs": crs, "bbox": bbox, "group": bool(children)})
+        for child in children:
+            walk(child, crs, bbox)
+
+    capability = next((el for el in root.iter() if _local(el.tag) == "Capability"), None)
+    for top in _children(capability, "Layer") if capability is not None else []:
+        walk(top, [], None)
+    return {"version": root.get("version") or "1.3.0", "layers": layers}
+
+
+def wms_layer_crs(layer: dict[str, Any], version: str) -> str | None:
+    """CRS in cui GeoLibre web chiede il layer, ``None`` se non sa disegnarlo.
+
+    Regola del plugin openrndt-geolibre (`crsOf`/`pickWmsCrs`): EPSG:3857 se
+    c'è, altrimenti un CRS geografico (CRS:84 solo in WMS 1.3.0), altrimenti il
+    primo ``EPSG:n``.
+    """
+    listed = [c.upper() for c in layer.get("crs") or []]
+    if any(c in {"EPSG:3857", "EPSG:900913"} for c in listed):
+        return "EPSG:3857"
+    v13 = version.startswith("1.3")
+    for c in listed:
+        if c in _GEOGRAPHIC_CRS and (c != "CRS:84" or v13):
+            return c
+    return next((c for c in listed if re.fullmatch(r"EPSG:\d+", c)), None)
+
+
+def _fetch_bytes(url: str, timeout: float) -> bytes:
+    """GET con la stessa validazione anti-SSRF di `check_resources`, anche a ogni redirect."""
+    headers = {"User-Agent": USER_AGENT}
+    current = url
+    for _ in range(_MAX_REDIRECTS + 1):
+        blocked = _validate_check_url(current)
+        if blocked is not None:
+            raise ValueError(f"url-blocked:{blocked}")
+        with httpx.stream(
+            "GET", current, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT
+        ) as response:
+            if response.status_code in _REDIRECT_STATUSES and response.headers.get("location"):
+                current = urljoin(current, response.headers["location"])
+                continue
+            if response.status_code >= 400:
+                raise ValueError(f"HTTP {response.status_code}")
+            body = bytearray()
+            for chunk in response.iter_bytes():
+                body.extend(chunk)
+                if len(body) > _MAX_CAPABILITIES_BYTES:
+                    raise ValueError("risposta troppo grande")
+            return bytes(body)
+    raise ValueError("too-many-redirects")
+
+
+def list_layers(
+    item_id: str, resources: list[dict[str, str]], *, timeout: float | None = None
+) -> list[dict[str, Any]]:
+    """Layer con nome dei servizi WMS di una scheda, ognuno con un `geolibre_url`.
+
+    Un servizio per base URL (lo schema non conta), nell'ordine della scheda.
+    Ogni riga: ``service``, ``name``, ``title``, ``crs`` (quello in cui GeoLibre
+    lo chiederebbe), ``geolibre_url`` (apre GeoLibre web col layer sulla mappa),
+    ``note`` ed ``error``. Un servizio che non risponde dà una riga con
+    ``name`` ``None`` ed ``error``. Come il plugin, un nome già visto in un
+    servizio precedente si risolve su quello: ``geolibre_url`` ``None`` e una nota.
+    """
+    from openrndt.search import geolibre_url
+
+    if timeout is None:
+        timeout = get_timeout()
+    # Un servizio per base URL, nell'ordine della scheda; se la scheda lo
+    # dichiara sia in http sia in https, si usa https.
+    services: dict[str, str] = {}
+    for resource in resources:
+        if resource.get("type") != "WMS" or not re.match(r"https?://", resource["url"], re.IGNORECASE):
+            continue
+        base = service_base_url(resource["url"])
+        key = re.sub(r"^https?://", "", base, flags=re.IGNORECASE).lower()
+        if key not in services or (base.lower().startswith("https://") and services[key].lower().startswith("http://")):
+            services[key] = base
+    rows: list[dict[str, Any]] = []
+    seen_names: set[str] = set()
+    for base in services.values():
+        row_base: dict[str, Any] = {"service": base, "name": None, "title": None, "crs": None, "geolibre_url": None, "note": None, "error": None}
+        try:
+            caps = parse_wms_capabilities(_fetch_bytes(capabilities_url(base), timeout))
+        except (httpx.HTTPError, ValueError) as exc:
+            rows.append({**row_base, "error": str(exc) or type(exc).__name__})
+            continue
+        http_note = "servizio in http://: GeoLibre web (https) potrebbe non mostrarlo" if base.lower().startswith("http://") else None
+        for layer in caps["layers"]:
+            name = layer["name"]
+            row = {**row_base, "name": name, "title": layer["title"], "note": http_note}
+            if name in seen_names:
+                row["note"] = "nome già in un servizio precedente della scheda: GeoLibre usa quello"
+            else:
+                seen_names.add(name)
+                crs = wms_layer_crs(layer, caps["version"])
+                row["crs"] = crs
+                if crs is None:
+                    row["note"] = "nessun CRS che GeoLibre sa disegnare"
+                else:
+                    row["geolibre_url"] = geolibre_url(item_id, [("wms", name)])
+            rows.append(row)
+    return rows

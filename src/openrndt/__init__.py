@@ -10,6 +10,15 @@ from openrndt.item import (
     get_item_xml,
     resolve_item_id,
 )
+from openrndt.resources import (
+    capabilities_url,
+    check_resources,
+    extract_resources,
+    list_layers,
+    parse_wms_capabilities,
+    service_base_url,
+    wms_layer_crs,
+)
 from openrndt.search import (
     bbox_from_envelope,
     compact_results,
@@ -32,6 +41,13 @@ __all__ = [
     "record_license",
     "record_url",
     "geolibre_url",
+    "extract_resources",
+    "check_resources",
+    "list_layers",
+    "parse_wms_capabilities",
+    "wms_layer_crs",
+    "capabilities_url",
+    "service_base_url",
     "organization_names",
     "item_record",
     "contact_point",
