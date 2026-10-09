@@ -146,6 +146,8 @@ def _build_text_clause(q: str, mode: str) -> str:
     ``any``: parole in OR. ``lucene``: pass-through per chi scrive la sintassi.
     In ``all``/``any`` una `q` che contiene già sintassi Lucene (`:`, virgolette,
     parentesi) passa intatta, per retrocompatibilità con ``keywords_s:VAL``.
+    Sempre in ``all``/``any`` le parole senza lettere né cifre (il " - " di un
+    titolo incollato, `–`, `/`) sono scartate: in AND azzererebbero la ricerca.
     """
     _check_q_mode(mode)
     text = q.strip()
@@ -153,7 +155,9 @@ def _build_text_clause(q: str, mode: str) -> str:
         raise ValueError("`q` non può essere vuoto o di soli spazi.")
     if mode == "lucene" or _looks_like_lucene(text):
         return f"({text})"
-    words = [ _escape_term(w) for w in text.split() ]
+    words = [_escape_term(w) for w in text.split() if any(c.isalnum() for c in w)]
+    if not words:
+        raise ValueError("`q` non contiene parole: solo spazi o segni di punteggiatura.")
     joiner = " AND " if mode == "all" else " OR "
     return "(" + joiner.join(words) + ")"
 

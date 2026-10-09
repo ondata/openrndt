@@ -585,6 +585,49 @@ def test_q_mode_all_escapes_special_chars_keeps_wildcards():
     assert sent == r"(car\-ta AND \[beta\] AND \~tilde AND *suo* AND na??ra)"
 
 
+@pytest.mark.parametrize(
+    ("q", "mode", "expected"),
+    [
+        # titolo incollato: il " - " isolato diventava `\-` e azzerava l'AND (#32)
+        (
+            "DTM LiDAR 1 metro - Regione Sicilia",
+            "all",
+            "(DTM AND LiDAR AND 1 AND metro AND Regione AND Sicilia)",
+        ),
+        ("DTM – Sicilia / Palermo", "all", "(DTM AND Sicilia AND Palermo)"),
+        ("DTM - Sicilia", "any", "(DTM OR Sicilia)"),
+        # il trattino dentro una parola resta
+        ("Emilia-Romagna - DTM", "all", r"(Emilia\-Romagna AND DTM)"),
+    ],
+)
+@respx.mock
+def test_q_drops_words_without_letters_or_digits(q, mode, expected):
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q=q, q_mode=mode)
+    assert route.calls.last.request.url.params["q"] == expected
+
+
+@respx.mock
+def test_q_lucene_mode_keeps_isolated_dash():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    search(q="DTM - Sicilia", q_mode="lucene")
+    assert route.calls.last.request.url.params["q"] == "(DTM - Sicilia)"
+
+
+@respx.mock
+def test_q_only_punctuation_raises():
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"total": 0, "results": []})
+    )
+    with pytest.raises(ValueError, match="`q` non contiene parole"):
+        search(q=" - / – ")
+    assert not route.called
+
+
 @respx.mock
 def test_q_mode_invalid_raises_without_q():
     # senza q la modalità non serve, ma un valore sbagliato va segnalato:

@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-09 (issue #32, trattino isolato in `--q`)
+
+- **In `all`/`any` scartate le parole senza lettere né cifre**: il ` - ` di un titolo incollato diventava `\-` in AND e dava 0 risultati. Dal vivo «DTM LiDAR con risoluzione a terra 1 metro - Regione Sicilia» passa da 0 a 1 scheda. `lucene` e le `q` con sintassi Lucene invariate; una `q` di soli segni è un errore.
+
 ## 2026-10-09 (idee da arcpi)
 
 - **Due idee in `docs/future-ideas.md`** da mraad/arcpi: ricette con la libreria Python nella skill (`references/chaining.md`, equivalente del codemode) e un riferimento ordinato per sintomo → causa → cosa fare (come il suo `errors.md`).
