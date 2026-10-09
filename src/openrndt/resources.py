@@ -467,7 +467,7 @@ def wms_layer_crs(layer: dict[str, Any], version: str) -> str | None:
     c'è, altrimenti un CRS geografico (CRS:84 solo in WMS 1.3.0), altrimenti il
     primo ``EPSG:n``.
     """
-    listed = [c.upper() for c in layer.get("crs") or []]
+    listed: list[str] = [str(c).upper() for c in layer.get("crs") or []]
     if any(c in {"EPSG:3857", "EPSG:900913"} for c in listed):
         return "EPSG:3857"
     v13 = version.startswith("1.3")
