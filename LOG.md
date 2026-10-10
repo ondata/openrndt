@@ -1,5 +1,10 @@
 # LOG
 
+## 2026-10-10 (rilascio 3.11.0, skill 3.12.0)
+
+- **Workflow `ipa-registry` a mano** dopo il merge della PR #45: `ipa-enti.csv` in `data-ipa` con `categoria` e `nome_categoria`, 23.757 enti, 53 categorie, sha256 verificato.
+- **Vocabolario rigenerato dalla release** (254 s): `ipa.json` identico; il gzip cambiava solo per i fine riga, CRLF nella release e LF nella copia letta con `read_text`. Normalizzati nello script (test), il gzip è uguale a quello del merge.
+
 ## 2026-10-10 (issue #44, anagrafica IPA nel pacchetto e categoria)
 
 - **Categoria**: nel file degli enti IPA i campi tipologici sono cinque (`Tipologia` 5 valori, `Codice_Categoria` 53, `Codice_natura` 40 ma solo su 10.280 enti e senza descrizioni, `Codice_ateco`, `Ente_in_liquidazione`); il nome della categoria sta in `categorie-enti` e la sua `Tipologia_categoria` coincide con `Tipologia` per tutti gli enti. Tenuti codice e nome della categoria.
