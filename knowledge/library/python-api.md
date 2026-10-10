@@ -6,13 +6,13 @@ tags: [libreria, python, api]
 timestamp: 2026-07-17T00:00:00Z
 ---
 
-Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `compact_results`, `record_dates`, `record_license`, `record_org`, `record_url`, `organization_names`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
+Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `ipa_clause`, `ipa_vocabulary`, `ipa_vocabulary_date`, `find_ipa`, `compact_results`, `record_dates`, `record_license`, `record_org`, `record_url`, `organization_names`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
 
 # Schema
 
 | Simbolo | Firma / significato |
 |---------|---------------------|
-| `search(*, q, q_mode="all", bbox, bbox_crs, org, org_exact, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
+| `search(*, q, q_mode="all", bbox, bbox_crs, org, org_exact, ipa, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, start=1, num=10, fmt="json", item_id=None)` | Ricerca su `/rest/metadata/search`. Ritorna `dict` se `fmt` è `json`/`json-source`, altrimenti `str` col body grezzo (XML, CSV, KML, …). |
 | `get_item(item_id)` | `dict` Elasticsearch del metadato (`_source` + flag). |
 | `get_item_xml(item_id)` | `str` XML ISO 19139. |
 | `get_item_html(item_id)` | `str` HTML. |
@@ -21,7 +21,9 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 | `organization_names(payload)` | In `openrndt.search`: nomi di ente distinti nei risultati, ordinati per frequenza. L'API ignora `facet`: è l'unico modo di scoprire come un ente è scritto in catalogo. |
 | `record_org(source)` | In `openrndt.search`: l'ente del record, `EnteResponsabile_s` e solo se manca `apiso_OrganizationName_txt` (che contiene anche il contatto del metadato). È il campo `org` di `compact_results`, `item_record` e degli output della CLI, e lo stesso ente su cui filtra `org` di `search()`. |
 | `record_license(source)` | In `openrndt.search`: tupla `(open, license)` dal campo `isOpendata` di `_source`. `open` è la presenza del campo, `license` i valori diversi dai marcatori `opendata`/`open data`, non normalizzati. |
-| `geolibre_search_url(*, q, q_mode, bbox, bbox_crs, org, org_exact, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, item_id, view=None)` | In `openrndt.search`, esportata: indirizzo che apre in GeoLibre web la stessa ricerca di `search()`. Ritorna `{"url", "untranslated", "notes"}`: i nomi dei filtri che il plugin non ha e le differenze su quelli tradotti. `view` (`[ovest, sud, est, nord]`) diventa `rndtView` solo senza `bbox`. Plugin 0.3.8 o successivo. |
+| `geolibre_search_url(*, q, q_mode, bbox, bbox_crs, org, org_exact, ipa, data_category, time, modified, updated_from, updated_to, published_from, published_to, sort, item_id, view=None)` | In `openrndt.search`, esportata: indirizzo che apre in GeoLibre web la stessa ricerca di `search()`. Ritorna `{"url", "untranslated", "notes"}`: i nomi dei filtri che il plugin non ha e le differenze su quelli tradotti. `view` (`[ovest, sud, est, nord]`) diventa `rndtView` solo senza `bbox`. Plugin 0.3.8 o successivo. |
+| `ipa_clause(codes)` | In `openrndt.ipa`, esportata: clausola Lucene su `apiso_Identifier_s` per uno o più codici IPA separati da virgola, senza distinzione di maiuscole. È il filtro di `search(ipa=…)`. `ValueError` per un codice con caratteri diversi da lettere, cifre e `_`. |
+| `ipa_vocabulary()`, `ipa_vocabulary_date()`, `find_ipa(text)` | In `openrndt.ipa`, esportate: il vocabolario offline dei codici IPA presenti nel RNDT (`codice`, `ipa`, `nome_ipa`, `acronimo`, `enti`, `schede`, `grafie`), la sua data di generazione, e i codici il cui codice, nome IPA, acronimo o ente contiene `text`. |
 | `results_bbox(payload)` | In `openrndt.search`, esportata: riquadro `[ovest, sud, est, nord]` che contiene i `bbox` dei risultati, `None` se nessuno ne ha uno numerico. |
 | `geolibre_url(item_id, layers=None)` | In `openrndt.search`, esportata: indirizzo che apre il record in GeoLibre web nel plugin openrndt-geolibre (`https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`, id codificato), `None` senza id. `layers`: coppie `(tipo, nome)` con tipo `wms` o `arcgis`, ognuna diventa `rndtLayer=<id>~<tipo>~<nome>` e il plugin (dalla 0.3.5) aggiunge quel layer alla mappa. `search()` lo aggiunge come chiave `geolibre_url` a ogni risultato; `compact_results` e `item_record` lo riportano dopo `url`. |
 | `extract_resources(payload)` / `check_resources(rows, timeout=None)` | In `openrndt.resources`, esportate: risorse fruibili di un `get_item()` e loro raggiungibilità, come `resources --no-check` e `resources`. |

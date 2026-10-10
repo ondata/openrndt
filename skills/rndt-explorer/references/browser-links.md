@@ -36,7 +36,7 @@ Il link porta i filtri che il plugin ha. Gli altri il link li ignora e la CLI li
 | `--published-from/to` | `rndtDate=publication`, `rndtFrom`/`rndtTo` | un solo intervallo: con `--updated-*` le date di pubblicazione restano fuori |
 | `--sort` | `rndtSort` | solo `title:asc`/`desc` e `apiso_Modified_dt:desc`/`asc` |
 | `--id` | `rndt=<id>` | apre quella scheda, gli altri filtri non contano |
-| `--time`, `--modified` | nessuno | elencati su stderr |
+| `--time`, `--modified`, `--ipa` | nessuno | elencati su stderr; per `--ipa` il plugin non ha un filtro equivalente |
 | `--start`, `--num` | nessuno | il link apre la prima pagina |
 
 Senza `--bbox` il link porta `rndtView`, il riquadro dei risultati della pagina: la mappa si apre sull'area dei dati senza filtrarli.
