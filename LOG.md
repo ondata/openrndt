@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-10-10 (issue #27, link GeoLibre per la ricerca intera)
+
+- **`search --geolibre-link` e `geolibre_search` nel JSON**: tabella di traduzione rivista sul plugin 0.3.8 (`url-params.ts`). Novità rispetto al piano del 9 ottobre: `--data-category` passa come `rndtKeywords` (planningCadastre 11.731 in entrambi), `--bbox-crs` accetta solo WGS84 quindi il riquadro passa sempre, il plugin ha un solo intervallo di date (con `--updated-*` le date di pubblicazione restano fuori), in `all` il plugin escapa una `q` Lucene (`rndtMode=lucene`).
+- **Confronto dal vivo** (sessione del plugin, Chrome headless, 0.3.8 del registro): cinque link, 1419 / 15 / 180 / 571 / 8069, tutti uguali alla CLI.
+- **Virgola nel nome dell'ente**: Arpae per esteso, CLI 383, plugin 515 (la virgola diventa un elenco in OR). Corretto nel plugin, ondata/openrndt-geolibre#51 (b7224fb, uscirà con la 0.3.9): un nome tra virgolette resta uno. La CLI lo metterà tra virgolette quando la 0.3.9 è nel registro; fino ad allora una nota. È l'unico ente con una virgola, 383 schede.
+- **Skill 3.9.0**: `references/browser-links.md` con i tre link e i limiti; in `SKILL.md` i due paragrafi su `geolibre_url` e `--layers` diventano un rimando.
+
 ## 2026-10-10 (rilascio 3.7.0, skill 3.8.0)
 
 - **Pubblicata**: tag `v3.7.0`, GitHub Release, PyPI. Subito dopo l'upload `/pypi/openrndt/json` dava già 3.7.0 ma la prima `uv tool install openrndt==3.7.0` è fallita con «unsatisfiable» (indice non ancora propagato); riuscita al tentativo successivo. Smoke test sulla CLI da PyPI: `--org "regione piemonte"` 613, `org` «Regione Piemonte» sulla scheda PRAE, `--org csi` con l'avviso sulle 272 schede fra i contatti.

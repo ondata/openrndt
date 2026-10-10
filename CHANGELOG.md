@@ -4,6 +4,13 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **Link GeoLibre per l'intera ricerca** ([#27](https://github.com/ondata/openrndt/issues/27)): `search --geolibre-link` stampa solo l'indirizzo che apre in GeoLibre web, nel plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre), la stessa ricerca con i footprint sulla mappa. Con `--format json` lo stesso link è nell'oggetto `geolibre_search` subito dopo `total`, con i filtri che il plugin non ha (`untranslated`) e le differenze su quelli tradotti (`notes`); su stderr «Non applicati nel link» e «Nota sul link». Senza `--bbox` la mappa si apre sul riquadro dei risultati della pagina (`rndtView`). Testo, modalità, riquadro, ente, `--data-category`, date della scheda o di pubblicazione e i principali ordinamenti passano nel link; `--time`, `--modified` e gli altri ordinamenti no. Stesso numero di schede nella CLI e nel pannello su cinque ricerche, con il plugin 0.3.8. In libreria: `geolibre_search_url()` e `results_bbox()`.
+- Skill `rndt-explorer` 3.9.0: `references/browser-links.md`, i tre link a GeoLibre web (scheda, layer, ricerca) con versioni e limiti.
+
 ## [3.7.0] - 2026-10-10
 
 **Cambia il risultato di `search --org` e `footprints --org`, e il campo `org` degli output.** Chi usava una sigla (`--org arpae`) ora ottiene 0 risultati e, su stderr, il nome per esteso da rilanciare.
