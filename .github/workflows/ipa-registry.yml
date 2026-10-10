@@ -1,7 +1,7 @@
 name: Anagrafica IPA
 
 # Ogni mese scarica l'anagrafica degli enti dall'Indice PA, la riduce a codice,
-# nome e acronimo, la verifica e la pubblica come asset della release fissa
+# nome, acronimo e categoria (#44), la verifica e la pubblica come asset della release fissa
 # `data-ipa` (senza versione: interessa una copia stabile e verificata, non le
 # variazioni). Se la verifica fallisce, l'asset precedente resta com'è (#38).
 # Le action sono fissate al commit: il job può scrivere le release.
@@ -39,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes="Anagrafica degli enti dell'Indice PA (codice_ipa, denominazione, acronimo), aggiornata il $(date -u +%Y-%m-%d): $(cat build.log). Fonte: open data IPA, https://www.indicepa.gov.it/ipa-dati/dataset/enti. File stabile: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/ipa-enti.csv"
+          notes="Anagrafica degli enti dell'Indice PA (codice_ipa, denominazione, acronimo, categoria, nome_categoria), aggiornata il $(date -u +%Y-%m-%d): $(cat build.log). Fonte: open data IPA, https://www.indicepa.gov.it/ipa-dati/dataset/enti e https://www.indicepa.gov.it/ipa-dati/dataset/categorie-enti. File stabile: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/ipa-enti.csv"
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             gh release create "$TAG" --title "Anagrafica IPA" --notes "$notes" --prerelease --latest=false
           fi

@@ -2,7 +2,13 @@
 
 from openrndt._version import __version__
 from openrndt.cli import main
-from openrndt.ipa import find_ipa, ipa_clause, ipa_vocabulary, ipa_vocabulary_date
+from openrndt.ipa import (
+    find_ipa,
+    find_ipa_registry,
+    ipa_clause,
+    ipa_vocabulary,
+    ipa_vocabulary_date,
+)
 from openrndt.item import (
     AmbiguousItemIdError,
     ItemNotFoundError,
@@ -39,6 +45,7 @@ from openrndt.search import (
 
 __all__ = [
     "find_ipa",
+    "find_ipa_registry",
     "ipa_clause",
     "ipa_vocabulary",
     "ipa_vocabulary_date",

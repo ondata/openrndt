@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-10-10 (issue #44, anagrafica IPA nel pacchetto e categoria)
+
+- **Categoria**: nel file degli enti IPA i campi tipologici sono cinque (`Tipologia` 5 valori, `Codice_Categoria` 53, `Codice_natura` 40 ma solo su 10.280 enti e senza descrizioni, `Codice_ateco`, `Ente_in_liquidazione`); il nome della categoria sta in `categorie-enti` e la sua `Tipologia_categoria` coincide con `Tipologia` per tutti gli enti. Tenuti codice e nome della categoria.
+- **Decisioni dell'utente**: anagrafica nel pacchetto in gzip (397 KB), rigenerata a ogni release con il vocabolario; ripiego anche per `--org`; `--match` non cerca nella categoria.
+- **Ordine del ripiego**: prima per peso della categoria nel RNDT (somma delle schede del vocabolario), poi per nome. In ordine di codice `--org palermo` proponeva un ordine professionale, un ATO e un'accademia; ora Comune di Palermo, Città metropolitana, AMAT.
+- Vocabolario rigenerato con l'anagrafica nuova (scansione completa, 271 s): conteggi identici, due campi in più per voce.
+
 ## 2026-10-10 (README, ente dal codice IPA)
 
 - **README**: nella «Ricerca per ente» la via consigliata è il codice IPA (`discover --what ipa --match`, poi `--ipa`), `--org` la seconda; esempio Torino `c_l219` 269 schede, come `--org`. Aperta la #44: su `--match` senza risultati ripiego sull'anagrafica IPA (Palermo `c_g273`, 0 schede, oggi elenco vuoto).

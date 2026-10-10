@@ -1,4 +1,4 @@
-"""Codici IPA: vocabolario offline e filtro sul prefisso dell'id (#38)."""
+"""Codici IPA: vocabolario offline, anagrafica nel pacchetto e filtro sul prefisso dell'id (#38, #44)."""
 
 import json
 
@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 from openrndt import (
     find_ipa,
+    find_ipa_registry,
     geolibre_search_url,
     ipa_clause,
     ipa_vocabulary,
@@ -47,7 +48,28 @@ def test_vocabulary_shape_and_known_codes():
     assert "ARPAV" in codes["arpa_ve"]["enti"]
     assert codes["pcm"]["grafie"] == ["PCM"]
     assert codes["istgemil"]["ipa"] is False
-    assert set(codes["pcm"]) == {"codice", "ipa", "nome_ipa", "acronimo", "enti", "schede", "grafie"}
+    assert set(codes["pcm"]) == {"codice", "ipa", "nome_ipa", "acronimo", "categoria", "nome_categoria", "enti", "schede", "grafie"}
+    assert (codes["c_l219"]["categoria"], codes["c_l219"]["nome_categoria"]) == ("L6", "Comuni e loro Consorzi e Associazioni")
+    assert codes["istgemil"]["categoria"] is None
+
+
+def test_find_ipa_registry_finds_entities_without_records():
+    # Il Comune di Palermo è nell'Indice PA ma non ha schede nel RNDT (2026-10-10).
+    assert find_ipa("comune di palermo") == []
+    found = find_ipa_registry("Comune di Palermo")
+    assert [c["codice"] for c in found] == ["c_g273"]
+    assert found[0] == {
+        "codice": "c_g273", "ipa": True, "nome_ipa": "Comune di Palermo", "acronimo": None,
+        "categoria": "L6", "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+        "enti": [], "schede": 0, "grafie": [],
+    }
+    assert find_ipa_registry("  ") == []
+
+
+def test_find_ipa_registry_skips_vocabulary_and_puts_publishing_categories_first():
+    assert "c_l219" not in [c["codice"] for c in find_ipa_registry("torino")]
+    # Prima il Comune e la Città metropolitana, poi le categorie che non pubblicano sul RNDT.
+    assert [c["codice"] for c in find_ipa_registry("palermo")[:2]] == ["c_g273", "p_pa"]
 
 
 def test_vocabulary_returns_independent_copies():
@@ -109,3 +131,18 @@ def test_cli_org_zero_suggests_ipa_code():
     result = runner.invoke(app, ["search", "--org", "arpae"])
     assert result.exit_code == 0, result.output
     assert "codici IPA nel vocabolario: --ipa arpa (" in result.output
+
+
+def test_cli_discover_ipa_falls_back_on_registry():
+    result = runner.invoke(app, ["--format", "json", "discover", "--what", "ipa", "--match", "comune di palermo"])
+    assert result.exit_code == 0, result.output
+    assert [c["codice"] for c in json.loads(result.stdout)["codici"]] == ["c_g273"]
+    assert "Dall'anagrafica IPA, 1 ente senza schede nel RNDT" in result.stderr
+
+
+@respx.mock
+def test_cli_search_org_zero_results_names_registry_entity():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json=EMPTY))
+    result = runner.invoke(app, ["search", "--org", "comune di palermo"])
+    assert result.exit_code == 0, result.output
+    assert "nell'Indice PA ma senza schede nel RNDT: c_g273 (Comune di Palermo)" in result.stderr
