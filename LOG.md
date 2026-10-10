@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (README, ente dal codice IPA)
+
+- **README**: nella «Ricerca per ente» la via consigliata è il codice IPA (`discover --what ipa --match`, poi `--ipa`), `--org` la seconda; esempio Torino `c_l219` 269 schede, come `--org`. Aperta la #44: su `--match` senza risultati ripiego sull'anagrafica IPA (Palermo `c_g273`, 0 schede, oggi elenco vuoto).
+
 ## 2026-10-10 (rilascio 3.10.0, skill 3.11.0)
 
 - **Pubblicata**: tag `v3.10.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.10.0` riuscita. Smoke test sulla CLI da PyPI: `--ipa r_sardeg --geolibre-link` dà `rndtIpa=r_sardeg`, Arpae per esteso dà `rndtOrg` tra virgolette.

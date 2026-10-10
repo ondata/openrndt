@@ -76,8 +76,9 @@ openrndt search --q "catasto" --profile gis --num 10
 # Profilo QGIS (CSV con colonne URL servizi + bbox separata)
 openrndt --format csv search --q "catasto" --profile qgis --num 10
 
-# Cosa pubblica un ente (contiene, case-insensitive)
-openrndt search --org "comune di torino" --num 10
+# Cosa pubblica un ente: dal nome al codice IPA, poi il filtro
+openrndt discover --what ipa --match torino
+openrndt search --ipa c_l219 --num 10
 
 # Filtri temporali avanzati (aggiornamento + pubblicazione)
 openrndt search --q "catasto" --updated-from 2024-01-01 --published-from 2020-01-01 --num 10
@@ -203,32 +204,41 @@ scheda sta in `_source.apiso_Modified_dt`.
 
 ### Ricerca per ente
 
-`--org` cerca l'ente responsabile (`EnteResponsabile_s`) che contiene il testo, senza distinzione di maiuscole, come il plugin openrndt-geolibre. Le sigle non bastano, perché l'ente è scritto per esteso: per `--org arpae` la CLI propone «Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna».
+Per un ente la via consigliata è il **codice IPA**: prima lo trovi dal nome, poi filtri con `--ipa`.
+
+```bash
+openrndt discover --what ipa --match torino   # c_l219 Comune di Torino (269 schede), cmto Città metropolitana (247)
+openrndt search --ipa c_l219 --num 5          # 269 record
+openrndt search --ipa r_sardeg                # 766 record, anche quelli con il prefisso R_SARDEG
+```
+
+`--ipa` filtra sul codice IPA dell'ente titolare, che nel RNDT è il prefisso dell'id di ogni scheda. Non dipende da come è scritto il nome: la Città metropolitana di Torino ha due grafie, ARPA Veneto tre (per esteso, «ARPAV» e «…Protezione dell'Ambiente del Veneto»), e `--ipa cmto` e `--ipa arpa_ve` (245) le trovano tutte. Trova anche le schede senza ente responsabile (192 nel catalogo). Il prefisso nel catalogo non ha maiuscole uniformi (`PCM`, `R_SARDEG` e `r_sardeg`), e la CLI lo cerca senza distinguerle. Più codici si separano con la virgola.
+
+`discover --what ipa` è un vocabolario offline dei codici presenti nel RNDT (179), con nome e acronimo dell'Indice PA; `--match` cerca nel codice, nel nome, nell'acronimo e nei nomi usati nelle schede (`--match arpae` → `arpa`). Un ente che non pubblica sul RNDT non c'è: `--match palermo` dà un elenco vuoto, perché il Comune di Palermo non ha schede.
+
+Due limiti: `--ipa arpa_ve` non trova 11 schede ARPAV il cui id non ha il codice, e in pochi casi l'ente responsabile non è il titolare IPA (`m_d`, Ministero della Difesa, ha schede dell'Istituto Geografico Militare).
+
+`--org` è la seconda strada: cerca l'ente responsabile (`EnteResponsabile_s`) che contiene il testo, senza distinzione di maiuscole, come il plugin openrndt-geolibre. Le sigle non bastano, perché l'ente è scritto per esteso.
 
 ```bash
 openrndt search --org "comune di torino" --num 5      # 269 record, solo Comune di Torino
 openrndt search --org "regione piemonte" --num 5      # 613 record, anche «Regione Piemonte - A1601B - …»
 openrndt search --org-exact "Comune di Torino"        # confronto esatto su EnteResponsabile_s
-openrndt search --ipa r_sardeg                        # 766 record: codice IPA dell'ente titolare
-openrndt discover --what ipa --match arpae            # dal nome o dall'acronimo al codice: arpa
 ```
-
-`--ipa` filtra sul codice IPA dell'ente titolare, che nel RNDT è il prefisso dell'id di ogni scheda. Non dipende da come è scritto il nome: trova le schede di ARPA Veneto a nome «ARPAV» e per esteso (245 con `--ipa arpa_ve`) e anche quelle senza ente responsabile. Il prefisso nel catalogo non ha maiuscole uniformi (`PCM`, `R_SARDEG` e `r_sardeg`), e la CLI lo cerca senza distinguerle. Più codici si separano con la virgola. I codici presenti nel RNDT sono in un vocabolario offline, `discover --what ipa`, con nome e acronimo dell'Indice PA.
 
 Evita le wildcard su `contact_organizations_s`: sono case-sensitive
 (`*bologna*` → 0, `*Bologna*` → 112) e pescano ogni record che *nomina* quel
 territorio, anche di altri enti.
 
-Se `--org` non trova nulla, la CLI interroga il catalogo e ti mostra i nomi di
-ente realmente presenti che somigliano a quello cercato — utile perché molti
-comuni non pubblicano in proprio e i loro dati stanno sotto un ente
-sovraordinato:
+Se `--org` non trova nulla, la CLI interroga il catalogo e ti mostra i nomi di ente realmente presenti che somigliano a quello cercato, e i codici IPA del vocabolario che contengono il testo: utile perché molti comuni non pubblicano in proprio e i loro dati stanno sotto un ente sovraordinato.
 
 ```
 $ openrndt search --org "comune di bologna"
 Nessun risultato per la ricerca.
-Suggerimenti: enti simili presenti in catalogo: Citta' metropolitana di Bologna | Regione Emilia-Romagna
+Suggerimenti: enti simili presenti in catalogo: Citta' Metropolitana di Bologna | Agenzia Regionale per La Sicurezza Territoriale e La Protezione Civile | Regione Emilia-Romagna
 ```
+
+Per `--org arpae` il suggerimento è `--ipa arpa` (383 schede).
 
 Se `resources` è `[]` il record non linka servizi fruibili: recupera il
 dettaglio con `get <id>` e guarda `_source.links_s` (spesso il download è
@@ -389,8 +399,8 @@ e una parola chiave del territorio si arriva a 4 record precisi.
 Qui la ricerca è per territorio e non per ente perché il Comune di Bologna non
 pubblica in proprio: `openrndt search --org "comune di bologna"` dà 0 e ti indica
 chi pubblica davvero (`Citta' metropolitana di Bologna`, `Regione
-Emilia-Romagna`). Dove l'ente c'è, `--org` è la via diretta: `openrndt search
---org "comune di torino"` → 269 record.
+Emilia-Romagna`). Dove l'ente c'è, il codice IPA è la via diretta: `openrndt search
+--ipa c_l219` (Comune di Torino) → 269 record.
 
 ### 9. Solo open data: 268 dataset sulle frane, con licenza
 
