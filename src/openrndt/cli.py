@@ -11,6 +11,7 @@ import typer
 
 from openrndt import codelists, config, output
 from openrndt._version import __version__
+from openrndt.ipa import find_ipa, ipa_vocabulary, ipa_vocabulary_date
 from openrndt.item import (
     AmbiguousItemIdError,
     ItemNotFoundError,
@@ -269,6 +270,12 @@ def _no_results_hint(
             )
         elif suggestions:
             hints.append("enti simili presenti in catalogo: " + " | ".join(suggestions))
+        codes = find_ipa(org) if exact is None else []
+        if codes:
+            hints.append(
+                "codici IPA nel vocabolario: "
+                + " | ".join(f"--ipa {c['codice']} ({c['nome_ipa'] or (c['enti'][0] if c['enti'] else c['codice'])}, {c['schede']} schede)" for c in codes[:3])
+            )
         if contacts:
             hints.append(
                 f"'{org.strip()}' non è nel nome di nessun ente responsabile, ma in tutto il "
@@ -537,6 +544,15 @@ def search(
             '(es. --org-exact "Comune di Torino"). Alternativo a --org.'
         ),
     ),
+    ipa: str | None = typer.Option(
+        None,
+        "--ipa",
+        help=(
+            "Codice IPA dell'ente titolare, il prefisso dell'id, senza distinzione di maiuscole; "
+            "più codici separati da virgola (es. --ipa r_sardeg). Trova anche le schede senza "
+            "ente responsabile. I codici: discover --what ipa --match <testo>."
+        ),
+    ),
     data_category: str | None = typer.Option(
         None,
         "--data-category",
@@ -620,6 +636,7 @@ def search(
             bbox_crs=bbox_crs,
             org=org,
             org_exact=org_exact,
+            ipa=ipa,
             data_category=data_category,
             time=time,
             modified=modified,
@@ -654,6 +671,7 @@ def search(
         bbox_crs=bbox_crs,
         org=org,
         org_exact=org_exact,
+        ipa=ipa,
         data_category=data_category,
         time=time,
         modified=modified,
@@ -734,6 +752,15 @@ def footprints(
             '(es. --org-exact "Comune di Torino"). Alternativo a --org.'
         ),
     ),
+    ipa: str | None = typer.Option(
+        None,
+        "--ipa",
+        help=(
+            "Codice IPA dell'ente titolare, il prefisso dell'id, senza distinzione di maiuscole; "
+            "più codici separati da virgola (es. --ipa r_sardeg). Trova anche le schede senza "
+            "ente responsabile. I codici: discover --what ipa --match <testo>."
+        ),
+    ),
     data_category: str | None = typer.Option(
         None,
         "--data-category",
@@ -783,6 +810,7 @@ def footprints(
             bbox_crs=bbox_crs,
             org=org,
             org_exact=org_exact,
+            ipa=ipa,
             data_category=data_category,
             time=time,
             modified=modified,
@@ -983,10 +1011,37 @@ def discover(
     what: str = typer.Option(
         "all",
         "--what",
-        help="Sezione: all|data_categories|sort_values|output_formats|search_params|lucene_fields.",
+        help="Sezione: all|data_categories|sort_values|output_formats|search_params|lucene_fields|ipa.",
+    ),
+    match: str | None = typer.Option(
+        None,
+        "--match",
+        help="Con --what ipa: solo i codici il cui codice, nome IPA, acronimo o ente contiene il testo.",
     ),
 ) -> None:
     """Codelist e parametri validi (nessuna chiamata di rete)."""
+    if what == "ipa":
+        codes = find_ipa(match) if match else ipa_vocabulary()
+        if output.get_mode() == "json":
+            output.emit({"generato": ipa_vocabulary_date(), "codici": codes})
+            return
+        rows = [
+            {
+                "codice": c["codice"],
+                "nome_ipa": c["nome_ipa"] or "",
+                "acronimo": c["acronimo"] or "",
+                "schede": c["schede"],
+                "enti": " | ".join(c["enti"]),
+            }
+            for c in codes
+        ]
+        if not rows:
+            typer.echo(f"Nessun codice IPA nel vocabolario contiene '{match}'.", err=True)
+            return
+        output.emit(codes, table_rows=rows, table_title=f"Codici IPA nel RNDT (vocabolario del {ipa_vocabulary_date()})")
+        return
+    if match is not None:
+        raise typer.BadParameter("--match vale solo con --what ipa.")
     full = codelists.codelist_payload()
     if what == "all":
         if output.get_mode() == "json":
