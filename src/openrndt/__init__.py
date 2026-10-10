@@ -29,6 +29,7 @@ from openrndt.search import (
     organization_names,
     record_dates,
     record_license,
+    record_org,
     record_url,
     search,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "compact_results",
     "record_dates",
     "record_license",
+    "record_org",
     "record_url",
     "geolibre_url",
     "extract_resources",

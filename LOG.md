@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-10-10 (issue #23, `--org` sull'ente responsabile)
+
+- **`--org` fa il «contiene» case-insensitive su `EnteResponsabile_s`**, porting di `containsIgnoreCase` del plugin: stessa stringa di `tests/fixtures/queries.json` per «regione piemonte». Dal vivo: Piemonte 363 → 613, Veneto 527 → 758, Roma Capitale 20 → 19; `footprints --org` dà gli stessi totali.
+- **`org` negli output dall'ente responsabile** (`record_org`, nuova in libreria): con il filtro nuovo `--org "regione piemonte"` mostrava righe con `org: "CSI Piemonte"`. La issue diceva che l'output usava già `EnteResponsabile_s`: era falso, l'output usava `apiso_OrganizationName_txt`.
+- **Le sigle danno 0** (non misurato nella issue): `arpae` 394 → 0, `csi` 272 → 0, `arpa piemonte` 6 → 0. La ricerca esplorativa su zero risultati ora cerca il token sul campo del contatto e propone il nome per esteso. `csi` ha meno di quattro lettere e non fa partire la ricerca esplorativa: l'avviso dice «nessun ente somiglia».
+- **Grafie diverse dello stesso ente**: «Città metropolitana di Torino» 244 e «Città Metropolitana di Torino» 3 in `EnteResponsabile_s`; `--org` le trova insieme (247). Annotato in `known-issues.md`.
+
 ## 2026-10-10 (slash in `q` Lucene)
 
 - **`known-issues.md`: lo slash in una `q` Lucene va escapato**, altrimenti l'API risponde 500 (`links_s:*rest/services*` 500, `links_s:*rest\/services*` 1.728). In `all`/`any` la CLI lo escapa già; in Lucene passa intatto. Trovato cercando schede ArcGIS REST in https per openrndt-geolibre#49.

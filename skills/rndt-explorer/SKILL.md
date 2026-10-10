@@ -24,7 +24,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.7.0"
+  version: "3.8.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -124,7 +124,7 @@ Filtri principali:
 | `--bbox`            | bounding box WGS84 `xmin,ymin,xmax,ymax`                    |
 | `--bbox-crs`        | CRS dichiarato bbox: accetta `EPSG:4326`, `CRS:84`, `WGS84` (niente reproiezione) |
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
-| `--org`             | ente responsabile, frase su `apiso_OrganizationName_txt` (analizzato: case-insensitive, ordine dei token irrilevante) |
+| `--org`             | ente responsabile (`EnteResponsabile_s`) che contiene il testo, case-insensitive; le sigle (`arpae`) non bastano, su zero risultati la CLI propone il nome per esteso |
 | `--org-exact`       | ente responsabile, confronto esatto e case-sensitive su `EnteResponsabile_s` |
 | `--time`            | range temporale della **risorsa** `yyyy-mm-dd/yyyy-mm-dd`   |
 | `--modified`        | range modifica del **record nel catalogo** `yyyy-mm-dd/yyyy-mm-dd` |

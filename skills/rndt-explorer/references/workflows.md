@@ -53,9 +53,7 @@ openrndt --format table search \
   --num 20 --sort 'apiso_Modified_dt:desc'
 ```
 
-`--org` cerca la frase sul campo analizzato `apiso_OrganizationName_txt`: non
-conta il maiuscolo né l'ordine dei token. Se conosci la stringa esatta in
-catalogo usa `--org-exact "Agenzia delle Entrate"` (keyword, case-sensitive).
+`--org` cerca l'ente responsabile (`EnteResponsabile_s`) che contiene il testo, senza distinzione di maiuscole: `regione piemonte` trova anche «Regione Piemonte - A1601B - …». L'ente è scritto per esteso, quindi una sigla dà 0 (`--org arpae`): rilancia con il nome che la CLI propone. Se conosci la stringa esatta in catalogo usa `--org-exact "Agenzia delle Entrate"` (keyword, case-sensitive).
 
 Se il risultato è 0, la CLI sonda il catalogo e stampa i nomi di ente presenti
 che somigliano a quello cercato — molti comuni non pubblicano in proprio:
@@ -342,7 +340,7 @@ dalla regione o dalla città metropolitana. Ordine dei tentativi, misurato sul c
 
 3. **Il nome del territorio più la sua bbox.** `--q "bologna" --bbox 11.25,44.44,11.42,44.55` → 1512
    record, i primi 20 tutti pertinenti. Serve quando il passo 2 è troppo stretto. In alternativa alla
-   bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1381.
+   bbox, `--org` dell'ente sovraordinato: `--q "bologna" --org "Regione Emilia-Romagna"` → 1416, quanto l'intero catalogo della Regione (2026-10-10): restringe poco, meglio la bbox.
 
 4. **Controllo di completezza: il nome da solo, raggruppato per ente.** I passi 1-3 trovano chi
    pubblica *sul* territorio, ma possono perdere enti che non stanno nella lista dei suggerimenti né

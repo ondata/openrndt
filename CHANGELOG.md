@@ -4,6 +4,20 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+**Cambia il risultato di `search --org` e `footprints --org`, e il campo `org` degli output.** Chi usava una sigla (`--org arpae`) ora ottiene 0 risultati e, su stderr, il nome per esteso da rilanciare.
+
+### Changed
+
+- **`--org` cerca sull'ente responsabile** ([#23](https://github.com/ondata/openrndt/issues/23)): «contiene» senza distinzione di maiuscole su `EnteResponsabile_s`, lo stesso filtro del plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre). Prima cercava la frase su `apiso_OrganizationName_txt`, che contiene anche il contatto del metadato, e perdeva record: Regione Piemonte passa da 363 a 613 schede, Regione del Veneto da 527 a 758; `--org "csi piemonte"` non trova più le schede della Regione Piemonte, di cui CSI è solo il contatto. Le sigle, che stanno solo nel campo del contatto, danno 0: `--org arpae` era 394. Tre schede senza `EnteResponsabile_s` non si trovano più. `--org-exact` invariato.
+- **`org` negli output è l'ente responsabile** (`EnteResponsabile_s`, e solo se manca `apiso_OrganizationName_txt`), in `compact`, `table`, `csv`, `footprints`, `get` e in libreria (`compact_results`, `item_record`): per molte schede della Regione Piemonte era «CSI Piemonte».
+- **Su zero risultati `--org` propone i nomi per esteso**: la ricerca esplorativa cerca il token più lungo come frase sul campo del contatto, dove ci sono anche le sigle, e restituisce gli enti responsabili trovati lì. Per `--org arpae` propone «Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna».
+
+### Added
+
+- **`record_org(source)`** in libreria: l'ente del record, la stessa regola del campo `org`.
+
 ## [3.6.0] - 2026-10-09
 
 ### Added

@@ -6,7 +6,7 @@ tags: [libreria, python, api]
 timestamp: 2026-07-17T00:00:00Z
 ---
 
-Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `compact_results`, `record_dates`, `record_license`, `record_url`, `organization_names`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
+Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Export pubblici (`openrndt.__all__`): `search`, `compact_results`, `record_dates`, `record_license`, `record_org`, `record_url`, `organization_names`, `get_item`, `get_item_xml`, `get_item_html`, `ItemNotFoundError`, `main`, `__version__`.
 
 # Schema
 
@@ -19,6 +19,7 @@ Tutto ciò che la [CLI](/cli/index.md) fa è disponibile anche come libreria. Ex
 | `ItemNotFoundError` | Sollevata da `get_item` se l'ID non esiste; espone `.item_id`. |
 | `record_dates(result)` | In `openrndt.search`: tupla `(updated, indexed)` di un singolo risultato — `apiso_Modified_dt` e `sys_modified_dt`. |
 | `organization_names(payload)` | In `openrndt.search`: nomi di ente distinti nei risultati, ordinati per frequenza. L'API ignora `facet`: è l'unico modo di scoprire come un ente è scritto in catalogo. |
+| `record_org(source)` | In `openrndt.search`: l'ente del record, `EnteResponsabile_s` e solo se manca `apiso_OrganizationName_txt` (che contiene anche il contatto del metadato). È il campo `org` di `compact_results`, `item_record` e degli output della CLI, e lo stesso ente su cui filtra `org` di `search()`. |
 | `record_license(source)` | In `openrndt.search`: tupla `(open, license)` dal campo `isOpendata` di `_source`. `open` è la presenza del campo, `license` i valori diversi dai marcatori `opendata`/`open data`, non normalizzati. |
 | `geolibre_url(item_id, layers=None)` | In `openrndt.search`, esportata: indirizzo che apre il record in GeoLibre web nel plugin openrndt-geolibre (`https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`, id codificato), `None` senza id. `layers`: coppie `(tipo, nome)` con tipo `wms` o `arcgis`, ognuna diventa `rndtLayer=<id>~<tipo>~<nome>` e il plugin (dalla 0.3.5) aggiunge quel layer alla mappa. `search()` lo aggiunge come chiave `geolibre_url` a ogni risultato; `compact_results` e `item_record` lo riportano dopo `url`. |
 | `extract_resources(payload)` / `check_resources(rows, timeout=None)` | In `openrndt.resources`, esportate: risorse fruibili di un `get_item()` e loro raggiungibilità, come `resources --no-check` e `resources`. |

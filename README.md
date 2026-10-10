@@ -76,7 +76,7 @@ openrndt search --q "catasto" --profile gis --num 10
 # Profilo QGIS (CSV con colonne URL servizi + bbox separata)
 openrndt --format csv search --q "catasto" --profile qgis --num 10
 
-# Cosa pubblica un ente (campo analizzato: case-insensitive)
+# Cosa pubblica un ente (contiene, case-insensitive)
 openrndt search --org "comune di torino" --num 10
 
 # Filtri temporali avanzati (aggiornamento + pubblicazione)
@@ -194,11 +194,11 @@ scheda sta in `_source.apiso_Modified_dt`.
 
 ### Ricerca per ente
 
-`--org` cerca la frase su `apiso_OrganizationName_txt`, campo analizzato: non
-conta il maiuscolo, né l'ordine dei token, né gli apostrofi.
+`--org` cerca l'ente responsabile (`EnteResponsabile_s`) che contiene il testo, senza distinzione di maiuscole, come il plugin openrndt-geolibre. Le sigle non bastano, perché l'ente è scritto per esteso: per `--org arpae` la CLI propone «Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna».
 
 ```bash
 openrndt search --org "comune di torino" --num 5      # 269 record, solo Comune di Torino
+openrndt search --org "regione piemonte" --num 5      # 613 record, anche «Regione Piemonte - A1601B - …»
 openrndt search --org-exact "Comune di Torino"        # confronto esatto su EnteResponsabile_s
 ```
 
