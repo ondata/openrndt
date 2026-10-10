@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (rilascio 3.10.0, skill 3.11.0)
+
+- **3.10.0**: nel link di ricerca GeoLibre `--ipa` → `rndtIpa` (#42) ed ente con la virgola tra virgolette (#40), PR #43 in rebase. Vocabolario IPA rigenerato prima del rilascio (23.883 schede, 272 s): identico a quello della 3.9.0, 179 codici, 166 nell'Indice PA.
+
 ## 2026-10-10 (#40 e #42, link di ricerca con il plugin 0.3.12)
 
 - **Registro di GeoLibre**: opengeos/geolibre-plugins#105 mergiata alle 11:13 UTC, openrndt-geolibre 0.3.12 (avviso della sessione del plugin, verificato su `plugin-registry.json`).
