@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 from openrndt.client import rndt_request
 from openrndt.codelists import DATA_CATEGORIES
+from openrndt.ipa import ipa_clause
 from openrndt.resources import extract_resources
 
 SEARCH_PATH = "/rest/metadata/search"
@@ -215,6 +216,7 @@ def search(
     bbox_crs: str | None = None,
     org: str | None = None,
     org_exact: str | None = None,
+    ipa: str | None = None,
     data_category: str | None = None,
     time: str | None = None,
     modified: str | None = None,
@@ -239,6 +241,10 @@ def search(
     responsabile ``EnteResponsabile_s``: il primo cerca il testo ovunque nel
     valore, senza distinzione di maiuscole, il secondo il valore esatto.
     Entrambi si combinano in AND con gli altri filtri.
+
+    ``ipa`` filtra sul codice IPA dell'ente titolare, il prefisso dell'id, senza
+    distinzione di maiuscole: uno o più codici separati da virgola, in OR
+    (vedi :func:`openrndt.ipa.ipa_clause`). Si combina in AND con ``org``.
 
     Nota su `sort` (verificato live): l'ordinamento reale usa la sintassi
     `campo:asc|desc` su un campo sortable (keyword `_s`, data `_dt`, intero `_i`),
@@ -271,6 +277,8 @@ def search(
     org_clause = _build_org_clause(org, org_exact)
     if org_clause:
         non_q_clauses.append(org_clause)
+    if ipa is not None:
+        non_q_clauses.append(ipa_clause(ipa))
     if data_category:
         clause = _build_category_clause(data_category)
         if clause:
@@ -466,6 +474,7 @@ def geolibre_search_url(
     bbox_crs: str | None = None,
     org: str | None = None,
     org_exact: str | None = None,
+    ipa: str | None = None,
     data_category: str | None = None,
     time: str | None = None,
     modified: str | None = None,
@@ -489,7 +498,7 @@ def geolibre_search_url(
     """
     _check_q_mode(q_mode)
     filters = {
-        "q": q, "bbox": bbox, "org": org, "org_exact": org_exact, "data_category": data_category,
+        "q": q, "bbox": bbox, "org": org, "org_exact": org_exact, "ipa": ipa, "data_category": data_category,
         "time": time, "modified": modified, "updated_from": updated_from, "updated_to": updated_to,
         "published_from": published_from, "published_to": published_to, "sort": sort,
     }
@@ -531,7 +540,8 @@ def geolibre_search_url(
             params.append(("rndtSort", _GEOLIBRE_SORTS[sort]))
         else:
             untranslated.append("sort")
-    untranslated += [n for n in ("time", "modified") if filters[n] is not None]
+    # Il plugin non ha un filtro per codice IPA (proposto: ondata/openrndt-geolibre#54).
+    untranslated += [n for n in ("ipa", "time", "modified") if filters[n] is not None]
     if bbox_crs is not None and bbox is None:
         untranslated.append("bbox_crs")
     query = "".join(f"&{k}={quote(v, safe=',')}" for k, v in params)

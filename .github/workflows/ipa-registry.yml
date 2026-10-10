@@ -1,0 +1,44 @@
+name: Anagrafica IPA
+
+# Ogni mese scarica l'anagrafica degli enti dall'Indice PA, la riduce a codice,
+# nome e acronimo, la verifica e la pubblica come asset della release fissa
+# `data-ipa` (senza versione: interessa una copia stabile e verificata, non le
+# variazioni). Se la verifica fallisce, l'asset precedente resta com'è (#38).
+
+on:
+  schedule:
+    - cron: "0 5 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  registry:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: data-ipa
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Scarica e verifica l'anagrafica
+        run: |
+          uv sync --locked
+          uv run python scripts/build_ipa_registry.py ipa-enti.csv 2> build.log
+          cat build.log
+          sha256sum ipa-enti.csv > ipa-enti.csv.sha256
+
+      - name: Pubblica nella release data-ipa
+        run: |
+          notes="Anagrafica degli enti dell'Indice PA (codice_ipa, denominazione, acronimo), aggiornata il $(date -u +%Y-%m-%d): $(cat build.log). Fonte: open data IPA, https://www.indicepa.gov.it/ipa-dati/dataset/enti. File stabile: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/ipa-enti.csv"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --title "Anagrafica IPA" --notes "$notes" --prerelease --latest=false
+          fi
+          gh release upload "$TAG" ipa-enti.csv ipa-enti.csv.sha256 --clobber
+          gh release edit "$TAG" --notes "$notes"

@@ -1,0 +1,2340 @@
+{
+ "generato": "2026-10-10",
+ "schede": 23883,
+ "codici": [
+  {
+   "codice": "age",
+   "ipa": true,
+   "nome_ipa": "Agenzia delle Entrate",
+   "acronimo": null,
+   "enti": [
+    "Agenzia delle Entrate"
+   ],
+   "schede": 7699,
+   "grafie": [
+    "age"
+   ]
+  },
+  {
+   "codice": "r_friuve",
+   "ipa": true,
+   "nome_ipa": "Regione Autonoma Friuli-Venezia Giulia",
+   "acronimo": "RAFVG",
+   "enti": [
+    "Regione Autonoma Friuli-Venezia Giulia"
+   ],
+   "schede": 1796,
+   "grafie": [
+    "r_friuve"
+   ]
+  },
+  {
+   "codice": "r_emiro",
+   "ipa": true,
+   "nome_ipa": "Regione Emilia-Romagna",
+   "acronimo": null,
+   "enti": [
+    "Regione Emilia-Romagna"
+   ],
+   "schede": 1416,
+   "grafie": [
+    "r_emiro"
+   ]
+  },
+  {
+   "codice": "r_liguri",
+   "ipa": true,
+   "nome_ipa": "Regione Liguria",
+   "acronimo": null,
+   "enti": [
+    "Regione Liguria"
+   ],
+   "schede": 830,
+   "grafie": [
+    "r_liguri"
+   ]
+  },
+  {
+   "codice": "r_sardeg",
+   "ipa": true,
+   "nome_ipa": "Regione Autonoma della Sardegna",
+   "acronimo": "RAS",
+   "enti": [
+    "Regione Autonoma della Sardegna",
+    "Regione autonoma della Sardegna"
+   ],
+   "schede": 766,
+   "grafie": [
+    "R_SARDEG",
+    "r_sardeg"
+   ]
+  },
+  {
+   "codice": "r_veneto",
+   "ipa": true,
+   "nome_ipa": "Regione del Veneto",
+   "acronimo": null,
+   "enti": [
+    "Regione del Veneto"
+   ],
+   "schede": 758,
+   "grafie": [
+    "r_veneto"
+   ]
+  },
+  {
+   "codice": "pcm",
+   "ipa": true,
+   "nome_ipa": "Presidenza del Consiglio dei Ministri",
+   "acronimo": null,
+   "enti": [
+    "PCM - Dipartimento della Protezione Civile"
+   ],
+   "schede": 731,
+   "grafie": [
+    "PCM"
+   ]
+  },
+  {
+   "codice": "r_vda",
+   "ipa": true,
+   "nome_ipa": "Regione Autonoma Valle D'Aosta",
+   "acronimo": null,
+   "enti": [
+    "Regione Autonoma Valle d'Aosta"
+   ],
+   "schede": 628,
+   "grafie": [
+    "r_vda"
+   ]
+  },
+  {
+   "codice": "r_piemon",
+   "ipa": true,
+   "nome_ipa": "Regione Piemonte",
+   "acronimo": null,
+   "enti": [
+    "Regione Piemonte",
+    "Regione Piemonte - A1601B - Biodiversità e aree naturali"
+   ],
+   "schede": 613,
+   "grafie": [
+    "r_piemon"
+   ]
+  },
+  {
+   "codice": "c_d612",
+   "ipa": true,
+   "nome_ipa": "Comune di Firenze",
+   "acronimo": null,
+   "enti": [
+    "Comune di Firenze"
+   ],
+   "schede": 548,
+   "grafie": [
+    "c_d612"
+   ]
+  },
+  {
+   "codice": "p_tn",
+   "ipa": true,
+   "nome_ipa": "Provincia Autonoma di Trento",
+   "acronimo": null,
+   "enti": [
+    "Provincia Autonoma di Trento"
+   ],
+   "schede": 487,
+   "grafie": [
+    "p_TN",
+    "p_tn"
+   ]
+  },
+  {
+   "codice": "p_bz",
+   "ipa": true,
+   "nome_ipa": "Provincia Autonoma di Bolzano",
+   "acronimo": null,
+   "enti": [
+    "Provincia Autonoma di Bolzano"
+   ],
+   "schede": 468,
+   "grafie": [
+    "p_bz"
+   ]
+  },
+  {
+   "codice": "r_lombar",
+   "ipa": true,
+   "nome_ipa": "Regione Lombardia",
+   "acronimo": null,
+   "enti": [
+    "Regione Lombardia"
+   ],
+   "schede": 461,
+   "grafie": [
+    "r_lombar"
+   ]
+  },
+  {
+   "codice": "ispra_rm",
+   "ipa": true,
+   "nome_ipa": "Istituto Superiore per la Protezione e la Ricerca Ambientale",
+   "acronimo": "ISPRA",
+   "enti": [
+    "Istituto Superiore per la Protezione e la Ricerca Ambientale"
+   ],
+   "schede": 418,
+   "grafie": [
+    "ispra_rm"
+   ]
+  },
+  {
+   "codice": "arpa",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna",
+   "acronimo": "ARPAE ER",
+   "enti": [
+    "Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna"
+   ],
+   "schede": 383,
+   "grafie": [
+    "arpa"
+   ]
+  },
+  {
+   "codice": "m_amte",
+   "ipa": true,
+   "nome_ipa": "Ministero dell'Ambiente e della Sicurezza Energetica",
+   "acronimo": "MASE",
+   "enti": [
+    "Ministero dell'Ambiente e della Sicurezza Energetica"
+   ],
+   "schede": 289,
+   "grafie": [
+    "m_amte"
+   ]
+  },
+  {
+   "codice": "p_lo",
+   "ipa": true,
+   "nome_ipa": "Provincia di Lodi",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Lodi - U.O. Sistemi Informativi",
+    "Provincia di Lodi"
+   ],
+   "schede": 285,
+   "grafie": [
+    "p_lo"
+   ]
+  },
+  {
+   "codice": "r_basili",
+   "ipa": true,
+   "nome_ipa": "Regione Basilicata",
+   "acronimo": "RBAS",
+   "enti": [
+    "Regione Basilicata"
+   ],
+   "schede": 282,
+   "grafie": [
+    "r_basili"
+   ]
+  },
+  {
+   "codice": "c_l219",
+   "ipa": true,
+   "nome_ipa": "Comune di Torino",
+   "acronimo": null,
+   "enti": [
+    "Comune di Torino"
+   ],
+   "schede": 269,
+   "grafie": [
+    "c_l219"
+   ]
+  },
+  {
+   "codice": "ucvdavds",
+   "ipa": true,
+   "nome_ipa": "Unione di Comuni Valdarno e Valdisieve",
+   "acronimo": null,
+   "enti": [
+    "Unione di Comuni Valdarno e Valdisieve"
+   ],
+   "schede": 266,
+   "grafie": [
+    "ucvdavds"
+   ]
+  },
+  {
+   "codice": "cmto",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Torino",
+   "acronimo": null,
+   "enti": [
+    "Città metropolitana di Torino",
+    "Città Metropolitana di Torino"
+   ],
+   "schede": 247,
+   "grafie": [
+    "cmto"
+   ]
+  },
+  {
+   "codice": "arpa_ve",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la Prevenzione e Protezione Ambientale del Veneto",
+   "acronimo": "ARPAV",
+   "enti": [
+    "Agenzia Regionale per la Prevenzione e Protezione Ambientale del Veneto",
+    "ARPAV",
+    "Agenzia Regionale per la Protezione dell'Ambiente del Veneto"
+   ],
+   "schede": 245,
+   "grafie": [
+    "arpa_ve"
+   ]
+  },
+  {
+   "codice": "adbpo",
+   "ipa": true,
+   "nome_ipa": "Autorità di bacino distrettuale del fiume Po",
+   "acronimo": "AdbPo",
+   "enti": [
+    "Autorità di bacino distrettuale del fiume Po"
+   ],
+   "schede": 242,
+   "grafie": [
+    "adbpo"
+   ]
+  },
+  {
+   "codice": "c_f205",
+   "ipa": true,
+   "nome_ipa": "Comune di Milano",
+   "acronimo": null,
+   "enti": [
+    "Comune di Milano"
+   ],
+   "schede": 230,
+   "grafie": [
+    "C_F205",
+    "c_f205"
+   ]
+  },
+  {
+   "codice": "r_lazio",
+   "ipa": true,
+   "nome_ipa": "Regione Lazio",
+   "acronimo": null,
+   "enti": [
+    "Regione Lazio"
+   ],
+   "schede": 213,
+   "grafie": [
+    "r_lazio"
+   ]
+  },
+  {
+   "codice": "arlst",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per La Sicurezza Territoriale e La Protezione Civile",
+   "acronimo": "ARSTPC",
+   "enti": [
+    "Agenzia Regionale per La Sicurezza Territoriale e La Protezione Civile"
+   ],
+   "schede": 185,
+   "grafie": [
+    "arlst"
+   ]
+  },
+  {
+   "codice": "r_toscan",
+   "ipa": true,
+   "nome_ipa": "Regione Toscana",
+   "acronimo": "RT",
+   "enti": [
+    "Regione Toscana"
+   ],
+   "schede": 170,
+   "grafie": [
+    "r_toscan"
+   ]
+  },
+  {
+   "codice": "c_a564",
+   "ipa": true,
+   "nome_ipa": "Comune di Bagno a Ripoli",
+   "acronimo": null,
+   "enti": [
+    "Comune di Bagno a Ripoli"
+   ],
+   "schede": 163,
+   "grafie": [
+    "c_a564"
+   ]
+  },
+  {
+   "codice": "umdcm_0",
+   "ipa": true,
+   "nome_ipa": "Unione Montana Dei Comuni del Mugello",
+   "acronimo": "UMCM",
+   "enti": [
+    "Unione Montana dei Comuni del Mugello"
+   ],
+   "schede": 146,
+   "grafie": [
+    "umdcm_0"
+   ]
+  },
+  {
+   "codice": "cmfi",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Firenze",
+   "acronimo": "CMFI",
+   "enti": [
+    "Città Metropolitana di Firenze"
+   ],
+   "schede": 145,
+   "grafie": [
+    "cmfi"
+   ]
+  },
+  {
+   "codice": "c_d969",
+   "ipa": true,
+   "nome_ipa": "Comune di Genova",
+   "acronimo": null,
+   "enti": [
+    "Comune di Genova"
+   ],
+   "schede": 144,
+   "grafie": [
+    "c_d969"
+   ]
+  },
+  {
+   "codice": "arlpa_to",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
+   "acronimo": null,
+   "enti": [
+    "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
+    "Agenzia Regionale per la protezione dell'Ambiente del Piemonte"
+   ],
+   "schede": 143,
+   "grafie": [
+    "ARLPA_TO",
+    "arlpa_to"
+   ]
+  },
+  {
+   "codice": "r_abruzz",
+   "ipa": true,
+   "nome_ipa": "Regione Abruzzo",
+   "acronimo": "REGIONE ABRUZZO",
+   "enti": [
+    "Regione Abruzzo",
+    "Ispra Servizio Geologico d'Italia"
+   ],
+   "schede": 103,
+   "grafie": [
+    "r_abruzz"
+   ]
+  },
+  {
+   "codice": "c_b648",
+   "ipa": true,
+   "nome_ipa": "Comune di Capannori",
+   "acronimo": "CAPANNORI",
+   "enti": [
+    "Comune di Capannori"
+   ],
+   "schede": 100,
+   "grafie": [
+    "c_b648"
+   ]
+  },
+  {
+   "codice": "c_e202",
+   "ipa": true,
+   "nome_ipa": "Comune di Grosseto",
+   "acronimo": null,
+   "enti": [
+    "Comune di Grosseto"
+   ],
+   "schede": 99,
+   "grafie": [
+    "c_e202"
+   ]
+  },
+  {
+   "codice": "ccpbosc",
+   "ipa": true,
+   "nome_ipa": "Consorzio dei Comuni della Provincia di Bolzano Societa' Cooperativa",
+   "acronimo": null,
+   "enti": [
+    "Consorzio dei Comuni della Provincia di Bolzano Societa' Cooperativa"
+   ],
+   "schede": 93,
+   "grafie": [
+    "ccpbosc"
+   ]
+  },
+  {
+   "codice": "p_bi",
+   "ipa": true,
+   "nome_ipa": "Provincia di Biella",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Biella"
+   ],
+   "schede": 92,
+   "grafie": [
+    "p_bi"
+   ]
+  },
+  {
+   "codice": "arpat",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la protezione ambientale della Toscana",
+   "acronimo": "ARPAT",
+   "enti": [
+    "Agenzia regionale per la protezione ambientale della Toscana",
+    "Agenzia Regionale per la Protezione Ambientale della Toscana"
+   ],
+   "schede": 84,
+   "grafie": [
+    "ARPAT"
+   ]
+  },
+  {
+   "codice": "udcvs",
+   "ipa": true,
+   "nome_ipa": "Unione Dei Comuni Valle del Savio",
+   "acronimo": null,
+   "enti": [
+    "Unione Dei Comuni Valle del Savio"
+   ],
+   "schede": 74,
+   "grafie": [
+    "udcvs"
+   ]
+  },
+  {
+   "codice": "assapcbz",
+   "ipa": true,
+   "nome_ipa": "Agenzia per la protezione civile",
+   "acronimo": null,
+   "enti": [
+    "Agenzia per la Protezione civile"
+   ],
+   "schede": 70,
+   "grafie": [
+    "assapcbz"
+   ]
+  },
+  {
+   "codice": "r_sicili",
+   "ipa": true,
+   "nome_ipa": "Regione Siciliana",
+   "acronimo": "REGSIC",
+   "enti": [
+    "Regione Siciliana"
+   ],
+   "schede": 62,
+   "grafie": [
+    "r_sicili"
+   ]
+  },
+  {
+   "codice": "c_c540",
+   "ipa": true,
+   "nome_ipa": "Comune di Certaldo",
+   "acronimo": null,
+   "enti": [
+    "Comune di Certaldo"
+   ],
+   "schede": 58,
+   "grafie": [
+    "c_c540"
+   ]
+  },
+  {
+   "codice": "c_m408",
+   "ipa": true,
+   "nome_ipa": "Comune di Barberino Tavarnelle",
+   "acronimo": null,
+   "enti": [
+    "Comune di Barberino Tavarnelle"
+   ],
+   "schede": 51,
+   "grafie": [
+    "c_m408"
+   ]
+  },
+  {
+   "codice": "p_ar",
+   "ipa": true,
+   "nome_ipa": "Provincia di Arezzo",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Arezzo"
+   ],
+   "schede": 47,
+   "grafie": [
+    "p_AR"
+   ]
+  },
+  {
+   "codice": "uncobaro",
+   "ipa": true,
+   "nome_ipa": "Unione dei Comuni della Bassa Romagna",
+   "acronimo": null,
+   "enti": [
+    "Unione dei Comuni della Bassa Romagna"
+   ],
+   "schede": 47,
+   "grafie": [
+    "UNCOBARO"
+   ]
+  },
+  {
+   "codice": "r_umbria",
+   "ipa": true,
+   "nome_ipa": "Regione Umbria",
+   "acronimo": null,
+   "enti": [
+    "Regione Umbria",
+    "Regione UMBRIA"
+   ],
+   "schede": 45,
+   "grafie": [
+    "r_umbria"
+   ]
+  },
+  {
+   "codice": "c_f132",
+   "ipa": true,
+   "nome_ipa": "Comune di Merano",
+   "acronimo": null,
+   "enti": [
+    "Comune di Merano"
+   ],
+   "schede": 40,
+   "grafie": [
+    "c_f132"
+   ]
+  },
+  {
+   "codice": "c_e625",
+   "ipa": true,
+   "nome_ipa": "Comune di Livorno",
+   "acronimo": null,
+   "enti": [
+    "Comune di Livorno"
+   ],
+   "schede": 36,
+   "grafie": [
+    "c_e625"
+   ]
+  },
+  {
+   "codice": "avepa",
+   "ipa": true,
+   "nome_ipa": "Agenzia veneta per i pagamenti - AVEPA",
+   "acronimo": "AVEPA",
+   "enti": [
+    "Agenzia veneta per i pagamenti - AVEPA"
+   ],
+   "schede": 35,
+   "grafie": [
+    "avepa"
+   ]
+  },
+  {
+   "codice": "r_molise",
+   "ipa": true,
+   "nome_ipa": "Regione Molise",
+   "acronimo": null,
+   "enti": [],
+   "schede": 35,
+   "grafie": [
+    "r_molise"
+   ]
+  },
+  {
+   "codice": "c_d575",
+   "ipa": true,
+   "nome_ipa": "Comune di Fiesole",
+   "acronimo": null,
+   "enti": [
+    "Comune di Fiesole"
+   ],
+   "schede": 33,
+   "grafie": [
+    "c_d575"
+   ]
+  },
+  {
+   "codice": "etpfvg",
+   "ipa": true,
+   "nome_ipa": "Ente tutela patrimonio ittico (ETPI)",
+   "acronimo": "ETPI",
+   "enti": [
+    "Ente tutela patrimonio ittico (ETPI)"
+   ],
+   "schede": 33,
+   "grafie": [
+    "etpfvg"
+   ]
+  },
+  {
+   "codice": "c_f257",
+   "ipa": true,
+   "nome_ipa": "Comune di Modena",
+   "acronimo": null,
+   "enti": [
+    "Comune di Modena"
+   ],
+   "schede": 31,
+   "grafie": [
+    "c_f257"
+   ]
+  },
+  {
+   "codice": "p_pi",
+   "ipa": true,
+   "nome_ipa": "Provincia di Pisa",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Pisa"
+   ],
+   "schede": 28,
+   "grafie": [
+    "p_PI"
+   ]
+  },
+  {
+   "codice": "r_puglia",
+   "ipa": true,
+   "nome_ipa": "Regione Puglia",
+   "acronimo": null,
+   "enti": [
+    "Regione Puglia"
+   ],
+   "schede": 27,
+   "grafie": [
+    "r_puglia"
+   ]
+  },
+  {
+   "codice": "cmbo",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Bologna",
+   "acronimo": null,
+   "enti": [
+    "Citta' Metropolitana di Bologna"
+   ],
+   "schede": 25,
+   "grafie": [
+    "cmbo"
+   ]
+  },
+  {
+   "codice": "p_fe",
+   "ipa": true,
+   "nome_ipa": "Provincia di Ferrara",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Ferrara"
+   ],
+   "schede": 25,
+   "grafie": [
+    "p_fe"
+   ]
+  },
+  {
+   "codice": "c_h294",
+   "ipa": true,
+   "nome_ipa": "Comune di Rimini",
+   "acronimo": "COMUNE RIMINI",
+   "enti": [
+    "Comune di Rimini"
+   ],
+   "schede": 24,
+   "grafie": [
+    "c_h294"
+   ]
+  },
+  {
+   "codice": "c_i595",
+   "ipa": true,
+   "nome_ipa": "Comune di Selvazzano Dentro",
+   "acronimo": null,
+   "enti": [
+    "Comune di Selvazzano Dentro"
+   ],
+   "schede": 23,
+   "grafie": [
+    "c_i595"
+   ]
+  },
+  {
+   "codice": "arls_031",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per Lo Sviluppo Rurale - Ersa",
+   "acronimo": "ERSA",
+   "enti": [
+    "Agenzia Regionale per Lo Sviluppo Rurale - Ersa"
+   ],
+   "schede": 21,
+   "grafie": [
+    "arls_031"
+   ]
+  },
+  {
+   "codice": "c_i608",
+   "ipa": true,
+   "nome_ipa": "Comune di Senigallia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Senigallia"
+   ],
+   "schede": 21,
+   "grafie": [
+    "c_i608"
+   ]
+  },
+  {
+   "codice": "p_so",
+   "ipa": true,
+   "nome_ipa": "Provincia di Sondrio",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Sondrio"
+   ],
+   "schede": 19,
+   "grafie": [
+    "p_so"
+   ]
+  },
+  {
+   "codice": "arpa_09",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente della Valle D'Aosta",
+   "acronimo": "ARPA VdA",
+   "enti": [
+    "Agenzia Regionale per la Protezione dell'Ambiente della Valle D'Aosta"
+   ],
+   "schede": 18,
+   "grafie": [
+    "arpa_09"
+   ]
+  },
+  {
+   "codice": "m_d",
+   "ipa": true,
+   "nome_ipa": "Ministero della Difesa",
+   "acronimo": null,
+   "enti": [
+    "Istituto Geografico Militare"
+   ],
+   "schede": 17,
+   "grafie": [
+    "M_D",
+    "m_d"
+   ]
+  },
+  {
+   "codice": "cmrc",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Roma Capitale",
+   "acronimo": "CMR",
+   "enti": [
+    "Città Metropolitana di Roma Capitale"
+   ],
+   "schede": 16,
+   "grafie": [
+    "cmrc"
+   ]
+  },
+  {
+   "codice": "eripcfvg",
+   "ipa": true,
+   "nome_ipa": "Ente Regionale per Il Patrimonio Culturale della Regione Autonoma Friuli Venezia Giulia - Erpac",
+   "acronimo": "ERPAC",
+   "enti": [
+    "Ente Regionale per Il Patrimonio Culturale della Regione Autonoma Friuli Venezia Giulia - Erpac"
+   ],
+   "schede": 16,
+   "grafie": [
+    "eripcfvg"
+   ]
+  },
+  {
+   "codice": "inogs",
+   "ipa": true,
+   "nome_ipa": "Istituto Nazionale di Oceanografia e di Geofisica Sperimentale - OGS",
+   "acronimo": "OGS",
+   "enti": [
+    "Istituto Nazionale di Oceanografia e di Geofisica Sperimentale - OGS"
+   ],
+   "schede": 15,
+   "grafie": [
+    "INOGS"
+   ]
+  },
+  {
+   "codice": "p_tp",
+   "ipa": true,
+   "nome_ipa": "LIBERO CONSORZIO COMUNALE DI TRAPANI",
+   "acronimo": null,
+   "enti": [],
+   "schede": 15,
+   "grafie": [
+    "p_tp"
+   ]
+  },
+  {
+   "codice": "p_ve",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Venezia",
+   "acronimo": null,
+   "enti": [
+    "Città Metropolitana di Venezia"
+   ],
+   "schede": 15,
+   "grafie": [
+    "p_ve"
+   ]
+  },
+  {
+   "codice": "c_b563",
+   "ipa": true,
+   "nome_ipa": "Comune di Camposampiero",
+   "acronimo": null,
+   "enti": [
+    "Comune di Camposampiero"
+   ],
+   "schede": 14,
+   "grafie": [
+    "c_b563"
+   ]
+  },
+  {
+   "codice": "c_l833",
+   "ipa": true,
+   "nome_ipa": "Comune di Viareggio",
+   "acronimo": null,
+   "enti": [
+    "Comune di Viareggio"
+   ],
+   "schede": 14,
+   "grafie": [
+    "c_l833"
+   ]
+  },
+  {
+   "codice": "istat",
+   "ipa": true,
+   "nome_ipa": "Istituto Nazionale di Statistica - ISTAT",
+   "acronimo": null,
+   "enti": [
+    "Istituto Nazionale di Statistica"
+   ],
+   "schede": 14,
+   "grafie": [
+    "istat"
+   ]
+  },
+  {
+   "codice": "pr_marm",
+   "ipa": true,
+   "nome_ipa": "Ente Parco Regionale della Maremma",
+   "acronimo": null,
+   "enti": [
+    "Ente Parco Regionale della Maremma"
+   ],
+   "schede": 14,
+   "grafie": [
+    "pr_marm"
+   ]
+  },
+  {
+   "codice": "c_a468",
+   "ipa": true,
+   "nome_ipa": "Comune di Sinalunga",
+   "acronimo": null,
+   "enti": [
+    "Comune di Sinalunga"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_a468"
+   ]
+  },
+  {
+   "codice": "c_a632",
+   "ipa": true,
+   "nome_ipa": "Comune di Barberino di Mugello",
+   "acronimo": "BdM",
+   "enti": [
+    "Comune di Barberino di Mugello"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_a632"
+   ]
+  },
+  {
+   "codice": "c_b984",
+   "ipa": true,
+   "nome_ipa": "Comune di Casole D'Elsa",
+   "acronimo": null,
+   "enti": [
+    "Comune di Casole d'Elsa"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_b984"
+   ]
+  },
+  {
+   "codice": "c_c415",
+   "ipa": true,
+   "nome_ipa": "Comune di Cecina",
+   "acronimo": null,
+   "enti": [
+    "Comune di Cecina"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_c415"
+   ]
+  },
+  {
+   "codice": "c_c869",
+   "ipa": true,
+   "nome_ipa": "Comune di Collesalvetti",
+   "acronimo": null,
+   "enti": [
+    "Comune di Collesalvetti"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_c869"
+   ]
+  },
+  {
+   "codice": "c_f437",
+   "ipa": true,
+   "nome_ipa": "Comune di Monte Argentario",
+   "acronimo": null,
+   "enti": [
+    "Comune di Monte Argentario"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_f437"
+   ]
+  },
+  {
+   "codice": "c_h222",
+   "ipa": true,
+   "nome_ipa": "Comune di Reggello",
+   "acronimo": null,
+   "enti": [
+    "Comune di Reggello"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_h222"
+   ]
+  },
+  {
+   "codice": "c_h286",
+   "ipa": true,
+   "nome_ipa": "Comune di Rignano sull'Arno",
+   "acronimo": null,
+   "enti": [
+    "Comune di Rignano sull'Arno"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_h286"
+   ]
+  },
+  {
+   "codice": "c_h901",
+   "ipa": true,
+   "nome_ipa": "Comune di San Giovanni Valdarno",
+   "acronimo": null,
+   "enti": [
+    "Comune di San Giovanni Valdarno"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_h901"
+   ]
+  },
+  {
+   "codice": "c_m059",
+   "ipa": true,
+   "nome_ipa": "Comune di Vinci",
+   "acronimo": null,
+   "enti": [
+    "Comune di Vinci"
+   ],
+   "schede": 13,
+   "grafie": [
+    "c_m059"
+   ]
+  },
+  {
+   "codice": "c_c996",
+   "ipa": true,
+   "nome_ipa": "Comune di Coreglia Antelminelli",
+   "acronimo": null,
+   "enti": [
+    "Comune di Coreglia Antelminelli"
+   ],
+   "schede": 12,
+   "grafie": [
+    "c_c996"
+   ]
+  },
+  {
+   "codice": "c_d948",
+   "ipa": true,
+   "nome_ipa": "Comune di Gavorrano",
+   "acronimo": null,
+   "enti": [
+    "Comune di Gavorrano"
+   ],
+   "schede": 12,
+   "grafie": [
+    "c_d948"
+   ]
+  },
+  {
+   "codice": "c_g636",
+   "ipa": true,
+   "nome_ipa": "Comune di Pieve a Nievole",
+   "acronimo": null,
+   "enti": [
+    "Comune di Pieve a Nievole"
+   ],
+   "schede": 12,
+   "grafie": [
+    "c_g636"
+   ]
+  },
+  {
+   "codice": "c_h791",
+   "ipa": true,
+   "nome_ipa": "Comune di San Casciano in Val di Pesa",
+   "acronimo": null,
+   "enti": [
+    "Comune di San Casciano in Val di Pesa"
+   ],
+   "schede": 12,
+   "grafie": [
+    "c_h791"
+   ]
+  },
+  {
+   "codice": "c_d735",
+   "ipa": true,
+   "nome_ipa": "Comune di Fosdinovo",
+   "acronimo": null,
+   "enti": [
+    "Comune di Fosdinovo"
+   ],
+   "schede": 11,
+   "grafie": [
+    "c_d735"
+   ]
+  },
+  {
+   "codice": "istgemil",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [],
+   "schede": 11,
+   "grafie": [
+    "istgemil"
+   ]
+  },
+  {
+   "codice": "m_bac",
+   "ipa": true,
+   "nome_ipa": "Ministero della Cultura",
+   "acronimo": "MIC",
+   "enti": [
+    "Ministero della Cultura"
+   ],
+   "schede": 11,
+   "grafie": [
+    "m_bac"
+   ]
+  },
+  {
+   "codice": "p_fc",
+   "ipa": true,
+   "nome_ipa": "Provincia di Forli' Cesena",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Forli' Cesena"
+   ],
+   "schede": 11,
+   "grafie": [
+    "p_fc"
+   ]
+  },
+  {
+   "codice": "agea",
+   "ipa": true,
+   "nome_ipa": "Agenzia per le Erogazioni in Agricoltura - AGEA",
+   "acronimo": "AGEA",
+   "enti": [
+    "Agenzia per le Erogazioni in Agricoltura - AGEA"
+   ],
+   "schede": 10,
+   "grafie": [
+    "agea"
+   ]
+  },
+  {
+   "codice": "c_b007",
+   "ipa": true,
+   "nome_ipa": "Comune di Borgo a Mozzano",
+   "acronimo": null,
+   "enti": [
+    "Comune di Borgo a Mozzano"
+   ],
+   "schede": 10,
+   "grafie": [
+    "c_b007"
+   ]
+  },
+  {
+   "codice": "c_h109",
+   "ipa": true,
+   "nome_ipa": "Comune di Quarrata",
+   "acronimo": null,
+   "enti": [
+    "Comune di Quarrata"
+   ],
+   "schede": 10,
+   "grafie": [
+    "c_h109"
+   ]
+  },
+  {
+   "codice": "c_i684",
+   "ipa": true,
+   "nome_ipa": "Comune di Sesto Fiorentino",
+   "acronimo": null,
+   "enti": [
+    "Comune di Sesto Fiorentino"
+   ],
+   "schede": 10,
+   "grafie": [
+    "c_i684"
+   ]
+  },
+  {
+   "codice": "r_calabr",
+   "ipa": true,
+   "nome_ipa": "Consiglio regionale della Calabria",
+   "acronimo": "CONSRC",
+   "enti": [
+    "Regione Calabria"
+   ],
+   "schede": 10,
+   "grafie": [
+    "r_calabr"
+   ]
+  },
+  {
+   "codice": "cmna",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Napoli",
+   "acronimo": null,
+   "enti": [
+    "Città Metropolitana di Napoli"
+   ],
+   "schede": 9,
+   "grafie": [
+    "cmna"
+   ]
+  },
+  {
+   "codice": "p_mn",
+   "ipa": true,
+   "nome_ipa": "Provincia di Mantova",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Mantova"
+   ],
+   "schede": 9,
+   "grafie": [
+    "p_mn"
+   ]
+  },
+  {
+   "codice": "c_c190",
+   "ipa": true,
+   "nome_ipa": "Comune di Castello di Godego",
+   "acronimo": null,
+   "enti": [
+    "Comune di Castello di Godego"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_c190"
+   ]
+  },
+  {
+   "codice": "c_e692",
+   "ipa": true,
+   "nome_ipa": "Comune di Loria",
+   "acronimo": null,
+   "enti": [
+    "Comune di Loria"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_e692"
+   ]
+  },
+  {
+   "codice": "c_g587",
+   "ipa": true,
+   "nome_ipa": "Comune di Piazzola Sul Brenta",
+   "acronimo": null,
+   "enti": [
+    "Comune di Piazzola sul Brenta"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_g587"
+   ]
+  },
+  {
+   "codice": "c_h199",
+   "ipa": true,
+   "nome_ipa": "Comune di Ravenna",
+   "acronimo": null,
+   "enti": [
+    "Comune di Ravenna"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_h199"
+   ]
+  },
+  {
+   "codice": "c_h893",
+   "ipa": true,
+   "nome_ipa": "Comune di San Giorgio delle Pertiche",
+   "acronimo": null,
+   "enti": [
+    "Comune di San Giorgio delle Pertiche"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_h893"
+   ]
+  },
+  {
+   "codice": "c_i008",
+   "ipa": true,
+   "nome_ipa": "Comune di San Martino di Lupari",
+   "acronimo": null,
+   "enti": [
+    "Comune di San Martino di Lupari"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_i008"
+   ]
+  },
+  {
+   "codice": "c_l979",
+   "ipa": true,
+   "nome_ipa": "Comune di Villanova di Camposampiero",
+   "acronimo": null,
+   "enti": [
+    "Comune di Villanova di Camposampiero"
+   ],
+   "schede": 8,
+   "grafie": [
+    "c_l979"
+   ]
+  },
+  {
+   "codice": "p_pt",
+   "ipa": true,
+   "nome_ipa": "Provincia di Pistoia",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Pistoia"
+   ],
+   "schede": 8,
+   "grafie": [
+    "p_pt"
+   ]
+  },
+  {
+   "codice": "p_vi",
+   "ipa": true,
+   "nome_ipa": "Provincia di Vicenza",
+   "acronimo": null,
+   "enti": [],
+   "schede": 8,
+   "grafie": [
+    "p_vi"
+   ]
+  },
+  {
+   "codice": "aiifp_",
+   "ipa": true,
+   "nome_ipa": "Agenzia Interregionale per Il Fiume Po",
+   "acronimo": "AIPO",
+   "enti": [
+    "Agenzia Interregionale per Il Fiume Po"
+   ],
+   "schede": 7,
+   "grafie": [
+    "aiifp_"
+   ]
+  },
+  {
+   "codice": "c_e715",
+   "ipa": true,
+   "nome_ipa": "Comune di Lucca",
+   "acronimo": null,
+   "enti": [
+    "Comune di Lucca"
+   ],
+   "schede": 7,
+   "grafie": [
+    "c_e715"
+   ]
+  },
+  {
+   "codice": "c_a922",
+   "ipa": true,
+   "nome_ipa": "Comune di Bogliasco",
+   "acronimo": "COMUNE DI BOGLIASCO",
+   "enti": [
+    "Comune di Bogliasco"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_a922"
+   ]
+  },
+  {
+   "codice": "c_b538",
+   "ipa": true,
+   "nome_ipa": "Comune di Campo Ligure",
+   "acronimo": "CL",
+   "enti": [
+    "Comune di Campo Ligure"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_b538"
+   ]
+  },
+  {
+   "codice": "c_b956",
+   "ipa": true,
+   "nome_ipa": "Comune di Casella",
+   "acronimo": null,
+   "enti": [
+    "Comune di Casella"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_b956"
+   ]
+  },
+  {
+   "codice": "c_d175",
+   "ipa": true,
+   "nome_ipa": "Comune di Crocefieschi",
+   "acronimo": null,
+   "enti": [
+    "Comune di Crocefieschi"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_d175"
+   ]
+  },
+  {
+   "codice": "c_d255",
+   "ipa": true,
+   "nome_ipa": "Comune di Davagna",
+   "acronimo": null,
+   "enti": [
+    "Comune di Davagna"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_d255"
+   ]
+  },
+  {
+   "codice": "c_g913",
+   "ipa": true,
+   "nome_ipa": "Comune di Portofino",
+   "acronimo": null,
+   "enti": [
+    "Comune di Portofino"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_g913"
+   ]
+  },
+  {
+   "codice": "c_i346",
+   "ipa": true,
+   "nome_ipa": "Comune di Sant'Olcese",
+   "acronimo": null,
+   "enti": [
+    "Comune di Sant'Olcese"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_i346"
+   ]
+  },
+  {
+   "codice": "cmmi",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Milano",
+   "acronimo": null,
+   "enti": [
+    "Città Metropolitana di Milano",
+    "Città metropolitana di Milano"
+   ],
+   "schede": 6,
+   "grafie": [
+    "cmmi"
+   ]
+  },
+  {
+   "codice": "cnz_pvdt",
+   "ipa": true,
+   "nome_ipa": "Parco Lombardo della Valle del Ticino",
+   "acronimo": null,
+   "enti": [
+    "Parco del Ticino"
+   ],
+   "schede": 6,
+   "grafie": [
+    "cnz_pvdt"
+   ]
+  },
+  {
+   "codice": "c_b531",
+   "ipa": true,
+   "nome_ipa": "Comune di Campodoro",
+   "acronimo": null,
+   "enti": [
+    "Comune di Campodoro"
+   ],
+   "schede": 5,
+   "grafie": [
+    "c_b531"
+   ]
+  },
+  {
+   "codice": "c_f033",
+   "ipa": true,
+   "nome_ipa": "Comune di Massanzago",
+   "acronimo": null,
+   "enti": [
+    "Comune di Massanzago"
+   ],
+   "schede": 5,
+   "grafie": [
+    "c_f033"
+   ]
+  },
+  {
+   "codice": "p_lu",
+   "ipa": true,
+   "nome_ipa": "Provincia di Lucca",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Lucca"
+   ],
+   "schede": 5,
+   "grafie": [
+    "p_LU"
+   ]
+  },
+  {
+   "codice": "p_pr",
+   "ipa": true,
+   "nome_ipa": "Provincia di Parma",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Parma"
+   ],
+   "schede": 5,
+   "grafie": [
+    "p_pr"
+   ]
+  },
+  {
+   "codice": "p_ro",
+   "ipa": true,
+   "nome_ipa": "Provincia di Rovigo",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Rovigo"
+   ],
+   "schede": 5,
+   "grafie": [
+    "p_ro"
+   ]
+  },
+  {
+   "codice": "40b59awr",
+   "ipa": true,
+   "nome_ipa": "COMUNE DI SOVIZZO",
+   "acronimo": null,
+   "enti": [
+    "COMUNE DI SOVIZZO",
+    "Comune di Sovizzo"
+   ],
+   "schede": 4,
+   "grafie": [
+    "40B59AWR",
+    "40b59awr"
+   ]
+  },
+  {
+   "codice": "c_d226",
+   "ipa": true,
+   "nome_ipa": "Comune di Curtarolo",
+   "acronimo": null,
+   "enti": [
+    "Comune di Curtarolo"
+   ],
+   "schede": 4,
+   "grafie": [
+    "c_d226"
+   ]
+  },
+  {
+   "codice": "c_h501",
+   "ipa": true,
+   "nome_ipa": "ROMA CAPITALE",
+   "acronimo": "COMUNE ROMA",
+   "enti": [
+    "Roma Capitale"
+   ],
+   "schede": 4,
+   "grafie": [
+    "c_H501",
+    "c_h501"
+   ]
+  },
+  {
+   "codice": "c_h599",
+   "ipa": true,
+   "nome_ipa": "Comune di Rovegno",
+   "acronimo": null,
+   "enti": [
+    "Comune di Rovegno"
+   ],
+   "schede": 4,
+   "grafie": [
+    "c_h599"
+   ]
+  },
+  {
+   "codice": "clasv",
+   "ipa": true,
+   "nome_ipa": "Consorzio Lamma",
+   "acronimo": null,
+   "enti": [],
+   "schede": 4,
+   "grafie": [
+    "clasv"
+   ]
+  },
+  {
+   "codice": "arpa_fvg",
+   "ipa": true,
+   "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente del Friuli Venezia Giulia",
+   "acronimo": "ARPA FVG",
+   "enti": [
+    "Agenzia Regionale per la Protezione dell'Ambiente del Friuli Venezia Giulia"
+   ],
+   "schede": 3,
+   "grafie": [
+    "arpa_fvg"
+   ]
+  },
+  {
+   "codice": "c_a658",
+   "ipa": true,
+   "nome_ipa": "Comune di Bargagli",
+   "acronimo": null,
+   "enti": [
+    "Comune di Bargagli"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_a658"
+   ]
+  },
+  {
+   "codice": "c_b067",
+   "ipa": true,
+   "nome_ipa": "Comune di Borzonasca",
+   "acronimo": null,
+   "enti": [
+    "Comune di Borzonasca"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_b067"
+   ]
+  },
+  {
+   "codice": "c_b485",
+   "ipa": true,
+   "nome_ipa": "Comune di Camisano Vicentino",
+   "acronimo": null,
+   "enti": [
+    "Comune di Camisano Vicentino"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_b485"
+   ]
+  },
+  {
+   "codice": "c_b551",
+   "ipa": true,
+   "nome_ipa": "Comune di Campomorone",
+   "acronimo": null,
+   "enti": [
+    "Comune di Campomorone"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_b551"
+   ]
+  },
+  {
+   "codice": "c_c302",
+   "ipa": true,
+   "nome_ipa": "Comune di Castiglione Chiavarese",
+   "acronimo": null,
+   "enti": [
+    "Comune di Castiglione Chiavarese"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_c302"
+   ]
+  },
+  {
+   "codice": "c_c995",
+   "ipa": true,
+   "nome_ipa": "Comune di Coreglia Ligure",
+   "acronimo": null,
+   "enti": [
+    "Comune di Coreglia Ligure"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_c995"
+   ]
+  },
+  {
+   "codice": "c_e488",
+   "ipa": true,
+   "nome_ipa": "Comune di Lavagna",
+   "acronimo": null,
+   "enti": [
+    "Comune di Lavagna"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_e488"
+   ]
+  },
+  {
+   "codice": "c_e737",
+   "ipa": true,
+   "nome_ipa": "Comune di Lumarzo",
+   "acronimo": null,
+   "enti": [
+    "Comune di Lumarzo"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_e737"
+   ]
+  },
+  {
+   "codice": "c_f098",
+   "ipa": true,
+   "nome_ipa": "Comune di Mele",
+   "acronimo": null,
+   "enti": [
+    "Comune di Mele"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_f098"
+   ]
+  },
+  {
+   "codice": "c_f173",
+   "ipa": true,
+   "nome_ipa": "Comune di Mezzanego",
+   "acronimo": null,
+   "enti": [
+    "Comune di Mezzanego"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_f173"
+   ]
+  },
+  {
+   "codice": "c_f202",
+   "ipa": true,
+   "nome_ipa": "Comune di Mignanego",
+   "acronimo": null,
+   "enti": [
+    "Comune di Mignanego"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_f202"
+   ]
+  },
+  {
+   "codice": "c_f682",
+   "ipa": true,
+   "nome_ipa": "Comune di Montoggio",
+   "acronimo": null,
+   "enti": [
+    "Comune di Montoggio"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_f682"
+   ]
+  },
+  {
+   "codice": "c_h536",
+   "ipa": true,
+   "nome_ipa": "Comune di Ronco Scrivia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Ronco Scrivia"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_h536"
+   ]
+  },
+  {
+   "codice": "c_h802",
+   "ipa": true,
+   "nome_ipa": "Comune di San Colombano Certenoli",
+   "acronimo": null,
+   "enti": [
+    "Comune di San Colombano Certenoli"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_h802"
+   ]
+  },
+  {
+   "codice": "c_i475",
+   "ipa": true,
+   "nome_ipa": "Comune di Savignone",
+   "acronimo": null,
+   "enti": [
+    "Comune di Savignone"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_i475"
+   ]
+  },
+  {
+   "codice": "c_l546",
+   "ipa": true,
+   "nome_ipa": "Comune di Valbrevenna",
+   "acronimo": null,
+   "enti": [
+    "Comune di Valbrevenna"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_l546"
+   ]
+  },
+  {
+   "codice": "c_m105",
+   "ipa": true,
+   "nome_ipa": "Comune di Vobbia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Vobbia"
+   ],
+   "schede": 3,
+   "grafie": [
+    "c_m105"
+   ]
+  },
+  {
+   "codice": "cbbas",
+   "ipa": true,
+   "nome_ipa": "Consorzio di Bonifica della Basilicata",
+   "acronimo": "CBBAS",
+   "enti": [
+    "Consorzio di Bonifica della Basilicata"
+   ],
+   "schede": 3,
+   "grafie": [
+    "cbbas"
+   ]
+  },
+  {
+   "codice": "ucp_ar",
+   "ipa": true,
+   "nome_ipa": "Unione dei Comuni del Pratomagno",
+   "acronimo": "UCP",
+   "enti": [
+    "Unione dei Comuni del Pratomagno"
+   ],
+   "schede": 3,
+   "grafie": [
+    "ucp_ar"
+   ]
+  },
+  {
+   "codice": "c_b031",
+   "ipa": true,
+   "nome_ipa": "Comune di Borgoricco",
+   "acronimo": null,
+   "enti": [
+    "Comune di Borgoricco"
+   ],
+   "schede": 2,
+   "grafie": [
+    "c_b031"
+   ]
+  },
+  {
+   "codice": "r_marche",
+   "ipa": true,
+   "nome_ipa": "Regione Marche",
+   "acronimo": null,
+   "enti": [
+    "Regione Marche"
+   ],
+   "schede": 2,
+   "grafie": [
+    "r_marche"
+   ]
+  },
+  {
+   "codice": "agid",
+   "ipa": true,
+   "nome_ipa": "Agenzia per L'Italia Digitale",
+   "acronimo": "AGID",
+   "enti": [],
+   "schede": 1,
+   "grafie": [
+    "agid"
+   ]
+  },
+  {
+   "codice": "arpa_ve_trix2008",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "arpa_ve_TRIX2008"
+   ]
+  },
+  {
+   "codice": "arpav_ve",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "arpav_ve"
+   ]
+  },
+  {
+   "codice": "c0201030_concinquinanteco",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "Agenzia Regionale per la Protezione dell'Ambiente del Veneto"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0201030_ConcInquinanteCO"
+   ]
+  },
+  {
+   "codice": "c0507251_rpercterbmais",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507251_RPercTerbMais"
+   ]
+  },
+  {
+   "codice": "c0507261_rpercnicomais",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507261_RPercNicoMais"
+   ]
+  },
+  {
+   "codice": "c0507271_rperccloramais",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507271_RPercCloraMais"
+   ]
+  },
+  {
+   "codice": "c0507281_rperccloravite",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507281_RPercCloraVite"
+   ]
+  },
+  {
+   "codice": "c0507291_erospot",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507291_ErosPot"
+   ]
+  },
+  {
+   "codice": "c0507301_erosatt",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0507301_ErosAtt"
+   ]
+  },
+  {
+   "codice": "c0901013_brillanzacielonot",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c0901013_BrillanzaCieloNot"
+   ]
+  },
+  {
+   "codice": "c_a662",
+   "ipa": true,
+   "nome_ipa": "Comune di Bari",
+   "acronimo": null,
+   "enti": [
+    "Comune di Bari"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_a662"
+   ]
+  },
+  {
+   "codice": "c_b188",
+   "ipa": true,
+   "nome_ipa": "Comune di Brisighella",
+   "acronimo": null,
+   "enti": [
+    "Comune di Brisighella"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_b188"
+   ]
+  },
+  {
+   "codice": "c_b524",
+   "ipa": true,
+   "nome_ipa": "Comune di Campodarsego",
+   "acronimo": null,
+   "enti": [
+    "Comune di Campodarsego"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_b524"
+   ]
+  },
+  {
+   "codice": "c_c553",
+   "ipa": true,
+   "nome_ipa": "Comune di Cervia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Cervia"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_c553"
+   ]
+  },
+  {
+   "codice": "c_d458",
+   "ipa": true,
+   "nome_ipa": "Comune di Faenza",
+   "acronimo": null,
+   "enti": [
+    "Comune di Faenza"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_d458"
+   ]
+  },
+  {
+   "codice": "c_d509",
+   "ipa": true,
+   "nome_ipa": "Comune di Fascia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Fascia"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_d509"
+   ]
+  },
+  {
+   "codice": "c_d548",
+   "ipa": true,
+   "nome_ipa": "Comune di Ferrara",
+   "acronimo": "COMUNE DI FERRARA",
+   "enti": [
+    "Comune di Ferrara"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_d548"
+   ]
+  },
+  {
+   "codice": "c_e054",
+   "ipa": true,
+   "nome_ipa": "Comune di Giugliano In Campania",
+   "acronimo": null,
+   "enti": [
+    "Comune di Giugliano in Campania"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_e054"
+   ]
+  },
+  {
+   "codice": "c_e388",
+   "ipa": true,
+   "nome_ipa": "Comune di Jesi",
+   "acronimo": null,
+   "enti": [
+    "Comune di Jesi"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_e388"
+   ]
+  },
+  {
+   "codice": "c_e684",
+   "ipa": true,
+   "nome_ipa": "Comune di Loreggia",
+   "acronimo": null,
+   "enti": [
+    "Comune di Loreggia"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_e684"
+   ]
+  },
+  {
+   "codice": "c_f367",
+   "ipa": true,
+   "nome_ipa": "Comune di Montjovet",
+   "acronimo": null,
+   "enti": [
+    "Comune di Montjovet"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_f367"
+   ]
+  },
+  {
+   "codice": "c_f376",
+   "ipa": true,
+   "nome_ipa": "Comune di Monopoli",
+   "acronimo": "MONOPOLI",
+   "enti": [
+    "Comune di Monopoli"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_f376"
+   ]
+  },
+  {
+   "codice": "c_g229",
+   "ipa": true,
+   "nome_ipa": "Comune di Paese",
+   "acronimo": null,
+   "enti": [
+    "Comune di Paese"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_g229"
+   ]
+  },
+  {
+   "codice": "c_l050",
+   "ipa": true,
+   "nome_ipa": "Comune di Tarcento",
+   "acronimo": null,
+   "enti": [
+    "Comune di Tarcento"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_l050"
+   ]
+  },
+  {
+   "codice": "c_l934",
+   "ipa": true,
+   "nome_ipa": "Comune di Villa del Conte",
+   "acronimo": null,
+   "enti": [
+    "Comune di Villa del Conte"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_l934"
+   ]
+  },
+  {
+   "codice": "p_va",
+   "ipa": true,
+   "nome_ipa": "Provincia di Varese",
+   "acronimo": null,
+   "enti": [
+    "Provincia di Varese"
+   ],
+   "schede": 1,
+   "grafie": [
+    "p_va"
+   ]
+  },
+  {
+   "codice": "trix2017",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "TRIX2017"
+   ]
+  },
+  {
+   "codice": "trix2018r",
+   "ipa": false,
+   "nome_ipa": null,
+   "acronimo": null,
+   "enti": [
+    "ARPAV"
+   ],
+   "schede": 1,
+   "grafie": [
+    "TRIX2018R"
+   ]
+  }
+ ]
+}
