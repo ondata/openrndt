@@ -27,6 +27,7 @@ from openrndt.search import (
     organization_names,
     record_dates,
     record_license,
+    record_org,
     record_url,
 )
 from openrndt.search import search as do_search
@@ -178,15 +179,21 @@ def _suggest_orgs(org: str) -> list[str]:
     L'API ignora `facet`: l'unico modo di scoprire come un ente è scritto in
     catalogo è aggregare a valle un campione di risultati sul token più
     distintivo del nome cercato.
+
+    La ricerca esplorativa usa la frase su `apiso_OrganizationName_txt`, non il
+    filtro di `--org`: lì ci sono anche le sigle (`arpae`, `csi`), mentre
+    l'ente responsabile è scritto per esteso. I nomi proposti sono quelli
+    dell'ente responsabile (:func:`organization_names`), quindi rilanciabili
+    con `--org` (#23).
     """
     token = _org_probe_token(org)
     if token is None:
         return []
+    phrase = token.replace("\\", "\\\\").replace('"', '\\"')
     try:
-        # Passa da `org=` invece di comporre la clausola: il token finisce così
-        # tra virgolette con escape, e un nome con punteggiatura riservata
-        # (`Emilia-Romagna`, sigle con `:`) non altera la query esplorativa.
-        payload = do_search(org=token, num=200, fmt="json")
+        payload = do_search(
+            q=f'apiso_OrganizationName_txt:"{phrase}"', q_mode="lucene", num=200, fmt="json"
+        )
     except (httpx.HTTPError, ValueError):
         return []
     if not isinstance(payload, dict):
@@ -207,7 +214,7 @@ def _no_results_hint(
     if org_exact:
         hints.append(
             f"--org-exact è un confronto esatto e case-sensitive su {ORG_EXACT_FIELD}: "
-            "prova --org, che cerca sul campo analizzato"
+            "prova --org, che cerca il nome ovunque senza distinzione di maiuscole"
         )
     if org:
         suggestions = _suggest_orgs(org)
@@ -245,7 +252,7 @@ def _no_results_hint(
         )
     if q and ":" not in q:
         hints.append(
-            "se cercavi un ente: usa --org (cerca su apiso_OrganizationName_txt, "
+            "se cercavi un ente: usa --org (ente responsabile che contiene il testo, "
             "case-insensitive), oppure cerca per territorio con --bbox e "
             "AmbitoTerritoriale_s:Locale"
         )
@@ -266,7 +273,7 @@ def _result_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "id": r.get("id"),
                 "title": r.get("title"),
                 "updated": updated,
-                "org": source.get("apiso_OrganizationName_txt"),
+                "org": record_org(source),
                 "author": (r.get("author") or {}).get("name"),
                 "open": is_open,
                 "license": license_text,
@@ -406,7 +413,7 @@ def _bbox_feature(result: dict[str, Any]) -> dict[str, Any] | None:
     compact = {
         "id": result.get("id"),
         "title": result.get("title"),
-        "org": source.get("apiso_OrganizationName_txt") or (result.get("author") or {}).get("name"),
+        "org": record_org(source) or (result.get("author") or {}).get("name"),
         "type": source.get("apiso_Type_s"),
         "updated": updated,
         "indexed": indexed,
@@ -466,8 +473,8 @@ def search(
         None,
         "--org",
         help=(
-            "Ente responsabile: frase su apiso_OrganizationName_txt (case-insensitive, "
-            'es. --org "comune di torino"). In AND con gli altri filtri.'
+            "Ente responsabile (EnteResponsabile_s) che contiene il testo, senza distinzione "
+            'di maiuscole (es. --org "regione piemonte"). In AND con gli altri filtri.'
         ),
     ),
     org_exact: str | None = typer.Option(
@@ -631,8 +638,8 @@ def footprints(
         None,
         "--org",
         help=(
-            "Ente responsabile: frase su apiso_OrganizationName_txt (case-insensitive, "
-            'es. --org "comune di torino"). In AND con gli altri filtri.'
+            "Ente responsabile (EnteResponsabile_s) che contiene il testo, senza distinzione "
+            'di maiuscole (es. --org "regione piemonte"). In AND con gli altri filtri.'
         ),
     ),
     org_exact: str | None = typer.Option(

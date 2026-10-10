@@ -14,14 +14,14 @@ from openrndt.resources import extract_resources
 SEARCH_PATH = "/rest/metadata/search"
 MAX_NUM = 5000
 
-# Campo dell'ente su cui cerca `org`: analizzato, quindi case-insensitive e
-# insensibile all'ordine dei token. Verificato live: la frase esatta funziona
-# (`"comune di torino"` → 269 record, un solo ente), mentre la wildcard su
-# `contact_organizations_s` è case-sensitive e prende ogni record che *nomina*
-# quel territorio, anche di altri enti.
-ORG_FIELD = "apiso_OrganizationName_txt"
-# Campo dell'ente in forma keyword: confronto esatto, case-sensitive.
-ORG_EXACT_FIELD = "EnteResponsabile_s"
+# Campo dell'ente responsabile, keyword: `org` ci cerca «contiene» senza
+# distinzione di maiuscole (espressione regolare), `org_exact` il valore esatto,
+# case-sensitive. È il filtro del plugin openrndt-geolibre. Prima `org` cercava
+# la frase su `apiso_OrganizationName_txt`, che contiene anche il contatto di
+# chi ha compilato il metadato, e perdeva record (#23: Regione Piemonte 363
+# contro 613, verificato live 2026-10-10).
+ORG_FIELD = "EnteResponsabile_s"
+ORG_EXACT_FIELD = ORG_FIELD
 
 # Link `rel` che NON sono risorse fruibili (rappresentazioni del metadato stesso).
 _NON_RESOURCE_RELS = {"alternate", "icon", "self"}
@@ -162,13 +162,35 @@ def _build_text_clause(q: str, mode: str) -> str:
     return "(" + joiner.join(words) + ")"
 
 
-def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
-    """Clausola Lucene per la ricerca per ente.
+# Caratteri speciali dell'espressione regolare Lucene, come nel plugin
+# (`REGEX_SPECIAL` in `src/rndt/query.ts`).
+_REGEX_SPECIAL = set('.?+*|{}[]()"\\#@&<>~/')
 
-    ``org`` cerca la frase sul campo analizzato (``apiso_OrganizationName_txt``):
-    case-insensitive, robusta rispetto a maiuscole e apostrofi. ``org_exact``
-    confronta il valore esatto sul campo keyword (``EnteResponsabile_s``), utile
-    quando si conosce già la stringa memorizzata in catalogo.
+
+def _contains_ignore_case(value: str) -> str:
+    """Espressione regolare Lucene che trova `value` ovunque, senza distinzione di maiuscole.
+
+    Ogni lettera diventa la classe `[xX]`, i caratteri speciali sono escapati:
+    porting di `containsIgnoreCase` del plugin openrndt-geolibre, così CLI e
+    plugin trovano gli stessi record.
+    """
+    parts = []
+    for c in value.strip():
+        lower, upper = c.lower(), c.upper()
+        if lower != upper and len(lower) == len(upper) == 1:
+            parts.append(f"[{lower}{upper}]")
+        else:
+            parts.append(f"\\{c}" if c in _REGEX_SPECIAL else c)
+    return "/.*" + "".join(parts) + ".*/"
+
+
+def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
+    """Clausola Lucene per la ricerca per ente, sull'ente responsabile (``EnteResponsabile_s``).
+
+    ``org`` cerca il nome ovunque nel valore, senza distinzione di maiuscole
+    (``regione piemonte`` trova anche «Regione Piemonte - A1601B - …»).
+    ``org_exact`` confronta il valore esatto, case-sensitive, utile quando si
+    conosce già la stringa memorizzata in catalogo.
     """
     if org is not None and org_exact is not None:
         raise ValueError("Usa `org` oppure `org_exact`, non entrambi.")
@@ -176,7 +198,7 @@ def _build_org_clause(org: str | None, org_exact: str | None) -> str | None:
         value = org.strip()
         if not value:
             raise ValueError("`org` non può essere vuoto.")
-        return f'{ORG_FIELD}:"{_escape_phrase(value)}"'
+        return f"{ORG_FIELD}:{_contains_ignore_case(value)}"
     if org_exact is not None:
         value = org_exact.strip()
         if not value:
@@ -213,10 +235,10 @@ def search(
     risultato riceve in più la chiave ``geolibre_url`` (vedi :func:`geolibre_url`);
     il resto è la risposta dell'API invariata.
 
-    ``org`` e ``org_exact`` (mutuamente esclusivi) filtrano per ente: il primo
-    sul campo analizzato ``apiso_OrganizationName_txt`` (case-insensitive), il
-    secondo sul keyword ``EnteResponsabile_s`` (esatto). Entrambi si combinano
-    in AND con gli altri filtri.
+    ``org`` e ``org_exact`` (mutuamente esclusivi) filtrano sull'ente
+    responsabile ``EnteResponsabile_s``: il primo cerca il testo ovunque nel
+    valore, senza distinzione di maiuscole, il secondo il valore esatto.
+    Entrambi si combinano in AND con gli altri filtri.
 
     Nota su `sort` (verificato live): l'ordinamento reale usa la sintassi
     `campo:asc|desc` su un campo sortable (keyword `_s`, data `_dt`, intero `_i`),
@@ -431,6 +453,16 @@ def _first_str(value: Any) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
+def record_org(source: dict[str, Any]) -> str | None:
+    """Ente del record: il responsabile (``EnteResponsabile_s``), e solo se manca ``apiso_OrganizationName_txt``.
+
+    ``apiso_OrganizationName_txt`` contiene anche il contatto di chi ha
+    compilato il metadato: per molte schede della Regione Piemonte è «CSI
+    Piemonte». È lo stesso ente su cui filtra ``org`` (#23).
+    """
+    return _first_str(source.get(ORG_FIELD)) or _first_str(source.get("apiso_OrganizationName_txt"))
+
+
 def contact_point(source: dict[str, Any]) -> dict[str, str | None]:
     """Punto di contatto designato del dataset: nome, email e sito web."""
     return {
@@ -502,8 +534,7 @@ def item_record(payload: dict[str, Any]) -> dict[str, Any]:
         "id": item_id,
         "title": _first_str(source.get("title")),
         "description": _first_str(source.get("description")),
-        "org": _first_str(source.get("apiso_OrganizationName_txt"))
-        or _first_str(source.get("EnteResponsabile_s")),
+        "org": record_org(source),
         "type": _first_str(source.get("apiso_Type_s")),
         "category": _topic_category(source, []),
         "updated": updated,
@@ -536,8 +567,8 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Riduce la risposta di :func:`search` a record sintetici per agenti/pipe.
 
     Una voce per risultato con i soli campi ad alto segnale: ``id``, ``title``,
-    ``org`` (ente responsabile da ``apiso_OrganizationName_txt``, più informativo
-    di ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
+    ``org`` (ente responsabile, vedi :func:`record_org`; altrimenti
+    ``author.name``), ``type``, ``category`` (ISO 19115), ``updated`` (data
     della scheda), ``indexed`` (indicizzazione nel catalogo),
     ``open`` e ``license`` (vedi :func:`record_license`), ``url`` (permalink della scheda),
     ``geolibre_url`` (il record aperto in GeoLibre web, vedi :func:`geolibre_url`)
@@ -550,7 +581,7 @@ def compact_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     for r in payload.get("results", []) or []:
         source = r.get("_source") or {}
         categories = r.get("categories") or []
-        org = source.get("apiso_OrganizationName_txt") or (r.get("author") or {}).get("name")
+        org = record_org(source) or (r.get("author") or {}).get("name")
         updated, indexed = record_dates(r)
         is_open, license_text = record_license(source)
         records.append(

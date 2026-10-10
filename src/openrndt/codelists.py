@@ -84,9 +84,10 @@ SEARCH_PARAMS: dict[str, str] = {
     "time": "Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
     "org": (
-        "Parametro CLI (non API): ente responsabile, tradotto in frase Lucene su "
-        "apiso_OrganizationName_txt (campo analizzato: case-insensitive, insensibile "
-        "all'ordine dei token). Preferirlo alle wildcard su contact_organizations_s, "
+        "Parametro CLI (non API): ente responsabile che contiene il testo, senza "
+        "distinzione di maiuscole, tradotto in espressione regolare Lucene su "
+        "EnteResponsabile_s (`regione piemonte` → /.*[rR][eE][gG]….*/), lo stesso filtro "
+        "del plugin openrndt-geolibre. Preferirlo alle wildcard su contact_organizations_s, "
         "che sono case-sensitive e prendono anche i record di altri enti che nominano "
         "quel territorio."
     ),
@@ -133,8 +134,8 @@ LUCENE_FIELDS: dict[str, str] = {
     "keywords_s": "Parole chiave (flat)",
     "apiso_Lineage_txt": "Genealogia / provenienza del dato",
     # Organizzazione e contatti
-    "apiso_OrganizationName_txt": "Nome ente responsabile (analizzato: la ricerca per frase è case-insensitive). Campo usato da --org.",
-    "EnteResponsabile_s": "Ente responsabile (campo RNDT, keyword: confronto esatto e case-sensitive). Campo usato da --org-exact.",
+    "apiso_OrganizationName_txt": "Enti citati nel metadato, compreso il contatto di chi l'ha compilato (analizzato: la ricerca per frase è case-insensitive). Non sempre è l'ente responsabile.",
+    "EnteResponsabile_s": "Ente responsabile (campo RNDT, keyword: confronto esatto e case-sensitive). Campo di --org («contiene», case-insensitive) e di --org-exact (esatto).",
     "PuntoDiContatto_s": "Punto di contatto",
     "PuntoDiContattoEmail_s": "Email punto di contatto",
     "contact_organizations_s": "Organizzazioni di contatto (array)",

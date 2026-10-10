@@ -162,7 +162,7 @@ di `search` più i dettagli utili alla scheda. `_source` e i flag della busta
 |--------------------|------------------------------------------------------------|
 | `id`               | identificativo del record (`_source.fileid`)               |
 | `title`, `description` | titolo e descrizione                                   |
-| `org`              | ente responsabile (`apiso_OrganizationName_txt` o `EnteResponsabile_s`) |
+| `org`              | ente responsabile (`EnteResponsabile_s`, se manca `apiso_OrganizationName_txt`) |
 | `type`, `category` | tipo risorsa (`apiso_Type_s`) e categoria ISO 19115           |
 | `updated`          | data della **scheda** (`apiso_Modified_dt`), come in `compact` |
 | `indexed`          | indicizzazione nel catalogo (`sys_modified_dt`)               |

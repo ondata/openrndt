@@ -617,13 +617,13 @@ def test_cli_footprints_invalid_bbox_crs():
 
 
 @respx.mock
-def test_cli_search_org_builds_analyzed_field_clause(search_response_json):
+def test_cli_search_org_builds_contains_clause(search_response_json):
     route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json=search_response_json)
     )
     result = runner.invoke(app, ["search", "--org", "comune di torino", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune di torino"'
+    assert route.calls.last.request.url.params["q"] == 'EnteResponsabile_s:/.*[cC][oO][mM][uU][nN][eE] [dD][iI] [tT][oO][rR][iI][nN][oO].*/'
 
 
 @respx.mock
@@ -711,7 +711,7 @@ def test_cli_footprints_org_filter(search_response_json):
     )
     result = runner.invoke(app, ["footprints", "--org", "agenzia delle entrate", "--num", "2"])
     assert result.exit_code == 0, result.output
-    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"agenzia delle entrate"'
+    assert route.calls.last.request.url.params["q"] == 'EnteResponsabile_s:/.*[aA][gG][eE][nN][zZ][iI][aA] [dD][eE][lL][lL][eE] [eE][nN][tT][rR][aA][tT][eE].*/'
     geojson = json.loads(result.stdout)
     assert "indexed" in geojson["features"][0]["properties"]
 
@@ -733,15 +733,32 @@ def test_cli_search_org_zero_results_when_org_exists_blames_other_filters():
 
 
 @respx.mock
+def test_cli_search_org_acronym_suggests_full_responsible_name():
+    """Una sigla sta nel contatto, non nell'ente responsabile: zero, ma il nome per esteso è proposto (#23)."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    full = "Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna"
+    probe = {
+        "total": 394,
+        "results": [{"_source": {"EnteResponsabile_s": full, "apiso_OrganizationName_txt": "ARPAE"}}],
+    }
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe)]
+    )
+    result = runner.invoke(app, ["search", "--org", "arpae"])
+    assert result.exit_code == 0, result.output
+    assert f"enti simili presenti in catalogo: {full}" in result.output
+
+
+@respx.mock
 def test_cli_search_org_probe_escapes_token():
-    """La probe passa da --org: il token finisce quotato, non concatenato a mano."""
+    """La probe cerca il token come frase sul campo del contatto, quotato (#23)."""
     empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
     route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
     )
     result = runner.invoke(app, ["search", "--org", "regione emilia-romagna"])
     assert result.exit_code == 0, result.output
-    assert route.calls[-1].request.url.params["q"] == 'apiso_OrganizationName_txt:"emilia-romagna"'
+    assert route.calls[-1].request.url.params["q"] == '(apiso_OrganizationName_txt:"emilia-romagna")'
 
 
 @respx.mock

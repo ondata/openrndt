@@ -9,6 +9,7 @@ import respx
 from openrndt.config import DEFAULT_BASE_URL
 from openrndt.search import (
     MAX_NUM,
+    _build_org_clause,
     bbox_from_envelope,
     compact_results,
     download_urls,
@@ -17,6 +18,7 @@ from openrndt.search import (
     organization_names,
     record_dates,
     record_license,
+    record_org,
     record_url,
     search,
 )
@@ -283,14 +285,17 @@ def test_record_dates_falls_back_to_top_level_updated():
     assert record_dates(result) == (None, "2026-04-25T00:00:00Z")
 
 
+TORINO = "EnteResponsabile_s:/.*[cC][oO][mM][uU][nN][eE] [dD][iI] [tT][oO][rR][iI][nN][oO].*/"
+
+
 @respx.mock
-def test_search_org_uses_analyzed_field_phrase():
-    """`org` cerca la frase sul campo analizzato: case-insensitive, niente wildcard."""
+def test_search_org_contains_ignore_case_on_responsible_party():
+    """`org` cerca «contiene» senza maiuscole sull'ente responsabile (#23)."""
     route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json={"total": 0, "results": []})
     )
     search(org="comune di torino", num=1)
-    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune di torino"'
+    assert route.calls.last.request.url.params["q"] == TORINO
 
 
 @respx.mock
@@ -310,7 +315,7 @@ def test_search_org_combines_in_and_with_other_filters():
     search(q="ortofoto", org="comune di torino", data_category="imageryBaseMapsEarthCover", num=1)
     q = route.calls.last.request.url.params["q"]
     assert q == (
-        '(ortofoto) AND apiso_OrganizationName_txt:"comune di torino" '
+        f'(ortofoto) AND {TORINO} '
         "AND keywords_s:imageryBaseMapsEarthCover"
     )
 
@@ -325,13 +330,28 @@ def test_search_rejects_empty_org():
         search(org="   ")
 
 
+def test_org_clause_matches_plugin():
+    """Stessa stringa del plugin (`tests/fixtures/queries.json` di openrndt-geolibre, 613 record dal vivo)."""
+    assert _build_org_clause("  regione piemonte ", None) == (
+        "EnteResponsabile_s:/.*[rR][eE][gG][iI][oO][nN][eE] [pP][iI][eE][mM][oO][nN][tT][eE].*/"
+    )
+
+
+def test_org_clause_escapes_regex_specials_and_keeps_others():
+    """Apostrofo, trattino e lettere accentate restano; i caratteri della regex sono escapati."""
+    assert _build_org_clause("dell'Ambiente", None) == "EnteResponsabile_s:/.*[dD][eE][lL][lL]'[aA][mM][bB][iI][eE][nN][tT][eE].*/"
+    assert _build_org_clause("Emilia-Romagna", None) == "EnteResponsabile_s:/.*[eE][mM][iI][lL][iI][aA]-[rR][oO][mM][aA][gG][nN][aA].*/"
+    assert _build_org_clause("Città", None) == "EnteResponsabile_s:/.*[cC][iI][tT][tT][àÀ].*/"
+    assert _build_org_clause("a/b.c (x)*", None) == "EnteResponsabile_s:/.*[aA]\\/[bB]\\.[cC] \\([xX]\\)\\*.*/"
+
+
 @respx.mock
 def test_search_org_escapes_quotes():
     route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json={"total": 0, "results": []})
     )
     search(org='comune "x"', num=1)
-    assert route.calls.last.request.url.params["q"] == 'apiso_OrganizationName_txt:"comune \\"x\\""'
+    assert route.calls.last.request.url.params["q"] == 'EnteResponsabile_s:/.*[cC][oO][mM][uU][nN][eE] \\"[xX]\\".*/'
 
 
 def test_organization_names_ranks_by_frequency():
@@ -656,7 +676,7 @@ def test_q_mode_combines_with_filters_in_and():
     )
     search(q="copertura del suolo", org="comune di torino")
     sent = route.calls.last.request.url.params["q"]
-    assert sent == '(copertura AND del AND suolo) AND apiso_OrganizationName_txt:"comune di torino"'
+    assert sent == f'(copertura AND del AND suolo) AND {TORINO}'
 
 
 # --- geolibre_url (issue #24) ------------------------------------------------
@@ -711,3 +731,25 @@ def test_search_json_malformed_results_left_untouched(payload):
     # risposta malformata: niente geolibre_url, niente eccezione; la segnala chi chiama
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json=payload))
     assert search(q="catasto") == payload
+
+
+# --- record_org (issue #23) ---------------------------------------------------
+
+
+def test_record_org_prefers_responsible_party_over_contact():
+    """Il contatto del metadato (CSI Piemonte) non sostituisce l'ente responsabile."""
+    source = {"EnteResponsabile_s": "Regione Piemonte", "apiso_OrganizationName_txt": "CSI Piemonte"}
+    assert record_org(source) == "Regione Piemonte"
+
+
+def test_record_org_falls_back_to_contact_and_reads_lists():
+    assert record_org({"apiso_OrganizationName_txt": ["", "ISPRA"]}) == "ISPRA"
+    assert record_org({"EnteResponsabile_s": "", "apiso_OrganizationName_txt": "ISPRA"}) == "ISPRA"
+    assert record_org({}) is None
+
+
+def test_compact_and_item_record_show_responsible_party():
+    source = {"EnteResponsabile_s": "Regione Piemonte", "apiso_OrganizationName_txt": "CSI Piemonte"}
+    payload = {"results": [{"id": "r_piemon:x", "title": "T", "_source": source}]}
+    assert compact_results(payload)[0]["org"] == "Regione Piemonte"
+    assert item_record({"_id": "r_piemon:x", "_source": source})["org"] == "Regione Piemonte"
