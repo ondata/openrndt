@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (skill 3.10.1, enti dal codice IPA)
+
+- **Skill**: per un ente prima il codice IPA (`discover --what ipa --match`, `--ipa`), poi `--org`. `search-syntax.md` consigliava come robusta `apiso_Identifier_s:r_sicili*`, che distingue le maiuscole (con `pcm` 0 su 731) e non ha i due punti: ora la forma Lucene indicata è quella di `--ipa`. Esempi verificati dal vivo: `--match siciliana` → `r_sicili`, 62 schede con `--ipa` e con la regex.
+
 ## 2026-10-10 (rilascio 3.9.0, skill 3.10.0)
 
 - **Pubblicata**: tag `v3.9.0`, GitHub Release (Latest), PyPI. Reinstallazione da PyPI con `==3.9.0` riuscita al secondo tentativo. Smoke test sulla CLI da PyPI: `--ipa r_sardeg` 766, `--ipa pcm` 731, `discover --what ipa --match arpae` → `arpa` (vocabolario del 2026-10-10), `--org arpae` suggerisce `--ipa arpa`.

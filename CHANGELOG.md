@@ -4,6 +4,12 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Changed
+
+- Skill `rndt-explorer` 3.10.1: per filtrare un ente si parte dal codice IPA (`discover --what ipa --match`, poi `--ipa`), poi `--org`. In `references/search-syntax.md` la sezione «Filtrare per ente» consigliava `apiso_Identifier_s:r_sicili*` ed `EnteResponsabile_s:"…"` esatto come forme robuste: distinguono maiuscole e minuscole (`pcm` 0 schede su 731) e ora sono indicate come da evitare.
+
 ## [3.9.0] - 2026-10-10
 
 ### Added

@@ -56,9 +56,8 @@ openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --sort 'api
 # solo servizi esiste, e la controprova è ripetere con `service`.
 openrndt search --q 'apiso_OrganizationName_txt:"Agenzia delle Entrate" AND apiso_Type_s:dataset' --num 10   # 7.692 su 7.699
 
-# Ricavare il codice IPA dell'ente capofila (non dell'ufficio specifico)
-openrndt search --q 'apiso_OrganizationName_txt:"Regione Siciliana"' --num 1 \
-  | jq -r '.results[0] | {autore: .author.name, codice_ipa_ente: (.id | split(":")[0])}'
+# Il codice IPA dell'ente capofila (non dell'ufficio), offline, dal vocabolario della CLI
+openrndt --format json discover --what ipa --match "siciliana" | jq -r '.codici[] | "\(.codice)\t\(.nome_ipa)\t\(.schede)"'   # r_sicili, 62
 
 # Combinazione: catasto OR cartografia, escluso "test"
 openrndt search --q '(catasto OR cartografia) -test' --num 10
@@ -183,20 +182,19 @@ Altri limiti:
 - Il servizio **CSW** (`/csw`) ignora del tutto `<ogc:SortBy>` pur dichiarando `CoreSortables: Title, Modified` nel GetCapabilities: non ordina per nessuna proprietà. Dettagli e implicazioni INSPIRE in [`csw.md`](./csw.md) e `ref/csw-rndt.md`.
 - I campi *garantiti* sortable restano quelli `_s`/`_dt`/`_i`: su altri campi text non c'è garanzia.
 
-## Filtrare per ente — usa la forma stabile
+## Filtrare per ente: parti dal codice IPA
 
-Lo stesso ente compare con molte varianti del nome lungo in
-`apiso_OrganizationName_txt` (uffici/dipartimenti diversi). Filtrare per la
-stringa esatta lunga è fragile e perde record. Preferisci la forma breve
-`EnteResponsabile_s` o il prefisso dell'`id` (codice IPA dell'ente capofila):
+Il prefisso dell'`id` di ogni scheda è il codice IPA dell'ente titolare, e `--ipa` (CLI 3.9.0) lo cerca senza distinguere le maiuscole. Non dipende da come è scritto il nome: tiene insieme le grafie diverse dello stesso ente (ARPA Veneto ha 245 schede con tre nomi) e trova anche le schede senza ente responsabile (192 nel catalogo). Il codice si trova offline, nel vocabolario della CLI, per nome, acronimo o ente.
 
 ```bash
-# Robusto: forma breve dell'ente
-openrndt search --q 'EnteResponsabile_s:"Regione Siciliana"' --sort 'apiso_Modified_dt:desc' --num 5
-
-# Robusto: per prefisso id (codice IPA ente capofila)
-openrndt search --q 'apiso_Identifier_s:r_sicili*' --sort 'apiso_Modified_dt:desc' --num 5
+openrndt --format table discover --what ipa --match "siciliana"   # → r_sicili
+openrndt search --ipa r_sicili --sort 'apiso_Modified_dt:desc' --num 5
+openrndt search --ipa r_piemon,cmto --num 5                       # più enti, in OR: 860
 ```
+
+Se il vocabolario non conosce l'ente, usa `--org`, che cerca il nome nell'ente responsabile senza distinguere le maiuscole. Su zero risultati `--org` suggerisce da solo i codici IPA che contengono il testo (`--org arpae` → `--ipa arpa`).
+
+Non scrivere a mano query Lucene sui campi keyword dell'ente: distinguono maiuscole e minuscole, e nel catalogo l'ente e il prefisso non sono scritti in modo uniforme. `EnteResponsabile_s:"Città Metropolitana di Torino"` trova 3 schede, con la m minuscola 244; `apiso_Identifier_s:pcm\:*` trova 0 schede della Presidenza del Consiglio, `PCM` 731. Se ti serve proprio la query Lucene, usa la forma di `--ipa`, con le classi di lettere e i due punti: `apiso_Identifier_s:/[rR]_[sS][iI][cC][iI][lL][iI]:.*/`. 11 schede ARPAV hanno l'id senza i due punti e nessuna forma sul prefisso le trova: lì serve `--org`.
 
 ## Zero risultati — la CLI suggerisce
 

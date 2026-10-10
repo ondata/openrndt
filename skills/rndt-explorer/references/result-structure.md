@@ -143,7 +143,9 @@ Questi sono i più ricorrenti e utili per costruire `q=campo:valore`:
 > **Codice IPA**: non c'è un campo dedicato per il codice IPA dell'ufficio.
 > Il prefisso dell'`id` prima dei due punti (es. `r_sicili` da `r_sicili:4e0a416f-...`)
 > è il codice IPA dell'**ente capofila** (es. Regione Siciliana), non dell'ufficio
-> specifico (es. Assessorato). Estraibile con `jq -r '.id | split(":")[0]'`.
+> specifico (es. Assessorato). Estraibile con `jq -r '.id | split(":")[0]'`. Per filtrare
+> su quel codice usa `--ipa` (CLI 3.9.0), che non distingue le maiuscole del prefisso, e per
+> trovarlo dal nome `discover --what ipa --match <nome o sigla>`.
 
 Per esplorare un payload, prendi un risultato qualsiasi e fai:
 

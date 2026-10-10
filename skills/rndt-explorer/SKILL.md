@@ -24,7 +24,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.10.0"
+  version: "3.10.1"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -152,8 +152,10 @@ rimette l'OR anche sul testo libero (`catasto siciliana` → 8.915).
 sono visibili con `openrndt discover --what lucene_fields`. Esempi utili:
 
 ```bash
-# Per ente/organizzazione: usa --org, non scrivere la clausola a mano
-openrndt search --org "regione siciliana"
+# Per ente/organizzazione: parti dal codice IPA, poi --org; non scrivere la clausola a mano
+openrndt --format table discover --what ipa --match "siciliana"   # → r_sicili
+openrndt search --ipa r_sicili
+openrndt search --org "regione siciliana"                       # se il codice non c'è
 
 # Solo open data (isOpendata contiene la licenza, non un booleano)
 openrndt search --q "isOpendata:*"                    # dichiarati open data: 16.759
