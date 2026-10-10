@@ -1,5 +1,11 @@
 # LOG
 
+## 2026-10-10 (#40 e #42, link di ricerca con il plugin 0.3.12)
+
+- **Registro di GeoLibre**: opengeos/geolibre-plugins#105 mergiata alle 11:13 UTC, openrndt-geolibre 0.3.12 (avviso della sessione del plugin, verificato su `plugin-registry.json`).
+- **Link di ricerca**: `--ipa` → `rndtIpa` (#42); ente con una virgola in `rndtOrg` tra virgolette doppie, via la nota (#40).
+- **Prova dal vivo** (agent-browser headed con WebGL, plugin 0.3.12 dal registro): `rndtIpa=r_sardeg` 766, Arpae per esteso tra virgolette 383, gli stessi numeri della CLI. In headless la mappa di GeoLibre non si apre («Map failed to render»), nemmeno con i flag swiftshader: serve `--headed`.
+
 ## 2026-10-10 (skill 3.10.1, enti dal codice IPA)
 
 - **Skill**: per un ente prima il codice IPA (`discover --what ipa --match`, `--ipa`), poi `--org`. `search-syntax.md` consigliava come robusta `apiso_Identifier_s:r_sicili*`, che distingue le maiuscole (con `pcm` 0 su 731) e non ha i due punti: ora la forma Lucene indicata è quella di `--ipa`. Esempi verificati dal vivo: `--match siciliana` → `r_sicili`, 62 schede con `--ipa` e con la regex.

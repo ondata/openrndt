@@ -494,7 +494,7 @@ def geolibre_search_url(
     nord]``, vedi :func:`results_bbox`) diventa ``rndtView`` solo senza
     ``bbox``: la mappa si apre sull'area dei risultati senza filtrarli.
     ``bbox_crs`` accetta solo alias di WGS84, quindi ``bbox`` passa così com'è.
-    Parametri del plugin dalla 0.3.8 (#27).
+    Parametri del plugin dalla 0.3.11 (#27, #40, #42).
     """
     _check_q_mode(q_mode)
     filters = {
@@ -521,11 +521,13 @@ def geolibre_search_url(
         params.append(("rndtView", ",".join(f"{v:g}" for v in view)))
     ente = org if org is not None else org_exact
     if ente is not None and ente.strip():
-        params.append(("rndtOrg", ente.strip()))
+        # Il plugin legge la virgola come elenco di enti; tra virgolette il nome resta uno (dalla 0.3.9, #40).
+        params.append(("rndtOrg", f'"{ente.strip()}"' if "," in ente else ente.strip()))
         if org_exact is not None:
             notes.append("org_exact: nel plugin l'ente è un «contiene» senza distinzione di maiuscole, può trovare anche varianti del nome")
-        if "," in ente:
-            notes.append("org: il plugin legge la virgola come elenco di enti in alternativa, può trovare più schede")
+    if ipa is not None and ipa.strip():
+        # `rndtIpa` dal plugin 0.3.11, stessa clausola di `--ipa` (#42).
+        params.append(("rndtIpa", ",".join(v.strip() for v in ipa.split(",") if v.strip())))
     if data_category is not None and data_category.strip():
         params.append(("rndtKeywords", ",".join(v.strip() for v in data_category.split(",") if v.strip())))
     if updated_from is not None or updated_to is not None:
@@ -540,8 +542,7 @@ def geolibre_search_url(
             params.append(("rndtSort", _GEOLIBRE_SORTS[sort]))
         else:
             untranslated.append("sort")
-    # Il plugin non ha un filtro per codice IPA (proposto: ondata/openrndt-geolibre#54).
-    untranslated += [n for n in ("ipa", "time", "modified") if filters[n] is not None]
+    untranslated += [n for n in ("time", "modified") if filters[n] is not None]
     if bbox_crs is not None and bbox is None:
         untranslated.append("bbox_crs")
     query = "".join(f"&{k}={quote(v, safe=',')}" for k, v in params)
