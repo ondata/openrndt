@@ -831,3 +831,9 @@ def test_results_bbox_union_and_missing():
     assert results_bbox(payload) == [9.0, 43.0, 13.0, 45.0]
     assert results_bbox({"results": [{}]}) is None
     assert results_bbox({}) is None
+
+
+def test_results_bbox_straightens_reversed_bounds():
+    """Le schede AVEPA hanno ovest maggiore di est: il riquadro va raddrizzato, non preso così."""
+    payload = {"results": [{"bbox": {"xmin": 12.2, "ymin": 45.1, "xmax": 11.39, "ymax": 45.69}}]}
+    assert results_bbox(payload) == [11.39, 45.1, 12.2, 45.69]
