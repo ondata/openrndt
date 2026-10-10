@@ -45,12 +45,12 @@ Verificato il 2026-10-10 su cinque ricerche (testo in AND, riquadro con date di 
 
 ## Limiti
 
-- **Solo GeoLibre web.** Non GeoLibre Desktop 3.2.0, che non legge `?plugin=` per i plugin del registro, né `layout=viewer`, dove i plugin del registro non si aprono da link (opengeos/GeoLibre#2898).
+- **Solo GeoLibre web.** Non GeoLibre Desktop, che non apre i link web, né `layout=viewer`, dove i plugin del registro non si aprono da link (opengeos/GeoLibre#2898).
 - **La prima volta** chi apre il link deve accettare il plugin («Trust and load»).
 - **Versione del plugin.** Conta quella del registro di GeoLibre, che il link installa. Con una precedente a quelle della tabella il link si apre ma non fa tutto: prima della 0.3.5 il layer non va sulla mappa, dalla 0.3.5 alla 0.3.7 il layer entra ma la mappa resta dov'è (AGEA con la 0.3.7: zoom 4.3 su mezza Europa), prima della 0.3.8 `rndtDate=modified` non è un valore valido e l'intervallo di date finisce sulla data predefinita del plugin, la revisione.
 - **I dati li scarica il browser di chi apre.** Un servizio solo `http://` può non vedersi su una pagina https; un WMS senza CORS non si legge, e probabilmente nemmeno uno che manda due intestazioni `Access-Control-Allow-Origin`: l'ArcGIS ISPRA, che le manda, dava `Failed to fetch (0)` in una pagina MapLibre (prova del 30 agosto 2026), ma in GeoLibre web la causa non è isolata, perché lì il servizio era dichiarato anche `http://`; un servizio lento resta lento. Lo stesso link può funzionare per un servizio e non per un altro della stessa scheda.
 - **La ricerca è dal vivo.** Il link riapre la ricerca, non i risultati di oggi: se il catalogo cambia, cambiano anche le schede. Per una consegna che resta uguale serve un progetto (vedi [`geolibre.md`](./geolibre.md)).
 - **Solo la prima pagina**, e senza i filtri che il plugin non ha: dillo all'utente quando la CLI li elenca su stderr.
 - **`rndtView` e le schede nazionali.** Se nella pagina c'è una scheda con riquadro nazionale, la mappa si apre sull'Italia intera.
-- **Nomi di ente con una virgola.** Finché nel registro non c'è il plugin 0.3.9 o successivo (#51), il plugin legge la virgola come elenco di enti in alternativa e trova più schede. Oggi riguarda un solo ente: Arpae per esteso, 383 schede nella CLI, 515 nel plugin.
+- **Nomi di ente con una virgola.** Finché nel registro non c'è il plugin 0.3.9 o successivo (ondata/openrndt-geolibre#51), il plugin legge la virgola come elenco di enti in alternativa e trova più schede. Oggi riguarda un solo ente: Arpae per esteso, 383 schede nella CLI, 515 nel plugin.
 - **Lunghezza.** Un link con molti layer supera i 2.000 caratteri, la soglia oltre cui alcune app di posta e chat lo tagliano (circa 15 layer).
