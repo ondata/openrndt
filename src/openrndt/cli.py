@@ -174,6 +174,12 @@ def _org_probe_token(value: str) -> str | None:
     return max(candidates, key=len)
 
 
+def _cli_prefix() -> str:
+    """`openrndt`, con `--base-url` se si interroga un catalogo diverso da quello di default."""
+    base = config.get_base_url()
+    return "openrndt" if base == config.DEFAULT_BASE_URL else f"openrndt --base-url {shlex.quote(base)}"
+
+
 def _contact_clause(value: str) -> str:
     """Frase su `apiso_OrganizationName_txt`, il campo con contatti e sigle (case-insensitive)."""
     phrase = value.strip().replace("\\", "\\\\").replace('"', '\\"')
@@ -218,7 +224,12 @@ def _suggest_orgs(org: str) -> list[str]:
         return []
     if not isinstance(payload, dict):
         return []
-    return organization_names(payload)[:8]
+    # Solo i record con un ente responsabile: il nome del contatto, rilanciato
+    # con `--org`, non troverebbe nulla.
+    with_owner = [
+        r for r in payload.get("results", []) or [] if ((r.get("_source") or {}).get(ORG_EXACT_FIELD) or "").strip()
+    ]
+    return organization_names({"results": with_owner})[:8]
 
 
 def _no_results_hint(
@@ -251,7 +262,9 @@ def _no_results_hint(
             hints.append(
                 f"'{org.strip()}' non è nel nome di nessun ente responsabile, ma in tutto il "
                 f"catalogo compare in {contacts} schede fra gli enti citati nel metadato "
-                "(chi lo compila o distribuisce, o una sigla): openrndt search --q "
+                "(chi lo compila o distribuisce, o una sigla): "
+                + _cli_prefix()
+                + " search --q "
                 + shlex.quote(_contact_clause(org))
             )
         elif exact is None and not suggestions:

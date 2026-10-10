@@ -1010,3 +1010,72 @@ def test_cli_geolibre_url_in_json_csv_footprints_not_table(search_response_json)
     out = runner.invoke(app, ["--format", "table", "search", "--num", "2"], env={"COLUMNS": "400"})
     assert out.exit_code == 0, out.output
     assert "geolibre" not in out.stdout
+
+
+# --- org dall'ente responsabile negli output della CLI (#23) -----------------
+
+PIEMONTE_CSI = {
+    "total": 1,
+    "results": [
+        {
+            "id": "r_piemon:x",
+            "title": "PRAE",
+            "bbox": {"xmin": 7.0, "ymin": 44.0, "xmax": 8.0, "ymax": 45.0},
+            "_source": {"EnteResponsabile_s": "Regione Piemonte", "apiso_OrganizationName_txt": "CSI Piemonte"},
+        }
+    ],
+}
+
+
+@respx.mock
+def test_cli_csv_org_is_responsible_party():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=PIEMONTE_CSI)
+    )
+    result = runner.invoke(app, ["--format", "csv", "search", "--org", "regione piemonte"])
+    assert result.exit_code == 0, result.output
+    assert "Regione Piemonte" in result.stdout
+    assert "CSI Piemonte" not in result.stdout
+
+
+@respx.mock
+def test_cli_footprints_org_is_responsible_party():
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=PIEMONTE_CSI)
+    )
+    result = runner.invoke(app, ["footprints", "--org", "regione piemonte"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["features"][0]["properties"]["org"] == "Regione Piemonte"
+
+
+@respx.mock
+def test_cli_search_org_suggestions_skip_records_without_responsible_party():
+    """Un nome preso dal contatto non si trova con --org: non va suggerito."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    probe = {
+        "total": 2,
+        "results": [
+            {"_source": {"apiso_OrganizationName_txt": "ISPRA Ufficio X"}},
+            {"_source": {"EnteResponsabile_s": "Istituto Superiore per la Protezione e la Ricerca Ambientale"}},
+        ],
+    }
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe), httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
+    )
+    result = runner.invoke(app, ["search", "--org", "ispra ufficio"])
+    assert result.exit_code == 0, result.output
+    assert "Istituto Superiore per la Protezione e la Ricerca Ambientale" in result.output
+    assert "ISPRA Ufficio X" not in result.output
+
+
+@respx.mock
+def test_cli_search_org_contact_hint_keeps_base_url():
+    """Il comando suggerito interroga lo stesso catalogo su cui è stato contato."""
+    other = "https://example.org/RNDT"
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    respx.get(f"{other}/rest/metadata/search").mock(
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty), httpx.Response(200, json={"total": 5, "results": []})]
+    )
+    result = runner.invoke(app, ["--base-url", other, "search", "--org", "csi"])
+    assert result.exit_code == 0, result.output
+    assert f"openrndt --base-url {other} search --q" in result.output
