@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (rilascio 3.7.0, skill 3.8.0)
+
+- **3.7.0**: `--org` sull'ente responsabile con il filtro del plugin, `org` negli output dall'ente responsabile, avvisi su zero risultati con nome per esteso e schede dove l'ente è fra i contatti (#23, PR #36). Cambia il risultato di `--org`: avviso in testa alla sezione del CHANGELOG.
+
 ## 2026-10-10 (issue #23, `--org` sull'ente responsabile)
 
 - **`--org` fa il «contiene» case-insensitive su `EnteResponsabile_s`**, porting di `containsIgnoreCase` del plugin: stessa stringa di `tests/fixtures/queries.json` per «regione piemonte». Dal vivo: Piemonte 363 → 613, Veneto 527 → 758, Roma Capitale 20 → 19; `footprints --org` dà gli stessi totali.

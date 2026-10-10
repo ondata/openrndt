@@ -4,7 +4,7 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
-## [Unreleased]
+## [3.7.0] - 2026-10-10
 
 **Cambia il risultato di `search --org` e `footprints --org`, e il campo `org` degli output.** Chi usava una sigla (`--org arpae`) ora ottiene 0 risultati e, su stderr, il nome per esteso da rilanciare.
 
