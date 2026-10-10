@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (rilascio 3.8.0, skill 3.9.0)
+
+- **3.8.0**: link GeoLibre per l'intera ricerca, `search --geolibre-link` e `geolibre_search` nel JSON (#27, PR #39); `results_bbox` raddrizza i riquadri invertiti (AVEPA). Nella skill «CLI successiva alla 3.7.0» diventa «dalla CLI 3.8.0».
+
 ## 2026-10-10 (issue #27, link GeoLibre per la ricerca intera)
 
 - **`search --geolibre-link` e `geolibre_search` nel JSON**: tabella di traduzione rivista sul plugin 0.3.8 (`url-params.ts`). Novità rispetto al piano del 9 ottobre: `--data-category` passa come `rndtKeywords` (planningCadastre 11.731 in entrambi), `--bbox-crs` accetta solo WGS84 quindi il riquadro passa sempre, il plugin ha un solo intervallo di date (con `--updated-*` le date di pubblicazione restano fuori), in `all` il plugin escapa una `q` Lucene (`rndtMode=lucene`).

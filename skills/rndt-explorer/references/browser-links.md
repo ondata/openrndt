@@ -8,7 +8,7 @@ La CLI produce indirizzi che aprono [GeoLibre web](https://web.geolibre.app) con
 |---|---|---|---|
 | la scheda nel pannello, con i servizi WMS/WFS pronti da aggiungere | `geolibre_url` in `search` (JSON, `compact`, `csv`, profili `gis`/`qgis`), `get` e nelle proprietà di `footprints`; non in `--format table` | dalla 3.5.0 | qualunque |
 | la scheda con un layer WMS già sulla mappa | `resources <id> --layers`: un `geolibre_url` per layer in `layers[]` | dalla 3.6.0 | dalla 0.3.5 |
-| la stessa ricerca di `search`, con i footprint sulla mappa | `search … --geolibre-link` stampa solo l'indirizzo; con `--format json` l'oggetto `geolibre_search` (`url`, `untranslated`, `notes`) sta accanto a `total` | successiva alla 3.7.0 | dalla 0.3.8 |
+| la stessa ricerca di `search`, con i footprint sulla mappa | `search … --geolibre-link` stampa solo l'indirizzo; con `--format json` l'oggetto `geolibre_search` (`url`, `untranslated`, `notes`) sta accanto a `total` | dalla 3.8.0 | dalla 0.3.8 |
 
 Per sapere se la CLI installata ha il terzo: `openrndt search --help | grep geolibre-link`.
 
