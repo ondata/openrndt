@@ -209,7 +209,11 @@ scheda sta in `_source.apiso_Modified_dt`.
 openrndt search --org "comune di torino" --num 5      # 269 record, solo Comune di Torino
 openrndt search --org "regione piemonte" --num 5      # 613 record, anche «Regione Piemonte - A1601B - …»
 openrndt search --org-exact "Comune di Torino"        # confronto esatto su EnteResponsabile_s
+openrndt search --ipa r_sardeg                        # 766 record: codice IPA dell'ente titolare
+openrndt discover --what ipa --match arpae            # dal nome o dall'acronimo al codice: arpa
 ```
+
+`--ipa` filtra sul codice IPA dell'ente titolare, che nel RNDT è il prefisso dell'id di ogni scheda. Non dipende da come è scritto il nome: trova le schede di ARPA Veneto a nome «ARPAV» e per esteso (245 con `--ipa arpa_ve`) e anche quelle senza ente responsabile. Il prefisso nel catalogo non ha maiuscole uniformi (`PCM`, `R_SARDEG` e `r_sardeg`), e la CLI lo cerca senza distinguerle. Più codici si separano con la virgola. I codici presenti nel RNDT sono in un vocabolario offline, `discover --what ipa`, con nome e acronimo dell'Indice PA.
 
 Evita le wildcard su `contact_organizations_s`: sono case-sensitive
 (`*bologna*` → 0, `*Bologna*` → 112) e pescano ogni record che *nomina* quel

@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-10-10 (issue #38, codici IPA)
+
+- **Scansione dell'intero catalogo** (`tmp/scan_prefissi.py`, 23.883 schede su 23.883, id distinti, 316 s, 1,2 GB): 179 prefissi in minuscolo, 166 codici IPA validi; 13 no per 23 schede (12 ARPAV con id senza codice, 11 `istgemil`). 2.084 schede con maiuscole nel prefisso: `PCM` 731 e `pcm` 0, Sardegna `R_SARDEG` 404 e `r_sardeg` 362. Il prefisso tiene insieme le grafie dell'ente (`arpa_ve` 245 con tre nomi) e trova le 192 schede senza `EnteResponsabile_s`.
+- **`--ipa`** con le classi di lettere su `apiso_Identifier_s`, come `--org`; più codici in OR. **Vocabolario** nel pacchetto (`src/openrndt/data/ipa.json`, 39 KB) e `discover --what ipa --match`. Suggerimento del codice su zero risultati di `--org`.
+- **Anagrafica IPA**: decisione dell'utente, niente commit nel repo ma una release fissa senza versione (`data-ipa`) aggiornata ogni mese dal workflow `ipa-registry.yml`, con verifica prima di sostituire l'asset (intestazione, almeno 20.000 enti, codici validi e distinti). Codice, nome, acronimo: 23.757 enti, 5.531 con acronimo, 1,25 MB.
+- **Proposta al plugin**: ondata/openrndt-geolibre#54, un filtro per codice IPA (`rndtIpa`). Nel link della CLI `--ipa` resta fra i filtri non tradotti.
+
 ## 2026-10-10 (rilascio 3.8.0, skill 3.9.0)
 
 - **Pubblicata**: tag `v3.8.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.8.0` riuscita al secondo tentativo (indice non ancora propagato al primo). Smoke test sulla CLI da PyPI: `--geolibre-link` dà il link della #27 carattere per carattere, `--org avepa` un `rndtView` sul Veneto con `--sort relevance` elencato su stderr, `--format json` con `geolibre_search` subito dopo `total`. Informata la sessione del plugin su parametri scritti, versioni minime e riquadri AVEPA.

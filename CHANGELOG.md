@@ -4,6 +4,15 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **`--ipa`: ricerca per codice IPA dell'ente titolare** ([#38](https://github.com/ondata/openrndt/issues/38)) in `search` e `footprints`, e `ipa=` in `search()`. Nel RNDT il prefisso dell'id di ogni scheda è il codice IPA del titolare: il filtro non dipende da come è scritto il nome dell'ente (ARPA Veneto ha 245 schede con tre nomi diversi, `--ipa arpa_ve` le trova tutte) e trova anche le schede senza ente responsabile (192 nel catalogo). Il prefisso nel catalogo non ha maiuscole uniformi (`PCM` 731 schede e `pcm` 0, la Sardegna divisa fra `R_SARDEG` e `r_sardeg`): `--ipa` le cerca senza distinguerle (`--ipa r_sardeg` → 766). Più codici separati da virgola, in OR. Nel link GeoLibre `--ipa` non passa.
+- **Vocabolario offline dei codici IPA presenti nel RNDT**: `discover --what ipa`, con `--match <testo>` per cercare per codice, nome, acronimo o ente (`--match arpae` → `arpa`); 179 codici, 166 nell'Indice PA. Su zero risultati di `--org` l'avviso propone i codici che contengono il testo. In libreria: `ipa_vocabulary()`, `ipa_vocabulary_date()`, `find_ipa()`, `ipa_clause()`.
+- **Anagrafica IPA verificata, aggiornata ogni mese**: il workflow `ipa-registry.yml` scarica gli open data dell'Indice PA, li riduce a codice, nome e acronimo (23.757 enti), li verifica e li pubblica nella release fissa [`data-ipa`](https://github.com/ondata/openrndt/releases/tag/data-ipa), con lo sha256. Il vocabolario lo rigenera `scripts/build_ipa_vocabulary.py` prima di ogni release, con i nomi presi da lì.
+- Skill `rndt-explorer` 3.10.0: `--ipa` fra le opzioni e nella sequenza per gli enti che non pubblicano in proprio.
+
 ## [3.8.0] - 2026-10-10
 
 ### Added
