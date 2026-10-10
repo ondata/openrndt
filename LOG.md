@@ -2,6 +2,7 @@
 
 ## 2026-10-10 (rilascio 3.8.0, skill 3.9.0)
 
+- **Pubblicata**: tag `v3.8.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.8.0` riuscita al secondo tentativo (indice non ancora propagato al primo). Smoke test sulla CLI da PyPI: `--geolibre-link` dà il link della #27 carattere per carattere, `--org avepa` un `rndtView` sul Veneto con `--sort relevance` elencato su stderr, `--format json` con `geolibre_search` subito dopo `total`. Informata la sessione del plugin su parametri scritti, versioni minime e riquadri AVEPA.
 - **3.8.0**: link GeoLibre per l'intera ricerca, `search --geolibre-link` e `geolibre_search` nel JSON (#27, PR #39); `results_bbox` raddrizza i riquadri invertiti (AVEPA). Nella skill «CLI successiva alla 3.7.0» diventa «dalla CLI 3.8.0».
 
 ## 2026-10-10 (issue #27, link GeoLibre per la ricerca intera)
