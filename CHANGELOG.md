@@ -4,6 +4,14 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **Enti senza schede nel RNDT** ([#44](https://github.com/ondata/openrndt/issues/44)): se `discover --what ipa --match` non trova nulla nel vocabolario, cerca nell'anagrafica completa dell'Indice PA (23.757 enti, ora nel pacchetto) e restituisce gli enti con `schede: 0`, con un avviso su stderr. `--match "comune di palermo"` dava un elenco vuoto, ora dà `c_g273`: il nome è giusto, l'ente non pubblica sul RNDT. Prima le categorie che pubblicano più schede (un Comune prima di una scuola). Lo stesso ripiego nei suggerimenti di `--org` su zero risultati. In libreria: `find_ipa_registry()`.
+- **Categoria IPA dell'ente** nel vocabolario e nell'anagrafica: `categoria` e `nome_categoria` (`L6`, «Comuni e loro Consorzi e Associazioni»), dal dataset `categorie-enti` dell'Indice PA; colonna `categoria` nella tabella di `discover --what ipa`. Il file `ipa-enti.csv` della release `data-ipa` ha due colonne in più.
+- Skill `rndt-explorer` 3.12.0: `discover --what ipa --match` per capire se un ente pubblica in proprio.
+
 ## [3.10.0] - 2026-10-10
 
 ### Changed

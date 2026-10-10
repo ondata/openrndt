@@ -11,7 +11,12 @@ import typer
 
 from openrndt import codelists, config, output
 from openrndt._version import __version__
-from openrndt.ipa import find_ipa, ipa_vocabulary, ipa_vocabulary_date
+from openrndt.ipa import (
+    find_ipa,
+    find_ipa_registry,
+    ipa_vocabulary,
+    ipa_vocabulary_date,
+)
 from openrndt.item import (
     AmbiguousItemIdError,
     ItemNotFoundError,
@@ -275,6 +280,14 @@ def _no_results_hint(
             hints.append(
                 "codici IPA nel vocabolario: "
                 + " | ".join(f"--ipa {c['codice']} ({c['nome_ipa'] or (c['enti'][0] if c['enti'] else c['codice'])}, {c['schede']} schede)" for c in codes[:3])
+            )
+        registry = find_ipa_registry(org) if exact is None and not codes else []
+        if registry:
+            more = f" e altri {len(registry) - 3}: {_cli_prefix()} discover --what ipa --match {shlex.quote(org.strip())}" if len(registry) > 3 else ""
+            hints.append(
+                "nell'Indice PA ma senza schede nel RNDT: "
+                + " | ".join(f"{c['codice']} ({c['nome_ipa']})" for c in registry[:3])
+                + more
             )
         if contacts:
             hints.append(
@@ -1016,12 +1029,24 @@ def discover(
     match: str | None = typer.Option(
         None,
         "--match",
-        help="Con --what ipa: solo i codici il cui codice, nome IPA, acronimo o ente contiene il testo.",
+        help=(
+            "Con --what ipa: solo i codici il cui codice, nome IPA, acronimo o ente contiene il testo. "
+            "Se nessuno lo contiene, gli enti dell'anagrafica IPA senza schede nel RNDT."
+        ),
     ),
 ) -> None:
     """Codelist e parametri validi (nessuna chiamata di rete)."""
     if what == "ipa":
         codes = find_ipa(match) if match else ipa_vocabulary()
+        if match and not codes:
+            # Ripiego sull'anagrafica IPA: il nome è giusto ma l'ente non pubblica sul RNDT (#44).
+            codes = find_ipa_registry(match)
+            if codes:
+                typer.echo(
+                    f"Nessun codice IPA nel vocabolario contiene '{match}'. Dall'anagrafica IPA, "
+                    f"{len(codes)} {'ente' if len(codes) == 1 else 'enti'} senza schede nel RNDT.",
+                    err=True,
+                )
         if output.get_mode() == "json":
             output.emit({"generato": ipa_vocabulary_date(), "codici": codes})
             return
@@ -1030,13 +1055,14 @@ def discover(
                 "codice": c["codice"],
                 "nome_ipa": c["nome_ipa"] or "",
                 "acronimo": c["acronimo"] or "",
+                "categoria": c["nome_categoria"] or "",
                 "schede": c["schede"],
                 "enti": " | ".join(c["enti"]),
             }
             for c in codes
         ]
         if not rows:
-            typer.echo(f"Nessun codice IPA nel vocabolario contiene '{match}'.", err=True)
+            typer.echo(f"Nessun codice IPA nel vocabolario né ente nell'anagrafica IPA contiene '{match}'.", err=True)
             return
         output.emit(codes, table_rows=rows, table_title=f"Codici IPA nel RNDT (vocabolario del {ipa_vocabulary_date()})")
         return

@@ -4,12 +4,17 @@ Il prefisso dell'id di ogni scheda è il codice IPA dell'ente titolare (AgID,
 2026-09-04). Il campo distingue maiuscole e minuscole e i prefissi non sono
 uniformi (`PCM` 731 schede, `pcm` 0; `R_SARDEG` 404 e `r_sardeg` 362), quindi il
 filtro usa le classi di lettere. Il vocabolario lo rigenera
-`scripts/build_ipa_vocabulary.py` prima di ogni release.
+`scripts/build_ipa_vocabulary.py` prima di ogni release, insieme alla copia
+dell'anagrafica dell'Indice PA (`data/ipa-enti.csv.gz`), che serve per gli enti
+senza schede nel RNDT (#44).
 """
 
 from __future__ import annotations
 
 import copy
+import csv
+import gzip
+import io
 import json
 import re
 from functools import cache
@@ -27,9 +32,16 @@ def _vocabulary() -> dict[str, Any]:
     return data
 
 
+@cache
+def _registry() -> tuple[dict[str, str], ...]:
+    raw = resources.files("openrndt").joinpath("data/ipa-enti.csv.gz").read_bytes()
+    return tuple(csv.DictReader(io.StringIO(gzip.decompress(raw).decode("utf-8"))))
+
+
 def ipa_vocabulary() -> list[dict[str, Any]]:
     """I codici del vocabolario, dal più grande: ``codice``, ``ipa`` (è nell'Indice PA),
-    ``nome_ipa``, ``acronimo``, ``enti`` (i nomi in ``EnteResponsabile_s``), ``schede``, ``grafie``."""
+    ``nome_ipa``, ``acronimo``, ``categoria`` e ``nome_categoria`` (categoria IPA),
+    ``enti`` (i nomi in ``EnteResponsabile_s``), ``schede``, ``grafie``."""
     # Copia profonda: chi modifica `enti` o `grafie` non tocca la cache.
     return copy.deepcopy(_vocabulary()["codici"])
 
@@ -50,6 +62,43 @@ def find_ipa(text: str) -> list[dict[str, Any]]:
         if any(needle in name.lower() for name in names):
             found.append(code)
     return found
+
+
+def find_ipa_registry(text: str) -> list[dict[str, Any]]:
+    """Enti dell'anagrafica IPA senza schede nel RNDT il cui codice, nome o acronimo contiene ``text``.
+
+    Le voci hanno la forma di quelle del vocabolario, con ``schede`` 0 ed ``enti`` e
+    ``grafie`` vuoti: ``palermo`` → ``c_g273`` (Comune di Palermo) e altri 40 enti.
+    Per sapere se un nome è scritto bene quando :func:`find_ipa` non trova nulla.
+    Prima le categorie che pubblicano più schede nel RNDT (Regioni, Agenzie fiscali,
+    Comuni, ...), poi per nome: un Comune viene prima di una scuola o di un ordine.
+    """
+    needle = text.strip().lower()
+    if not needle:
+        return []
+    codes = _vocabulary()["codici"]
+    known = {c["codice"] for c in codes}
+    weight: dict[str, int] = {}
+    for c in codes:
+        if c.get("categoria"):
+            weight[c["categoria"]] = weight.get(c["categoria"], 0) + c["schede"]
+    found = []
+    for row in _registry():
+        if row["codice_ipa"] in known:
+            continue
+        if any(needle in name.lower() for name in (row["codice_ipa"], row["denominazione"], row["acronimo"])):
+            found.append({
+                "codice": row["codice_ipa"],
+                "ipa": True,
+                "nome_ipa": row["denominazione"] or None,
+                "acronimo": row["acronimo"] or None,
+                "categoria": row["categoria"] or None,
+                "nome_categoria": row["nome_categoria"] or None,
+                "enti": [],
+                "schede": 0,
+                "grafie": [],
+            })
+    return sorted(found, key=lambda c: (-weight.get(c["categoria"] or "", 0), (c["nome_ipa"] or "").lower()))
 
 
 def _prefix_regex(code: str) -> str:

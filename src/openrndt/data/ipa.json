@@ -7,6 +7,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia delle Entrate",
    "acronimo": null,
+   "categoria": "C10",
+   "nome_categoria": "Agenzie Fiscali",
    "enti": [
     "Agenzia delle Entrate"
    ],
@@ -20,6 +22,8 @@
    "ipa": true,
    "nome_ipa": "Regione Autonoma Friuli-Venezia Giulia",
    "acronimo": "RAFVG",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Autonoma Friuli-Venezia Giulia"
    ],
@@ -33,6 +37,8 @@
    "ipa": true,
    "nome_ipa": "Regione Emilia-Romagna",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Emilia-Romagna"
    ],
@@ -46,6 +52,8 @@
    "ipa": true,
    "nome_ipa": "Regione Liguria",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Liguria"
    ],
@@ -59,6 +67,8 @@
    "ipa": true,
    "nome_ipa": "Regione Autonoma della Sardegna",
    "acronimo": "RAS",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Autonoma della Sardegna",
     "Regione autonoma della Sardegna"
@@ -74,6 +84,8 @@
    "ipa": true,
    "nome_ipa": "Regione del Veneto",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione del Veneto"
    ],
@@ -87,6 +99,8 @@
    "ipa": true,
    "nome_ipa": "Presidenza del Consiglio dei Ministri",
    "acronimo": null,
+   "categoria": "C1",
+   "nome_categoria": "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato",
    "enti": [
     "PCM - Dipartimento della Protezione Civile"
    ],
@@ -100,6 +114,8 @@
    "ipa": true,
    "nome_ipa": "Regione Autonoma Valle D'Aosta",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Autonoma Valle d'Aosta"
    ],
@@ -113,6 +129,8 @@
    "ipa": true,
    "nome_ipa": "Regione Piemonte",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Piemonte",
     "Regione Piemonte - A1601B - Biodiversità e aree naturali"
@@ -127,6 +145,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Firenze",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Firenze"
    ],
@@ -140,6 +160,8 @@
    "ipa": true,
    "nome_ipa": "Provincia Autonoma di Trento",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Provincia Autonoma di Trento"
    ],
@@ -154,6 +176,8 @@
    "ipa": true,
    "nome_ipa": "Provincia Autonoma di Bolzano",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Provincia Autonoma di Bolzano"
    ],
@@ -167,6 +191,8 @@
    "ipa": true,
    "nome_ipa": "Regione Lombardia",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Lombardia"
    ],
@@ -180,6 +206,8 @@
    "ipa": true,
    "nome_ipa": "Istituto Superiore per la Protezione e la Ricerca Ambientale",
    "acronimo": "ISPRA",
+   "categoria": "C8",
+   "nome_categoria": "Enti e Istituzioni di Ricerca Pubblici",
    "enti": [
     "Istituto Superiore per la Protezione e la Ricerca Ambientale"
    ],
@@ -193,6 +221,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna",
    "acronimo": "ARPAE ER",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia dell'Emilia Romagna"
    ],
@@ -206,6 +236,8 @@
    "ipa": true,
    "nome_ipa": "Ministero dell'Ambiente e della Sicurezza Energetica",
    "acronimo": "MASE",
+   "categoria": "C1",
+   "nome_categoria": "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato",
    "enti": [
     "Ministero dell'Ambiente e della Sicurezza Energetica"
    ],
@@ -219,6 +251,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Lodi",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Lodi - U.O. Sistemi Informativi",
     "Provincia di Lodi"
@@ -233,6 +267,8 @@
    "ipa": true,
    "nome_ipa": "Regione Basilicata",
    "acronimo": "RBAS",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Basilicata"
    ],
@@ -246,6 +282,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Torino",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Torino"
    ],
@@ -259,6 +297,8 @@
    "ipa": true,
    "nome_ipa": "Unione di Comuni Valdarno e Valdisieve",
    "acronimo": null,
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Unione di Comuni Valdarno e Valdisieve"
    ],
@@ -272,6 +312,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Torino",
    "acronimo": null,
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città metropolitana di Torino",
     "Città Metropolitana di Torino"
@@ -286,6 +328,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Prevenzione e Protezione Ambientale del Veneto",
    "acronimo": "ARPAV",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Regionale per la Prevenzione e Protezione Ambientale del Veneto",
     "ARPAV",
@@ -301,6 +345,8 @@
    "ipa": true,
    "nome_ipa": "Autorità di bacino distrettuale del fiume Po",
    "acronimo": "AdbPo",
+   "categoria": "L40",
+   "nome_categoria": "Autorita' di Bacino",
    "enti": [
     "Autorità di bacino distrettuale del fiume Po"
    ],
@@ -314,6 +360,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Milano",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Milano"
    ],
@@ -328,6 +376,8 @@
    "ipa": true,
    "nome_ipa": "Regione Lazio",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Lazio"
    ],
@@ -341,6 +391,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per La Sicurezza Territoriale e La Protezione Civile",
    "acronimo": "ARSTPC",
+   "categoria": "L1",
+   "nome_categoria": "Altri Enti Locali",
    "enti": [
     "Agenzia Regionale per La Sicurezza Territoriale e La Protezione Civile"
    ],
@@ -354,6 +406,8 @@
    "ipa": true,
    "nome_ipa": "Regione Toscana",
    "acronimo": "RT",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Toscana"
    ],
@@ -367,6 +421,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Bagno a Ripoli",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Bagno a Ripoli"
    ],
@@ -380,6 +436,8 @@
    "ipa": true,
    "nome_ipa": "Unione Montana Dei Comuni del Mugello",
    "acronimo": "UMCM",
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Unione Montana dei Comuni del Mugello"
    ],
@@ -393,6 +451,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Firenze",
    "acronimo": "CMFI",
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città Metropolitana di Firenze"
    ],
@@ -406,6 +466,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Genova",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Genova"
    ],
@@ -419,6 +481,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
    "acronimo": null,
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
     "Agenzia Regionale per la protezione dell'Ambiente del Piemonte"
@@ -434,6 +498,8 @@
    "ipa": true,
    "nome_ipa": "Regione Abruzzo",
    "acronimo": "REGIONE ABRUZZO",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Abruzzo",
     "Ispra Servizio Geologico d'Italia"
@@ -448,6 +514,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Capannori",
    "acronimo": "CAPANNORI",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Capannori"
    ],
@@ -461,6 +529,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Grosseto",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Grosseto"
    ],
@@ -474,6 +544,8 @@
    "ipa": true,
    "nome_ipa": "Consorzio dei Comuni della Provincia di Bolzano Societa' Cooperativa",
    "acronimo": null,
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Consorzio dei Comuni della Provincia di Bolzano Societa' Cooperativa"
    ],
@@ -487,6 +559,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Biella",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Biella"
    ],
@@ -500,6 +574,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la protezione ambientale della Toscana",
    "acronimo": "ARPAT",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia regionale per la protezione ambientale della Toscana",
     "Agenzia Regionale per la Protezione Ambientale della Toscana"
@@ -514,6 +590,8 @@
    "ipa": true,
    "nome_ipa": "Unione Dei Comuni Valle del Savio",
    "acronimo": null,
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Unione Dei Comuni Valle del Savio"
    ],
@@ -527,6 +605,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia per la protezione civile",
    "acronimo": null,
+   "categoria": "L1",
+   "nome_categoria": "Altri Enti Locali",
    "enti": [
     "Agenzia per la Protezione civile"
    ],
@@ -540,6 +620,8 @@
    "ipa": true,
    "nome_ipa": "Regione Siciliana",
    "acronimo": "REGSIC",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Siciliana"
    ],
@@ -553,6 +635,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Certaldo",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Certaldo"
    ],
@@ -566,6 +650,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Barberino Tavarnelle",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Barberino Tavarnelle"
    ],
@@ -579,6 +665,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Arezzo",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Arezzo"
    ],
@@ -592,6 +680,8 @@
    "ipa": true,
    "nome_ipa": "Unione dei Comuni della Bassa Romagna",
    "acronimo": null,
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Unione dei Comuni della Bassa Romagna"
    ],
@@ -605,6 +695,8 @@
    "ipa": true,
    "nome_ipa": "Regione Umbria",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Umbria",
     "Regione UMBRIA"
@@ -619,6 +711,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Merano",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Merano"
    ],
@@ -632,6 +726,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Livorno",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Livorno"
    ],
@@ -645,6 +741,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia veneta per i pagamenti - AVEPA",
    "acronimo": "AVEPA",
+   "categoria": "L21",
+   "nome_categoria": "Agenzie Regionali per le Erogazioni in Agricoltura",
    "enti": [
     "Agenzia veneta per i pagamenti - AVEPA"
    ],
@@ -658,6 +756,8 @@
    "ipa": true,
    "nome_ipa": "Regione Molise",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [],
    "schede": 35,
    "grafie": [
@@ -669,6 +769,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Fiesole",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Fiesole"
    ],
@@ -682,6 +784,8 @@
    "ipa": true,
    "nome_ipa": "Ente tutela patrimonio ittico (ETPI)",
    "acronimo": "ETPI",
+   "categoria": "L1",
+   "nome_categoria": "Altri Enti Locali",
    "enti": [
     "Ente tutela patrimonio ittico (ETPI)"
    ],
@@ -695,6 +799,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Modena",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Modena"
    ],
@@ -708,6 +814,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Pisa",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Pisa"
    ],
@@ -721,6 +829,8 @@
    "ipa": true,
    "nome_ipa": "Regione Puglia",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Puglia"
    ],
@@ -734,6 +844,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Bologna",
    "acronimo": null,
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Citta' Metropolitana di Bologna"
    ],
@@ -747,6 +859,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Ferrara",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Ferrara"
    ],
@@ -760,6 +874,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Rimini",
    "acronimo": "COMUNE RIMINI",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Rimini"
    ],
@@ -773,6 +889,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Selvazzano Dentro",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Selvazzano Dentro"
    ],
@@ -786,6 +904,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per Lo Sviluppo Rurale - Ersa",
    "acronimo": "ERSA",
+   "categoria": "L13",
+   "nome_categoria": "Agenzie ed Enti Regionali di Sviluppo Agricolo",
    "enti": [
     "Agenzia Regionale per Lo Sviluppo Rurale - Ersa"
    ],
@@ -799,6 +919,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Senigallia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Senigallia"
    ],
@@ -812,6 +934,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Sondrio",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Sondrio"
    ],
@@ -825,6 +949,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente della Valle D'Aosta",
    "acronimo": "ARPA VdA",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Regionale per la Protezione dell'Ambiente della Valle D'Aosta"
    ],
@@ -838,6 +964,8 @@
    "ipa": true,
    "nome_ipa": "Ministero della Difesa",
    "acronimo": null,
+   "categoria": "C1",
+   "nome_categoria": "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato",
    "enti": [
     "Istituto Geografico Militare"
    ],
@@ -852,6 +980,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Roma Capitale",
    "acronimo": "CMR",
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città Metropolitana di Roma Capitale"
    ],
@@ -865,6 +995,8 @@
    "ipa": true,
    "nome_ipa": "Ente Regionale per Il Patrimonio Culturale della Regione Autonoma Friuli Venezia Giulia - Erpac",
    "acronimo": "ERPAC",
+   "categoria": "C7",
+   "nome_categoria": "Enti Pubblici Produttori di Servizi Assistenziali, Ricreativi e Culturali",
    "enti": [
     "Ente Regionale per Il Patrimonio Culturale della Regione Autonoma Friuli Venezia Giulia - Erpac"
    ],
@@ -878,6 +1010,8 @@
    "ipa": true,
    "nome_ipa": "Istituto Nazionale di Oceanografia e di Geofisica Sperimentale - OGS",
    "acronimo": "OGS",
+   "categoria": "C8",
+   "nome_categoria": "Enti e Istituzioni di Ricerca Pubblici",
    "enti": [
     "Istituto Nazionale di Oceanografia e di Geofisica Sperimentale - OGS"
    ],
@@ -891,6 +1025,8 @@
    "ipa": true,
    "nome_ipa": "LIBERO CONSORZIO COMUNALE DI TRAPANI",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [],
    "schede": 15,
    "grafie": [
@@ -902,6 +1038,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Venezia",
    "acronimo": null,
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città Metropolitana di Venezia"
    ],
@@ -915,6 +1053,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Camposampiero",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Camposampiero"
    ],
@@ -928,6 +1068,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Viareggio",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Viareggio"
    ],
@@ -941,6 +1083,8 @@
    "ipa": true,
    "nome_ipa": "Istituto Nazionale di Statistica - ISTAT",
    "acronimo": null,
+   "categoria": "C8",
+   "nome_categoria": "Enti e Istituzioni di Ricerca Pubblici",
    "enti": [
     "Istituto Nazionale di Statistica"
    ],
@@ -954,6 +1098,8 @@
    "ipa": true,
    "nome_ipa": "Ente Parco Regionale della Maremma",
    "acronimo": null,
+   "categoria": "L38",
+   "nome_categoria": "Parchi Nazionali, Consorzi e Enti Gestori di Parchi e Aree Naturali Protette",
    "enti": [
     "Ente Parco Regionale della Maremma"
    ],
@@ -967,6 +1113,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Sinalunga",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Sinalunga"
    ],
@@ -980,6 +1128,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Barberino di Mugello",
    "acronimo": "BdM",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Barberino di Mugello"
    ],
@@ -993,6 +1143,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Casole D'Elsa",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Casole d'Elsa"
    ],
@@ -1006,6 +1158,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Cecina",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Cecina"
    ],
@@ -1019,6 +1173,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Collesalvetti",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Collesalvetti"
    ],
@@ -1032,6 +1188,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Monte Argentario",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Monte Argentario"
    ],
@@ -1045,6 +1203,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Reggello",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Reggello"
    ],
@@ -1058,6 +1218,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Rignano sull'Arno",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Rignano sull'Arno"
    ],
@@ -1071,6 +1233,8 @@
    "ipa": true,
    "nome_ipa": "Comune di San Giovanni Valdarno",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di San Giovanni Valdarno"
    ],
@@ -1084,6 +1248,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Vinci",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Vinci"
    ],
@@ -1097,6 +1263,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Coreglia Antelminelli",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Coreglia Antelminelli"
    ],
@@ -1110,6 +1278,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Gavorrano",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Gavorrano"
    ],
@@ -1123,6 +1293,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Pieve a Nievole",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Pieve a Nievole"
    ],
@@ -1136,6 +1308,8 @@
    "ipa": true,
    "nome_ipa": "Comune di San Casciano in Val di Pesa",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di San Casciano in Val di Pesa"
    ],
@@ -1149,6 +1323,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Fosdinovo",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Fosdinovo"
    ],
@@ -1162,6 +1338,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [],
    "schede": 11,
    "grafie": [
@@ -1173,6 +1351,8 @@
    "ipa": true,
    "nome_ipa": "Ministero della Cultura",
    "acronimo": "MIC",
+   "categoria": "C1",
+   "nome_categoria": "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato",
    "enti": [
     "Ministero della Cultura"
    ],
@@ -1186,6 +1366,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Forli' Cesena",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Forli' Cesena"
    ],
@@ -1199,6 +1381,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia per le Erogazioni in Agricoltura - AGEA",
    "acronimo": "AGEA",
+   "categoria": "C3",
+   "nome_categoria": "Enti Pubblici Non Economici",
    "enti": [
     "Agenzia per le Erogazioni in Agricoltura - AGEA"
    ],
@@ -1212,6 +1396,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Borgo a Mozzano",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Borgo a Mozzano"
    ],
@@ -1225,6 +1411,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Quarrata",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Quarrata"
    ],
@@ -1238,6 +1426,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Sesto Fiorentino",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Sesto Fiorentino"
    ],
@@ -1251,6 +1441,8 @@
    "ipa": true,
    "nome_ipa": "Consiglio regionale della Calabria",
    "acronimo": "CONSRC",
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Calabria"
    ],
@@ -1264,6 +1456,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Napoli",
    "acronimo": null,
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città Metropolitana di Napoli"
    ],
@@ -1277,6 +1471,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Mantova",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Mantova"
    ],
@@ -1290,6 +1486,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Castello di Godego",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Castello di Godego"
    ],
@@ -1303,6 +1501,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Loria",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Loria"
    ],
@@ -1316,6 +1516,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Piazzola Sul Brenta",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Piazzola sul Brenta"
    ],
@@ -1329,6 +1531,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Ravenna",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Ravenna"
    ],
@@ -1342,6 +1546,8 @@
    "ipa": true,
    "nome_ipa": "Comune di San Giorgio delle Pertiche",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di San Giorgio delle Pertiche"
    ],
@@ -1355,6 +1561,8 @@
    "ipa": true,
    "nome_ipa": "Comune di San Martino di Lupari",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di San Martino di Lupari"
    ],
@@ -1368,6 +1576,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Villanova di Camposampiero",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Villanova di Camposampiero"
    ],
@@ -1381,6 +1591,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Pistoia",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Pistoia"
    ],
@@ -1394,6 +1606,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Vicenza",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [],
    "schede": 8,
    "grafie": [
@@ -1405,6 +1619,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Interregionale per Il Fiume Po",
    "acronimo": "AIPO",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Interregionale per Il Fiume Po"
    ],
@@ -1418,6 +1634,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Lucca",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Lucca"
    ],
@@ -1431,6 +1649,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Bogliasco",
    "acronimo": "COMUNE DI BOGLIASCO",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Bogliasco"
    ],
@@ -1444,6 +1664,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Campo Ligure",
    "acronimo": "CL",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Campo Ligure"
    ],
@@ -1457,6 +1679,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Casella",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Casella"
    ],
@@ -1470,6 +1694,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Crocefieschi",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Crocefieschi"
    ],
@@ -1483,6 +1709,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Davagna",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Davagna"
    ],
@@ -1496,6 +1724,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Portofino",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Portofino"
    ],
@@ -1509,6 +1739,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Sant'Olcese",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Sant'Olcese"
    ],
@@ -1522,6 +1754,8 @@
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Milano",
    "acronimo": null,
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
    "enti": [
     "Città Metropolitana di Milano",
     "Città metropolitana di Milano"
@@ -1536,6 +1770,8 @@
    "ipa": true,
    "nome_ipa": "Parco Lombardo della Valle del Ticino",
    "acronimo": null,
+   "categoria": "L38",
+   "nome_categoria": "Parchi Nazionali, Consorzi e Enti Gestori di Parchi e Aree Naturali Protette",
    "enti": [
     "Parco del Ticino"
    ],
@@ -1549,6 +1785,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Campodoro",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Campodoro"
    ],
@@ -1562,6 +1800,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Massanzago",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Massanzago"
    ],
@@ -1575,6 +1815,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Lucca",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Lucca"
    ],
@@ -1588,6 +1830,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Parma",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Parma"
    ],
@@ -1601,6 +1845,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Rovigo",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Rovigo"
    ],
@@ -1614,6 +1860,8 @@
    "ipa": true,
    "nome_ipa": "COMUNE DI SOVIZZO",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "COMUNE DI SOVIZZO",
     "Comune di Sovizzo"
@@ -1629,6 +1877,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Curtarolo",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Curtarolo"
    ],
@@ -1642,6 +1892,8 @@
    "ipa": true,
    "nome_ipa": "ROMA CAPITALE",
    "acronimo": "COMUNE ROMA",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Roma Capitale"
    ],
@@ -1656,6 +1908,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Rovegno",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Rovegno"
    ],
@@ -1669,6 +1923,8 @@
    "ipa": true,
    "nome_ipa": "Consorzio Lamma",
    "acronimo": null,
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [],
    "schede": 4,
    "grafie": [
@@ -1680,6 +1936,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente del Friuli Venezia Giulia",
    "acronimo": "ARPA FVG",
+   "categoria": "L2",
+   "nome_categoria": "Agenzie ed Enti Regionali per la Formazione, la Ricerca e l'Ambiente",
    "enti": [
     "Agenzia Regionale per la Protezione dell'Ambiente del Friuli Venezia Giulia"
    ],
@@ -1693,6 +1951,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Bargagli",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Bargagli"
    ],
@@ -1706,6 +1966,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Borzonasca",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Borzonasca"
    ],
@@ -1719,6 +1981,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Camisano Vicentino",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Camisano Vicentino"
    ],
@@ -1732,6 +1996,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Campomorone",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Campomorone"
    ],
@@ -1745,6 +2011,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Castiglione Chiavarese",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Castiglione Chiavarese"
    ],
@@ -1758,6 +2026,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Coreglia Ligure",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Coreglia Ligure"
    ],
@@ -1771,6 +2041,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Lavagna",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Lavagna"
    ],
@@ -1784,6 +2056,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Lumarzo",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Lumarzo"
    ],
@@ -1797,6 +2071,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Mele",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Mele"
    ],
@@ -1810,6 +2086,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Mezzanego",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Mezzanego"
    ],
@@ -1823,6 +2101,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Mignanego",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Mignanego"
    ],
@@ -1836,6 +2116,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Montoggio",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Montoggio"
    ],
@@ -1849,6 +2131,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Ronco Scrivia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Ronco Scrivia"
    ],
@@ -1862,6 +2146,8 @@
    "ipa": true,
    "nome_ipa": "Comune di San Colombano Certenoli",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di San Colombano Certenoli"
    ],
@@ -1875,6 +2161,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Savignone",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Savignone"
    ],
@@ -1888,6 +2176,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Valbrevenna",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Valbrevenna"
    ],
@@ -1901,6 +2191,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Vobbia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Vobbia"
    ],
@@ -1914,6 +2206,8 @@
    "ipa": true,
    "nome_ipa": "Consorzio di Bonifica della Basilicata",
    "acronimo": "CBBAS",
+   "categoria": "L37",
+   "nome_categoria": "Gestori di Pubblici Servizi",
    "enti": [
     "Consorzio di Bonifica della Basilicata"
    ],
@@ -1927,6 +2221,8 @@
    "ipa": true,
    "nome_ipa": "Unione dei Comuni del Pratomagno",
    "acronimo": "UCP",
+   "categoria": "L18",
+   "nome_categoria": "Unioni di Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Unione dei Comuni del Pratomagno"
    ],
@@ -1940,6 +2236,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Borgoricco",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Borgoricco"
    ],
@@ -1953,6 +2251,8 @@
    "ipa": true,
    "nome_ipa": "Regione Marche",
    "acronimo": null,
+   "categoria": "L4",
+   "nome_categoria": "Regioni, Province Autonome e loro Consorzi e Associazioni",
    "enti": [
     "Regione Marche"
    ],
@@ -1966,6 +2266,8 @@
    "ipa": true,
    "nome_ipa": "Agenzia per L'Italia Digitale",
    "acronimo": "AGID",
+   "categoria": "C3",
+   "nome_categoria": "Enti Pubblici Non Economici",
    "enti": [],
    "schede": 1,
    "grafie": [
@@ -1977,6 +2279,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -1990,6 +2294,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2003,6 +2309,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "Agenzia Regionale per la Protezione dell'Ambiente del Veneto"
    ],
@@ -2016,6 +2324,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2029,6 +2339,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2042,6 +2354,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2055,6 +2369,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2068,6 +2384,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2081,6 +2399,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2094,6 +2414,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2107,6 +2429,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Bari",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Bari"
    ],
@@ -2120,6 +2444,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Brisighella",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Brisighella"
    ],
@@ -2133,6 +2459,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Campodarsego",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Campodarsego"
    ],
@@ -2146,6 +2474,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Cervia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Cervia"
    ],
@@ -2159,6 +2489,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Faenza",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Faenza"
    ],
@@ -2172,6 +2504,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Fascia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Fascia"
    ],
@@ -2185,6 +2519,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Ferrara",
    "acronimo": "COMUNE DI FERRARA",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Ferrara"
    ],
@@ -2198,6 +2534,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Giugliano In Campania",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Giugliano in Campania"
    ],
@@ -2211,6 +2549,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Jesi",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Jesi"
    ],
@@ -2224,6 +2564,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Loreggia",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Loreggia"
    ],
@@ -2237,6 +2579,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Montjovet",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Montjovet"
    ],
@@ -2250,6 +2594,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Monopoli",
    "acronimo": "MONOPOLI",
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Monopoli"
    ],
@@ -2263,6 +2609,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Paese",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Paese"
    ],
@@ -2276,6 +2624,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Tarcento",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Tarcento"
    ],
@@ -2289,6 +2639,8 @@
    "ipa": true,
    "nome_ipa": "Comune di Villa del Conte",
    "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
    "enti": [
     "Comune di Villa del Conte"
    ],
@@ -2302,6 +2654,8 @@
    "ipa": true,
    "nome_ipa": "Provincia di Varese",
    "acronimo": null,
+   "categoria": "L5",
+   "nome_categoria": "Province e loro Consorzi e Associazioni",
    "enti": [
     "Provincia di Varese"
    ],
@@ -2315,6 +2669,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],
@@ -2328,6 +2684,8 @@
    "ipa": false,
    "nome_ipa": null,
    "acronimo": null,
+   "categoria": null,
+   "nome_categoria": null,
    "enti": [
     "ARPAV"
    ],

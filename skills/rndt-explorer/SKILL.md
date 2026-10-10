@@ -24,7 +24,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.11.0"
+  version: "3.12.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -198,6 +198,13 @@ territorio come frase esatta, il nome più la bbox (o `--org`, o meglio `--ipa`,
 sovraordinato), e infine l'aggregazione per ente di una ricerca sul solo nome
 (`--format compact … | jq -r .org | sort | uniq -c`), che è il passo che chiude
 la risposta: «chi pubblica davvero» è quell'elenco, non il primo ente trovato.
+
+Per sapere se un ente pubblica in proprio basta `discover --what ipa --match "<nome>"`
+(dalla CLI 3.11.0). Una voce con `schede` maggiore di 0 è un codice da passare a `--ipa`.
+Una voce con `schede: 0` viene dall'anagrafica dell'Indice PA: il nome è giusto ma l'ente
+non ha schede nel RNDT, quindi si passa subito all'ente sovraordinato o al territorio
+(`--match "comune di palermo"` → `c_g273`, 0 schede). `--org` lo dice nei suggerimenti
+su zero risultati («nell'Indice PA ma senza schede nel RNDT»).
 Cita sempre `id` o `url` delle schede: una tabella di soli titoli non è
 verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 [`references/workflows.md`](./references/workflows.md) §12.
