@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-10-10 (rilascio 3.9.0, skill 3.10.0)
+
+- **3.9.0**: `--ipa` sul codice IPA del prefisso, vocabolario offline (`discover --what ipa`), anagrafica IPA mensile nella release `data-ipa` (#38, PR #41). Vocabolario rigenerato prima del rilascio con la scansione completa (23.883 schede, 299 s, nessun nuovo tentativo) e i nomi dalla release `data-ipa`: identico a quello del merge, 179 codici, 166 nell'Indice PA. Primo run del workflow `ipa-registry` a mano: release `data-ipa` creata (pre-release), 23.757 enti, sha256 verificato.
+
 ## 2026-10-10 (issue #38, codici IPA)
 
 - **Scansione dell'intero catalogo** (`tmp/scan_prefissi.py`, 23.883 schede su 23.883, id distinti, 316 s, 1,2 GB): 179 prefissi in minuscolo, 166 codici IPA validi; 13 no per 23 schede (12 ARPAV con id senza codice, 11 `istgemil`). 2.084 schede con maiuscole nel prefisso: `PCM` 731 e `pcm` 0, Sardegna `R_SARDEG` 404 e `r_sardeg` 362. Il prefisso tiene insieme le grafie dell'ente (`arpa_ve` 245 con tre nomi) e trova le 192 schede senza `EnteResponsabile_s`.

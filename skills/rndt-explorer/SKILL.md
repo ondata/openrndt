@@ -124,7 +124,7 @@ Filtri principali:
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
 | `--org`             | ente responsabile (`EnteResponsabile_s`) che contiene il testo, case-insensitive; le sigle (`arpae`) non bastano, su zero risultati la CLI propone il nome per esteso |
 | `--org-exact`       | ente responsabile, confronto esatto e case-sensitive su `EnteResponsabile_s` |
-| `--ipa`             | codice IPA dell'ente titolare (prefisso dell'id), senza maiuscole, più codici con la virgola; trova anche le schede senza ente responsabile e tutte le grafie del nome. Il codice da `discover --what ipa --match <nome o sigla>` (CLI successiva alla 3.8.0) |
+| `--ipa`             | codice IPA dell'ente titolare (prefisso dell'id), senza maiuscole, più codici con la virgola; trova anche le schede senza ente responsabile e tutte le grafie del nome. Il codice da `discover --what ipa --match <nome o sigla>` (dalla CLI 3.9.0) |
 | `--time`            | range temporale della **risorsa** `yyyy-mm-dd/yyyy-mm-dd`   |
 | `--modified`        | range modifica del **record nel catalogo** `yyyy-mm-dd/yyyy-mm-dd` |
 | `--updated-from/--updated-to` | range data aggiornamento scheda (`apiso_Modified_dt`) |
