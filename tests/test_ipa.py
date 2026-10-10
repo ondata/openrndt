@@ -50,6 +50,14 @@ def test_vocabulary_shape_and_known_codes():
     assert set(codes["pcm"]) == {"codice", "ipa", "nome_ipa", "acronimo", "enti", "schede", "grafie"}
 
 
+def test_vocabulary_returns_independent_copies():
+    first = ipa_vocabulary()
+    first[0]["enti"].clear()
+    first[0]["grafie"].append("X")
+    again = ipa_vocabulary()[0]
+    assert again["enti"] and "X" not in again["grafie"]
+
+
 def test_find_ipa_by_acronym_name_and_code():
     assert [c["codice"] for c in find_ipa("arpae")] == ["arpa"]  # acronimo IPA «ARPAE ER»
     assert "r_sardeg" in [c["codice"] for c in find_ipa("sardegna")]

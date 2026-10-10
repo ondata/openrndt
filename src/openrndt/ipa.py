@@ -9,6 +9,7 @@ filtro usa le classi di lettere. Il vocabolario lo rigenera
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 from functools import cache
@@ -29,7 +30,8 @@ def _vocabulary() -> dict[str, Any]:
 def ipa_vocabulary() -> list[dict[str, Any]]:
     """I codici del vocabolario, dal più grande: ``codice``, ``ipa`` (è nell'Indice PA),
     ``nome_ipa``, ``acronimo``, ``enti`` (i nomi in ``EnteResponsabile_s``), ``schede``, ``grafie``."""
-    return [dict(c) for c in _vocabulary()["codici"]]
+    # Copia profonda: chi modifica `enti` o `grafie` non tocca la cache.
+    return copy.deepcopy(_vocabulary()["codici"])
 
 
 def ipa_vocabulary_date() -> str:
