@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from typing import Any, NoReturn, cast
 
 import httpx
@@ -173,6 +174,28 @@ def _org_probe_token(value: str) -> str | None:
     return max(candidates, key=len)
 
 
+def _contact_clause(value: str) -> str:
+    """Frase su `apiso_OrganizationName_txt`, il campo con contatti e sigle (case-insensitive)."""
+    phrase = value.strip().replace("\\", "\\\\").replace('"', '\\"')
+    return f'apiso_OrganizationName_txt:"{phrase}"'
+
+
+def _contact_count(org: str) -> int:
+    """Schede in cui `org` compare fra gli enti citati nel metadato, se non è in nessun ente responsabile.
+
+    Un ente che compila o distribuisce metadati per altri (CSI Piemonte per la
+    Regione) non è mai ente responsabile: `--org` lo trova a zero, ma lì c'è.
+    Zero quando `--org` da solo trova qualcosa: lo zero viene da un altro filtro.
+    """
+    try:
+        if _total_count(cast(dict[str, Any], do_search(org=org, num=1, fmt="json"))):
+            return 0
+        payload = do_search(q=_contact_clause(org), q_mode="lucene", num=1, fmt="json")
+    except (httpx.HTTPError, ValueError):
+        return 0
+    return _total_count(payload) if isinstance(payload, dict) else 0
+
+
 def _suggest_orgs(org: str) -> list[str]:
     """Nomi di ente in catalogo che assomigliano a `org` (una sola chiamata).
 
@@ -189,11 +212,8 @@ def _suggest_orgs(org: str) -> list[str]:
     token = _org_probe_token(org)
     if token is None:
         return []
-    phrase = token.replace("\\", "\\\\").replace('"', '\\"')
     try:
-        payload = do_search(
-            q=f'apiso_OrganizationName_txt:"{phrase}"', q_mode="lucene", num=200, fmt="json"
-        )
+        payload = do_search(q=_contact_clause(token), q_mode="lucene", num=200, fmt="json")
     except (httpx.HTTPError, ValueError):
         return []
     if not isinstance(payload, dict):
@@ -219,6 +239,7 @@ def _no_results_hint(
     if org:
         suggestions = _suggest_orgs(org)
         exact = next((s for s in suggestions if s.lower() == org.strip().lower()), None)
+        contacts = 0 if exact is not None else _contact_count(org)
         if exact is not None:
             hints.append(
                 f"l'ente '{exact}' esiste in catalogo: a dare zero è un altro filtro, "
@@ -226,7 +247,14 @@ def _no_results_hint(
             )
         elif suggestions:
             hints.append("enti simili presenti in catalogo: " + " | ".join(suggestions))
-        else:
+        if contacts:
+            hints.append(
+                f"'{org.strip()}' non è nel nome di nessun ente responsabile, ma in tutto il "
+                f"catalogo compare in {contacts} schede fra gli enti citati nel metadato "
+                "(chi lo compila o distribuisce, o una sigla): openrndt search --q "
+                + shlex.quote(_contact_clause(org))
+            )
+        elif exact is None and not suggestions:
             hints.append(
                 f"nessun ente in catalogo somiglia a '{org}': l'ente potrebbe non "
                 "pubblicare sul RNDT (i suoi dati possono essere pubblicati da un "

@@ -648,7 +648,7 @@ def test_cli_search_org_zero_results_suggests_catalog_names():
         ],
     }
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
-        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe)]
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe), httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
     )
     result = runner.invoke(app, ["search", "--org", "comune di bologna", "--num", "2"])
     assert result.exit_code == 0, result.output
@@ -660,7 +660,7 @@ def test_cli_search_org_zero_results_suggests_catalog_names():
 def test_cli_search_org_zero_results_without_matches_suggests_territory():
     empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
-        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty), httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
     )
     result = runner.invoke(app, ["search", "--org", "ente inesistente", "--num", "2"])
     assert result.exit_code == 0, result.output
@@ -742,7 +742,12 @@ def test_cli_search_org_acronym_suggests_full_responsible_name():
         "results": [{"_source": {"EnteResponsabile_s": full, "apiso_OrganizationName_txt": "ARPAE"}}],
     }
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
-        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=probe)]
+        side_effect=[
+            httpx.Response(200, json=empty),
+            httpx.Response(200, json=probe),
+            httpx.Response(200, json=empty),
+            httpx.Response(200, json={"total": 394, "results": []}),
+        ]
     )
     result = runner.invoke(app, ["search", "--org", "arpae"])
     assert result.exit_code == 0, result.output
@@ -750,15 +755,52 @@ def test_cli_search_org_acronym_suggests_full_responsible_name():
 
 
 @respx.mock
+def test_cli_search_org_contact_only_points_to_contact_query():
+    """CSI compila i metadati per la Regione: non è mai ente responsabile, ma è fra i contatti."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[
+            httpx.Response(200, json=empty),
+            httpx.Response(200, json=empty),
+            httpx.Response(200, json={"total": 272, "results": []}),
+        ]
+    )
+    result = runner.invoke(app, ["search", "--org", "csi"])
+    assert result.exit_code == 0, result.output
+    assert "compare in 272 schede fra gli enti citati nel metadato" in result.output
+    assert "openrndt search --q 'apiso_OrganizationName_txt:\"csi\"'" in result.output
+    assert "nessun ente in catalogo somiglia" not in result.output
+    assert route.calls[2].request.url.params["q"] == '(apiso_OrganizationName_txt:"csi")'
+
+
+@respx.mock
+def test_cli_search_org_no_contact_hint_when_another_filter_gives_zero():
+    """Se --org da solo trova record, lo zero viene da un altro filtro: niente avviso sui contatti."""
+    empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
+    probe = {"total": 5, "results": [{"_source": {"EnteResponsabile_s": "Regione Piemonte"}}]}
+    route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        side_effect=[
+            httpx.Response(200, json=empty),
+            httpx.Response(200, json=probe),
+            httpx.Response(200, json={"total": 613, "results": []}),
+        ]
+    )
+    result = runner.invoke(app, ["search", "--org", "piemonte", "--bbox", "7,44,8,45"])
+    assert result.exit_code == 0, result.output
+    assert "fra gli enti citati nel metadato" not in result.output
+    assert route.call_count == 3
+
+
+@respx.mock
 def test_cli_search_org_probe_escapes_token():
     """La probe cerca il token come frase sul campo del contatto, quotato (#23)."""
     empty = {"total": {"value": 0, "relation": "eq"}, "num": 0, "start": 1, "results": []}
     route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
-        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
+        side_effect=[httpx.Response(200, json=empty), httpx.Response(200, json=empty), httpx.Response(200, json=empty), httpx.Response(200, json=empty)]
     )
     result = runner.invoke(app, ["search", "--org", "regione emilia-romagna"])
     assert result.exit_code == 0, result.output
-    assert route.calls[-1].request.url.params["q"] == '(apiso_OrganizationName_txt:"emilia-romagna")'
+    assert route.calls[1].request.url.params["q"] == '(apiso_OrganizationName_txt:"emilia-romagna")'
 
 
 @respx.mock
