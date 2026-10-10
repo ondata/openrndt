@@ -78,6 +78,8 @@ def registry_text(client: httpx.Client, path: Path | None) -> str:
         r = client.get(REGISTRY, follow_redirects=True)
         r.raise_for_status()
         text = r.content.decode("utf-8")
+    # La release ha i CRLF di `csv.writer`, una copia letta con `read_text` no: stessi byte nel gzip.
+    text = text.replace("\r\n", "\n")
     header = text.split("\n", 1)[0].strip().split(",")
     if header != REGISTRY_COLUMNS:
         raise SystemExit(f"anagrafica IPA con colonne {header}, attese {REGISTRY_COLUMNS}: rilanciare il workflow ipa-registry")

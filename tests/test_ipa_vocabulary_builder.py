@@ -54,3 +54,12 @@ def test_main_writes_vocabulary_and_gzip_registry(monkeypatch, tmp_path):
     assert gzip.decompress(gz).decode("utf-8") == REGISTRY
     # mtime=0: stessa anagrafica, stesso file.
     assert gz == gzip.compress(REGISTRY.encode("utf-8"), compresslevel=9, mtime=0)
+
+
+def test_registry_text_from_release_drops_crlf():
+    # `csv.writer` scrive CRLF nella release: senza normalizzare, il gzip cambierebbe secondo la fonte.
+    class Client:
+        def get(self, url, follow_redirects):
+            return type("R", (), {"content": REGISTRY.replace("\n", "\r\n").encode(), "raise_for_status": lambda self: None})()
+
+    assert builder.registry_text(Client(), None) == REGISTRY
