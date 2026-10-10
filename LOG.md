@@ -2,6 +2,7 @@
 
 ## 2026-10-10 (rilascio 3.9.0, skill 3.10.0)
 
+- **Pubblicata**: tag `v3.9.0`, GitHub Release (Latest), PyPI. Reinstallazione da PyPI con `==3.9.0` riuscita al secondo tentativo. Smoke test sulla CLI da PyPI: `--ipa r_sardeg` 766, `--ipa pcm` 731, `discover --what ipa --match arpae` → `arpa` (vocabolario del 2026-10-10), `--org arpae` suggerisce `--ipa arpa`.
 - **3.9.0**: `--ipa` sul codice IPA del prefisso, vocabolario offline (`discover --what ipa`), anagrafica IPA mensile nella release `data-ipa` (#38, PR #41). Vocabolario rigenerato prima del rilascio con la scansione completa (23.883 schede, 299 s, nessun nuovo tentativo) e i nomi dalla release `data-ipa`: identico a quello del merge, 179 codici, 166 nell'Indice PA. Primo run del workflow `ipa-registry` a mano: release `data-ipa` creata (pre-release), 23.757 enti, sha256 verificato.
 
 ## 2026-10-10 (issue #38, codici IPA)
