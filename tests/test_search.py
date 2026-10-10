@@ -13,6 +13,7 @@ from openrndt.search import (
     bbox_from_envelope,
     compact_results,
     download_urls,
+    geolibre_search_url,
     geolibre_url,
     item_record,
     organization_names,
@@ -20,6 +21,7 @@ from openrndt.search import (
     record_license,
     record_org,
     record_url,
+    results_bbox,
     search,
 )
 
@@ -753,3 +755,79 @@ def test_compact_and_item_record_show_responsible_party():
     payload = {"results": [{"id": "r_piemon:x", "title": "T", "_source": source}]}
     assert compact_results(payload)[0]["org"] == "Regione Piemonte"
     assert item_record({"_id": "r_piemon:x", "_source": source})["org"] == "Regione Piemonte"
+
+
+# --- geolibre_search_url e results_bbox (issue #27) --------------------------
+
+GS = "https://web.geolibre.app/?plugin=openrndt-geolibre"
+
+
+def test_geolibre_search_url_issue_example():
+    """L'esempio della #27, parametro per parametro."""
+    link = geolibre_search_url(q="fiumi", bbox="9, 45, 10, 46", published_from="2020-01-01")
+    assert link == {
+        "url": f"{GS}&rndt=fiumi&rndtBbox=9,45,10,46&rndtDate=publication&rndtFrom=2020-01-01",
+        "untranslated": [],
+        "notes": [],
+    }
+
+
+def test_geolibre_search_url_text_modes():
+    assert geolibre_search_url(q="copertura del suolo")["url"] == f"{GS}&rndt=copertura%20del%20suolo"
+    assert geolibre_search_url(q="a b", q_mode="any")["url"] == f"{GS}&rndt=a%20b&rndtMode=any"
+    # La CLI passa intatta una q Lucene anche in all/any, il plugin la escaperebbe.
+    for mode in ("all", "any", "lucene"):
+        assert geolibre_search_url(q="keywords_s:x", q_mode=mode)["url"].endswith("&rndtMode=lucene")
+    assert geolibre_search_url(q="catasto", q_mode="lucene")["url"].endswith("&rndtMode=lucene")
+    with pytest.raises(ValueError):
+        geolibre_search_url(q="x", q_mode="boh")
+
+
+def test_geolibre_search_url_org_and_keywords():
+    link = geolibre_search_url(org="Regione Piemonte", data_category="planningCadastre, inlandWaters")
+    assert link["url"] == f"{GS}&rndtOrg=Regione%20Piemonte&rndtKeywords=planningCadastre,inlandWaters"
+    assert link["notes"] == []
+    exact = geolibre_search_url(org_exact="Città metropolitana di Torino")
+    assert exact["url"] == f"{GS}&rndtOrg=Citt%C3%A0%20metropolitana%20di%20Torino"
+    assert "org_exact" in exact["notes"][0]
+    comma = geolibre_search_url(org="Agenzia Regionale per la Prevenzione, l'Ambiente")
+    assert "virgola" in comma["notes"][0]
+
+
+def test_geolibre_search_url_dates_one_range_only():
+    updated = geolibre_search_url(updated_from="2026-04-26", updated_to="2026-10-01", published_from="2020-01-01")
+    assert updated["url"] == f"{GS}&rndtDate=modified&rndtFrom=2026-04-26&rndtTo=2026-10-01"
+    assert updated["untranslated"] == ["published_from"]
+    assert geolibre_search_url(published_to="2020-12-31")["url"] == f"{GS}&rndtDate=publication&rndtTo=2020-12-31"
+
+
+def test_geolibre_search_url_sort_and_untranslated():
+    assert geolibre_search_url(sort="apiso_Modified_dt:desc")["url"] == f"{GS}&rndtSort=newest"
+    assert geolibre_search_url(sort="title:desc")["url"] == f"{GS}&rndtSort=title-desc"
+    link = geolibre_search_url(sort="relevance", time="2020-01-01/2021-01-01", modified="2025-01-01,2025-12-31")
+    assert link["url"] == GS
+    assert link["untranslated"] == ["sort", "time", "modified"]
+
+
+def test_geolibre_search_url_view_only_without_bbox():
+    assert geolibre_search_url(q="x", view=[12.5, 37.0, 15.6, 38.8])["url"] == f"{GS}&rndt=x&rndtView=12.5,37,15.6,38.8"
+    assert "rndtView" not in geolibre_search_url(bbox="9,45,10,46", view=[1, 2, 3, 4])["url"]
+
+
+def test_geolibre_search_url_item_id_opens_record():
+    link = geolibre_search_url(item_id="r_piemon:x", q="ignorata")
+    assert link == {"url": geolibre_url("r_piemon:x"), "untranslated": ["q"], "notes": []}
+
+
+def test_results_bbox_union_and_missing():
+    payload = {
+        "results": [
+            {"bbox": {"xmin": 9, "ymin": 44, "xmax": 10, "ymax": 45}},
+            {"bbox": {"xmin": 12.5, "ymin": 43, "xmax": 13, "ymax": 44.5}},
+            {"bbox": {"xmin": None, "ymin": 1, "xmax": 2, "ymax": 3}},
+            {},
+        ]
+    }
+    assert results_bbox(payload) == [9.0, 43.0, 13.0, 45.0]
+    assert results_bbox({"results": [{}]}) is None
+    assert results_bbox({}) is None

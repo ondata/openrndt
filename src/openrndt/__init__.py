@@ -24,6 +24,7 @@ from openrndt.search import (
     compact_results,
     contact_point,
     download_urls,
+    geolibre_search_url,
     geolibre_url,
     item_record,
     organization_names,
@@ -31,6 +32,7 @@ from openrndt.search import (
     record_license,
     record_org,
     record_url,
+    results_bbox,
     search,
 )
 
@@ -42,6 +44,8 @@ __all__ = [
     "record_license",
     "record_org",
     "record_url",
+    "results_bbox",
+    "geolibre_search_url",
     "geolibre_url",
     "extract_resources",
     "check_resources",
