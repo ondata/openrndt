@@ -185,6 +185,15 @@ restano intere.
 
 `geolibre_url` apre lo stesso record in [GeoLibre](https://geolibre.app) web, dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre): `https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`. Il pannello si apre sulla scheda, con i servizi WMS/WFS pronti da aggiungere alla mappa; a chi non ha il plugin GeoLibre lo propone con «Trust and load». C'è in tutti gli output tranne `--format table`, anche nel JSON di `search` accanto a ogni risultato. Funziona su web.geolibre.app, non ancora in GeoLibre Desktop (la 3.2.0 non legge `?plugin=` per i plugin del registro) né con `layout=viewer` ([opengeos/GeoLibre#2898](https://github.com/opengeos/GeoLibre/issues/2898)).
 
+`--geolibre-link` dà invece l'indirizzo che apre l'intera ricerca nel plugin, con i footprint sulla mappa (plugin 0.3.8 o successivo):
+
+```bash
+openrndt search --q fiumi --bbox 9,45,10,46 --published-from 2020-01-01 --geolibre-link
+# https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=fiumi&rndtBbox=9,45,10,46&rndtDate=publication&rndtFrom=2020-01-01
+```
+
+I filtri che il plugin non ha (`--time`, `--modified`, alcuni `--sort`) il link li ignora e la CLI li elenca su stderr. Con `--format json` lo stesso link è nell'oggetto `geolibre_search`, accanto a `total`. Il link riapre la ricerca dal vivo, sulla prima pagina.
+
 `updated` è la data della **scheda di metadato** (`apiso_Modified_dt`), la stessa
 su cui filtrano `--updated-from/--updated-to`; `indexed` è l'istante in cui il
 catalogo ha indicizzato il record (`sys_modified_dt`) e non dice nulla né sul dato
@@ -545,7 +554,7 @@ Per provarlo:
 - **GeoLibre web**: <https://web.geolibre.app/?plugin=openrndt-geolibre>. Chi non ha il plugin lo installa dopo la richiesta «Trust and load».
 - **GeoLibre Desktop** (dalla 3.2.0): **Settings > Manage Plugins**, poi **RNDT catalogue** e **Install**.
 
-Il collegamento con la CLI è `geolibre_url`: ogni record in uscita da `search`, `get` e `footprints` ha l'indirizzo che lo apre nel plugin su GeoLibre web (vedi sopra, nella sezione sui campi). Il plugin è in beta; problemi e idee vanno nelle [issue del suo repository](https://github.com/ondata/openrndt-geolibre/issues).
+Il collegamento con la CLI sono i link a GeoLibre web: `geolibre_url` per ogni record in uscita da `search`, `get` e `footprints`, un link per layer da `resources --layers`, e `search --geolibre-link` per l'intera ricerca (vedi sopra, nella sezione sui campi). Il plugin è in beta; problemi e idee vanno nelle [issue del suo repository](https://github.com/ondata/openrndt-geolibre/issues).
 
 ## Riferimenti
 

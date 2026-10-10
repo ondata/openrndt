@@ -24,7 +24,7 @@ compatibility: >
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.8.0"
+  version: "3.9.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo
@@ -54,9 +54,7 @@ Se `resources` è `[]` o `download` è `[]` il record non linka servizi fruibili
 `get <id>` e guarda il suo campo `resources`, che parte da `resources_nst` (i tipi
 assegnati dal catalogo) e ricade sui link solo dove quello manca.
 
-`geolibre_url` (dalla CLI 3.5.0) apre lo stesso record in GeoLibre web, dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre): il pannello si apre sulla scheda, con i servizi WMS/WFS pronti da aggiungere alla mappa, e a chi non ha il plugin GeoLibre lo propone con «Trust and load». Proponilo quando l'utente vuole vedere il dato su una mappa senza installare nulla. Due limiti: funziona su web.geolibre.app ma non ancora in GeoLibre Desktop (la 3.2.0 non legge `?plugin=` per i plugin del registro), e non con `layout=viewer`, dove i plugin del registro non si aprono da link (opengeos/GeoLibre#2898). È in tutti gli output tranne `--format table`, anche nel JSON di `search` accanto a ogni risultato.
-
-Per aprire GeoLibre con un layer **già sulla mappa**, non solo con la scheda nel pannello, usa `resources <id> --layers` (CLI successiva alla 3.5.0): legge le GetCapabilities di ogni WMS e dà un `geolibre_url` per layer. Se è `null`, `note` dice perché (nessun CRS disegnabile, nome già in un altro servizio della scheda). Una `note` su `http://` avvisa che su web.geolibre.app il layer può non vedersi. Il link funziona con il plugin 0.3.5 o successivo nel registro di GeoLibre: con uno precedente si apre solo la scheda.
+**Vedere i risultati nel browser.** `geolibre_url` (dalla CLI 3.5.0, in tutti gli output tranne `--format table`) apre la scheda in GeoLibre web, nel plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre); `resources <id> --layers` (dalla 3.6.0) dà un link per layer, con il layer già sulla mappa; `search … --geolibre-link` (CLI successiva alla 3.7.0) apre l'intera ricerca. Proponili quando l'utente vuole guardare i dati senza installare nulla, dicendo i limiti: solo web.geolibre.app, i dati li scarica il browser di chi apre (servizi `http://` o senza CORS non si vedono), la ricerca è dal vivo e apre la prima pagina, e alcuni filtri non passano nel link (la CLI li elenca su stderr). Tabella di traduzione, versioni del plugin e limiti in [`references/browser-links.md`](./references/browser-links.md).
 
 **Le tre date non sono la stessa cosa.** Negli output `compact`, `csv`, `table` e
 `footprints`, `updated` è la data della **scheda** (`apiso_Modified_dt`) — la stessa
@@ -366,7 +364,7 @@ soglie ogni volta.
 
 ## Fase 5 — Visualizza (opzionale)
 
-Il RNDT dice dove stanno i dati, non li mostra. Per guardarli senza aprire QGIS
+Il RNDT dice dove stanno i dati, non li mostra. La via più breve per guardarli sono i link a GeoLibre web della CLI ([`references/browser-links.md`](./references/browser-links.md)). Per costruire una mappa da consegnare senza aprire QGIS
 si può usare [GeoLibre](https://geolibre.app), che ha una propria skill e un
 proprio server MCP per scrivere progetti `.geolibre`. Tre cose diverse da
 mettere su mappa, con comandi e limiti diversi:
