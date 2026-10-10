@@ -442,7 +442,8 @@ def results_bbox(payload: dict[str, Any]) -> list[float] | None:
     """Riquadro ``[ovest, sud, est, nord]`` che contiene i ``bbox`` dei risultati.
 
     ``None`` se nessun risultato ha un bbox numerico. Un solo record nazionale
-    porta il riquadro all'Italia intera.
+    porta il riquadro all'Italia intera. Un bbox con gli estremi invertiti è
+    raddrizzato: le 35 schede AVEPA hanno ovest maggiore di est (2026-10-10).
     """
     boxes: list[list[float]] = []
     for r in payload.get("results", []) or []:
@@ -450,7 +451,8 @@ def results_bbox(payload: dict[str, Any]) -> list[float] | None:
         values = [b.get(k) for k in ("xmin", "ymin", "xmax", "ymax")]
         numbers = [float(v) for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
         if len(numbers) == 4:
-            boxes.append(numbers)
+            xmin, ymin, xmax, ymax = numbers
+            boxes.append([min(xmin, xmax), min(ymin, ymax), max(xmin, xmax), max(ymin, ymax)])
     if not boxes:
         return None
     return [min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes)]
