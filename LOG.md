@@ -2,6 +2,7 @@
 
 ## 2026-10-10 (rilascio 3.7.0, skill 3.8.0)
 
+- **Pubblicata**: tag `v3.7.0`, GitHub Release, PyPI. Subito dopo l'upload `/pypi/openrndt/json` dava già 3.7.0 ma la prima `uv tool install openrndt==3.7.0` è fallita con «unsatisfiable» (indice non ancora propagato); riuscita al tentativo successivo. Smoke test sulla CLI da PyPI: `--org "regione piemonte"` 613, `org` «Regione Piemonte» sulla scheda PRAE, `--org csi` con l'avviso sulle 272 schede fra i contatti.
 - **3.7.0**: `--org` sull'ente responsabile con il filtro del plugin, `org` negli output dall'ente responsabile, avvisi su zero risultati con nome per esteso e schede dove l'ente è fra i contatti (#23, PR #36). Cambia il risultato di `--org`: avviso in testa alla sezione del CHANGELOG.
 
 ## 2026-10-10 (issue #23, `--org` sull'ente responsabile)
