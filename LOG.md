@@ -2,6 +2,7 @@
 
 ## 2026-10-10 (rilascio 3.11.0, skill 3.12.0)
 
+- **Pubblicata**: tag `v3.11.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.11.0` riuscita. Smoke test sulla CLI da PyPI: `discover --what ipa --match "comune di palermo"` → `c_g273`, `L6`, 0 schede; `--org "comune di palermo"` lo propone nei suggerimenti.
 - **Workflow `ipa-registry` a mano** dopo il merge della PR #45: `ipa-enti.csv` in `data-ipa` con `categoria` e `nome_categoria`, 23.757 enti, 53 categorie, sha256 verificato.
 - **Vocabolario rigenerato dalla release** (254 s): `ipa.json` identico; il gzip cambiava solo per i fine riga, CRLF nella release e LF nella copia letta con `read_text`. Normalizzati nello script (test), il gzip è uguale a quello del merge.
 
