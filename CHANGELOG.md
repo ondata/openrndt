@@ -8,6 +8,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il pr
 
 ### Changed
 
+- **Link di ricerca GeoLibre con `--ipa` e con gli enti che hanno una virgola nel nome** ([#40](https://github.com/ondata/openrndt/issues/40), [#42](https://github.com/ondata/openrndt/issues/42)): `--ipa` diventa `rndtIpa` e non è più fra i filtri non tradotti; un ente con una virgola va in `rndtOrg` tra virgolette doppie, così il plugin non lo legge come elenco (Arpae per esteso, 383 schede), e la nota relativa sparisce. Richiede il plugin openrndt-geolibre 0.3.11, nel registro di GeoLibre la 0.3.12 dal 2026-10-10.
+- Skill `rndt-explorer` 3.11.0: in `references/browser-links.md` `--ipa` passa nel link come `rndtIpa`; tolto il limite sui nomi di ente con una virgola.
 - Skill `rndt-explorer` 3.10.1: per filtrare un ente si parte dal codice IPA (`discover --what ipa --match`, poi `--ipa`), poi `--org`. In `references/search-syntax.md` la sezione «Filtrare per ente» consigliava `apiso_Identifier_s:r_sicili*` ed `EnteResponsabile_s:"…"` esatto come forme robuste: distinguono maiuscole e minuscole (`pcm` 0 schede su 731) e ora sono indicate come da evitare.
 
 ## [3.9.0] - 2026-10-10

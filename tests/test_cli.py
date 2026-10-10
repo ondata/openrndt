@@ -1116,11 +1116,11 @@ def test_cli_search_geolibre_link_prints_only_url(search_response_json):
 
 
 @respx.mock
-def test_cli_search_geolibre_link_notes_comma_in_org(search_response_json):
+def test_cli_search_geolibre_link_quotes_comma_in_org(search_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
         return_value=httpx.Response(200, json=search_response_json)
     )
     result = runner.invoke(app, ["search", "--org", "Agenzia per la Prevenzione, l'Ambiente", "--geolibre-link"])
     assert result.exit_code == 0, result.output
-    assert "rndtOrg=Agenzia%20per%20la%20Prevenzione,%20l%27Ambiente" in result.stdout
-    assert "Nota sul link: org: il plugin legge la virgola" in result.stderr
+    assert "rndtOrg=%22Agenzia%20per%20la%20Prevenzione,%20l%27Ambiente%22" in result.stdout
+    assert "Nota sul link" not in result.stderr

@@ -790,8 +790,10 @@ def test_geolibre_search_url_org_and_keywords():
     exact = geolibre_search_url(org_exact="Città metropolitana di Torino")
     assert exact["url"] == f"{GS}&rndtOrg=Citt%C3%A0%20metropolitana%20di%20Torino"
     assert "org_exact" in exact["notes"][0]
+    # Un nome con la virgola va tra virgolette, altrimenti il plugin lo legge come elenco (#40).
     comma = geolibre_search_url(org="Agenzia Regionale per la Prevenzione, l'Ambiente")
-    assert "virgola" in comma["notes"][0]
+    assert comma["url"] == f"{GS}&rndtOrg=%22Agenzia%20Regionale%20per%20la%20Prevenzione,%20l%27Ambiente%22"
+    assert comma["notes"] == []
 
 
 def test_geolibre_search_url_dates_one_range_only():

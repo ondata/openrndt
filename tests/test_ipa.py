@@ -72,10 +72,10 @@ def test_search_sends_ipa_clause_in_and():
     assert route.calls.last.request.url.params["q"] == "(catasto) AND apiso_Identifier_s:/[rR]_[sS][aA][rR][dD][eE][gG]:.*/"
 
 
-def test_geolibre_search_url_leaves_ipa_out():
-    link = geolibre_search_url(q="catasto", ipa="r_sardeg")
-    assert "r_sardeg" not in link["url"]
-    assert link["untranslated"] == ["ipa"]
+def test_geolibre_search_url_translates_ipa():
+    link = geolibre_search_url(q="catasto", ipa="R_SARDEG, arpa_ve")
+    assert link["url"].endswith("&rndt=catasto&rndtIpa=R_SARDEG,arpa_ve")
+    assert link["untranslated"] == []
 
 
 @respx.mock
