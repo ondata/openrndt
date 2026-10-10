@@ -285,7 +285,9 @@ def test_cli_search_zero_results_json_hint_on_stderr():
     )
     result = runner.invoke(app, ["search", "--q", "zzz", "--bbox", "7,44,8,45"])
     assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout) == empty
+    out = json.loads(result.stdout)
+    assert out.pop("geolibre_search")["url"].endswith("&rndt=zzz&rndtBbox=7,44,8,45")
+    assert out == empty
     assert "nessun risultato" in result.stderr.lower()
     assert "suggerimenti" in result.stderr.lower()
     assert "bbox" in result.stderr.lower()
@@ -1079,3 +1081,46 @@ def test_cli_search_org_contact_hint_keeps_base_url():
     result = runner.invoke(app, ["--base-url", other, "search", "--org", "csi"])
     assert result.exit_code == 0, result.output
     assert f"openrndt --base-url {other} search --q" in result.output
+
+
+# --- link GeoLibre per la ricerca intera (issue #27) -------------------------
+
+
+@respx.mock
+def test_cli_search_json_has_geolibre_search_after_total(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["--format", "json", "search", "--q", "fiumi", "--time", "2020-01-01/2021-01-01"])
+    assert result.exit_code == 0, result.output
+    out = json.loads(result.stdout)
+    assert list(out)[:2] == ["total", "geolibre_search"]
+    link = out["geolibre_search"]
+    # Senza --bbox la mappa si apre sul riquadro dei risultati della pagina.
+    assert link["url"].startswith("https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=fiumi&rndtView=")
+    assert link["untranslated"] == ["time"]
+
+
+@respx.mock
+def test_cli_search_geolibre_link_prints_only_url(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(
+        app,
+        ["--format", "table", "search", "--q", "fiumi", "--bbox", "9,45,10,46", "--sort", "relevance", "--geolibre-link"],
+    )
+    assert result.exit_code == 0, result.output
+    assert result.stdout.strip() == "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=fiumi&rndtBbox=9,45,10,46"
+    assert "Non applicati nel link (il plugin non li ha): --sort" in result.stderr
+
+
+@respx.mock
+def test_cli_search_geolibre_link_notes_comma_in_org(search_response_json):
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json=search_response_json)
+    )
+    result = runner.invoke(app, ["search", "--org", "Agenzia per la Prevenzione, l'Ambiente", "--geolibre-link"])
+    assert result.exit_code == 0, result.output
+    assert "rndtOrg=Agenzia%20per%20la%20Prevenzione,%20l%27Ambiente" in result.stdout
+    assert "Nota sul link: org: il plugin legge la virgola" in result.stderr

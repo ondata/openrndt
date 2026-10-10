@@ -429,6 +429,117 @@ def geolibre_url(item_id: Any, layers: list[tuple[str, str]] | None = None) -> s
     return url
 
 
+# `--sort` della CLI → `rndtSort` del plugin (`SORTS` in `src/rndt/url-params.ts`).
+_GEOLIBRE_SORTS = {
+    "title:asc": "title",
+    "title:desc": "title-desc",
+    "apiso_Modified_dt:desc": "newest",
+    "apiso_Modified_dt:asc": "oldest",
+}
+
+
+def results_bbox(payload: dict[str, Any]) -> list[float] | None:
+    """Riquadro ``[ovest, sud, est, nord]`` che contiene i ``bbox`` dei risultati.
+
+    ``None`` se nessun risultato ha un bbox numerico. Un solo record nazionale
+    porta il riquadro all'Italia intera.
+    """
+    boxes: list[list[float]] = []
+    for r in payload.get("results", []) or []:
+        b = r.get("bbox") or {}
+        values = [b.get(k) for k in ("xmin", "ymin", "xmax", "ymax")]
+        numbers = [float(v) for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+        if len(numbers) == 4:
+            boxes.append(numbers)
+    if not boxes:
+        return None
+    return [min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes)]
+
+
+def geolibre_search_url(
+    *,
+    q: str | None = None,
+    q_mode: str = "all",
+    bbox: str | None = None,
+    bbox_crs: str | None = None,
+    org: str | None = None,
+    org_exact: str | None = None,
+    data_category: str | None = None,
+    time: str | None = None,
+    modified: str | None = None,
+    updated_from: str | None = None,
+    updated_to: str | None = None,
+    published_from: str | None = None,
+    published_to: str | None = None,
+    sort: str | None = None,
+    item_id: str | None = None,
+    view: list[float] | None = None,
+) -> dict[str, Any]:
+    """Indirizzo che apre in GeoLibre web, nel plugin openrndt-geolibre, la stessa ricerca di :func:`search`.
+
+    Ritorna ``{"url", "untranslated", "notes"}``: ``untranslated`` sono i nomi
+    dei filtri che il plugin non ha (il link li ignora), ``notes`` le
+    differenze da sapere su quelli tradotti. ``view`` (``[ovest, sud, est,
+    nord]``, vedi :func:`results_bbox`) diventa ``rndtView`` solo senza
+    ``bbox``: la mappa si apre sull'area dei risultati senza filtrarli.
+    ``bbox_crs`` accetta solo alias di WGS84, quindi ``bbox`` passa così com'è.
+    Parametri del plugin dalla 0.3.8 (#27).
+    """
+    _check_q_mode(q_mode)
+    filters = {
+        "q": q, "bbox": bbox, "org": org, "org_exact": org_exact, "data_category": data_category,
+        "time": time, "modified": modified, "updated_from": updated_from, "updated_to": updated_to,
+        "published_from": published_from, "published_to": published_to, "sort": sort,
+    }
+    if item_id:
+        # Con l'id il plugin apre quella scheda: gli altri filtri non contano.
+        others = [name for name, value in filters.items() if value is not None]
+        return {"url": geolibre_url(item_id), "untranslated": others, "notes": []}
+    params: list[tuple[str, str]] = []
+    untranslated: list[str] = []
+    notes: list[str] = []
+    if q is not None and q.strip():
+        params.append(("rndt", q.strip()))
+        if q_mode == "lucene" or (q_mode == "all" and _looks_like_lucene(q.strip())):
+            params.append(("rndtMode", "lucene"))
+        elif q_mode == "any":
+            params.append(("rndtMode", "lucene" if _looks_like_lucene(q.strip()) else "any"))
+    if bbox is not None:
+        params.append(("rndtBbox", ",".join(v.strip() for v in bbox.split(","))))
+    elif view is not None:
+        params.append(("rndtView", ",".join(f"{v:g}" for v in view)))
+    ente = org if org is not None else org_exact
+    if ente is not None and ente.strip():
+        params.append(("rndtOrg", ente.strip()))
+        if org_exact is not None:
+            notes.append("org_exact: nel plugin l'ente è un «contiene» senza distinzione di maiuscole, può trovare anche varianti del nome")
+        if "," in ente:
+            notes.append("org: il plugin legge la virgola come elenco di enti in alternativa, può trovare più schede")
+    if data_category is not None and data_category.strip():
+        params.append(("rndtKeywords", ",".join(v.strip() for v in data_category.split(",") if v.strip())))
+    if updated_from is not None or updated_to is not None:
+        params.append(("rndtDate", "modified"))
+        params += [(k, v) for k, v in (("rndtFrom", updated_from), ("rndtTo", updated_to)) if v is not None]
+        untranslated += [n for n in ("published_from", "published_to") if filters[n] is not None]
+    elif published_from is not None or published_to is not None:
+        params.append(("rndtDate", "publication"))
+        params += [(k, v) for k, v in (("rndtFrom", published_from), ("rndtTo", published_to)) if v is not None]
+    if sort is not None:
+        if sort in _GEOLIBRE_SORTS:
+            params.append(("rndtSort", _GEOLIBRE_SORTS[sort]))
+        else:
+            untranslated.append("sort")
+    untranslated += [n for n in ("time", "modified") if filters[n] is not None]
+    if bbox_crs is not None and bbox is None:
+        untranslated.append("bbox_crs")
+    query = "".join(f"&{k}={quote(v, safe=',')}" for k, v in params)
+    return {
+        "url": f"{GEOLIBRE_WEB_URL}?plugin={GEOLIBRE_PLUGIN}{query}",
+        "untranslated": untranslated,
+        "notes": notes,
+    }
+
+
 def record_url(result: dict[str, Any]) -> str | None:
     """Permalink della scheda sul portale, dai link del record.
 

@@ -23,6 +23,7 @@ from openrndt.resources import check_resources, extract_resources, list_layers
 from openrndt.search import (
     ORG_EXACT_FIELD,
     compact_results,
+    geolibre_search_url,
     geolibre_url,
     item_record,
     organization_names,
@@ -30,6 +31,7 @@ from openrndt.search import (
     record_license,
     record_org,
     record_url,
+    results_bbox,
 )
 from openrndt.search import search as do_search
 
@@ -178,6 +180,15 @@ def _cli_prefix() -> str:
     """`openrndt`, con `--base-url` se si interroga un catalogo diverso da quello di default."""
     base = config.get_base_url()
     return "openrndt" if base == config.DEFAULT_BASE_URL else f"openrndt --base-url {shlex.quote(base)}"
+
+
+def _link_warnings(link: dict[str, Any]) -> None:
+    """Su stderr i filtri che il link GeoLibre non porta e le differenze da sapere."""
+    if link["untranslated"]:
+        flags = ", ".join("--" + name.replace("_", "-") for name in link["untranslated"])
+        typer.echo(f"Non applicati nel link (il plugin non li ha): {flags}", err=True)
+    for note in link["notes"]:
+        typer.echo(f"Nota sul link: {note}", err=True)
 
 
 def _contact_clause(value: str) -> str:
@@ -575,6 +586,14 @@ def search(
         ),
         case_sensitive=False,
     ),
+    geolibre_link: bool = typer.Option(
+        False,
+        "--geolibre-link",
+        help=(
+            "Stampa solo l'indirizzo che apre la stessa ricerca in GeoLibre web, nel plugin "
+            "openrndt-geolibre; i filtri che il plugin non ha vanno su stderr."
+        ),
+    ),
 ) -> None:
     """Cerca metadati nel RNDT."""
     profile_given = profile is not None
@@ -628,9 +647,33 @@ def search(
     if not isinstance(payload, dict):
         typer.echo("Risposta RNDT inattesa (non è un oggetto JSON).", err=True)
         raise typer.Exit(1)
+    link = geolibre_search_url(
+        q=q,
+        q_mode=q_mode,
+        bbox=bbox,
+        bbox_crs=bbox_crs,
+        org=org,
+        org_exact=org_exact,
+        data_category=data_category,
+        time=time,
+        modified=modified,
+        updated_from=updated_from,
+        updated_to=updated_to,
+        published_from=published_from,
+        published_to=published_to,
+        sort=sort,
+        item_id=item_id,
+        view=None if bbox else results_bbox(payload),
+    )
+    if geolibre_link:
+        typer.echo(link["url"])
+        _link_warnings(link)
+        return
     zero = _total_count(payload) == 0
     mode = output.get_mode()
     if mode == "json":
+        # Il link accanto al totale: chi legge il JSON lo trova subito (#27).
+        payload = {"total": payload.get("total"), "geolibre_search": link, **payload}
         output.emit(payload)
         if zero:
             _no_results_hint(q, bbox, data_category, time, org, org_exact)
