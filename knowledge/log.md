@@ -1,5 +1,12 @@
 # Knowledge Bundle — Update Log
 
+## 2026-11-01
+
+* **Update**: [cli/get.md](/cli/get.md) — `geolibre_map_url`, `--no-map-link`, id e fileid.
+* **Update**: [cli/resources.md](/cli/resources.md) — WMTS in `--layers`: griglia Web Mercator, template, CORS, campi `kind`/`tile_url`/`cors`.
+* **Update**: [library/python-api.md](/library/python-api.md) — `geolibre_map_url`, funzioni WMTS, `catalog_ids_for_fileid`.
+* **Update**: [api/known-issues.md](/api/known-issues.md) — `_id` diverso dal fileid e tipo di servizio dichiarato diverso dall'URL (AGEA).
+
 ## 2026-07-17
 
 * **Update**: [api/known-issues.md](/api/known-issues.md), [skill.md](/skill.md) — audit live della skill rndt-explorer: il sort su `title` ora funziona (API cambiata), `dateDescending` riconfermato rotto; skill aggiornata (workflow corretti, campo `apiso_PublicationDate_dt` inesistente rimosso, formato compact documentato, nuovo workflow data journalist).

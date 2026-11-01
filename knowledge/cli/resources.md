@@ -14,11 +14,11 @@ Recupera il metadato con [get](/cli/get.md), estrae le risorse fruibili dai camp
 |---------|-------------|
 | `ITEM_ID` (argomento) | ID del metadato (es. `age:D_E973_MARSAGLIA`). |
 | `--check/--no-check` | Verifica (default `--check`) o salta (`--no-check`) il test HTTP degli endpoint estratti. |
-| `--layers` | Legge le GetCapabilities di ogni WMS e aggiunge `layers`: un elemento per layer con nome, con `geolibre_url` che apre GeoLibre web con quel layer già sulla mappa. Sostituisce `--check` (le capabilities dicono già se il servizio risponde). In `table`/`csv` le righe sono i layer. |
+| `--layers` | Legge le GetCapabilities di ogni WMS e WMTS e aggiunge `layers`: un elemento per layer con nome, con `geolibre_url` che apre GeoLibre web con quel layer già sulla mappa. Sostituisce `--check` (le capabilities dicono già se il servizio risponde). In `table`/`csv` le righe sono i layer. |
 
 # Layer (`--layers`)
 
-Ogni elemento di `layers` ha `service` (base del WMS), `name`, `title`, `crs`, `geolibre_url`, `note`, `error`. Il link usa `rndtLayer=<id>~wms~<nome>` del plugin openrndt-geolibre (dalla 0.3.5, issue #30). Le regole ricalcano quelle del plugin, perché un link che il plugin non sa seguire fallirebbe senza avvisi:
+Ogni elemento di `layers` ha `service` (base del servizio), `kind` (`wms` o `wmts`), `name`, `title`, `crs`, `tile_url` e `cors` (solo WMTS), `geolibre_url`, `note`, `error`. Il link usa `rndtLayer=<id>~wms~<nome>` del plugin openrndt-geolibre (dalla 0.3.5, issue #30) o `~wmts~<nome>` (dalla 0.5.0, CLI 3.12.0). Le regole ricalcano quelle del plugin, perché un link che il plugin non sa seguire fallirebbe senza avvisi:
 
 - Un servizio per base URL, nell'ordine della scheda: si tolgono solo i parametri di operazione (`SERVICE`, `REQUEST`, `LAYERS`, …), `?map=` di MapServer resta, e `http`/`https` dello stesso indirizzo contano una volta.
 - `crs` è il sistema in cui GeoLibre web chiederebbe il layer: EPSG:3857 se c'è, altrimenti uno geografico (4326, 4258, 6706, CRS:84 solo in 1.3.0), altrimenti il primo `EPSG:n`. Senza nessuno di questi `geolibre_url` è `null`, con una nota.
@@ -27,7 +27,11 @@ Ogni elemento di `layers` ha `service` (base del WMS), `name`, `title`, `crs`, `
 - GeoServer pubblica lo stesso workspace a `…/ows` e a `…/wms`: se la scheda li elenca entrambi sono due servizi, e i layer del secondo risultano «nome già in un servizio precedente» con `geolibre_url` `null`. Non sono layer inutilizzabili: il link del primo servizio vale per tutti e due.
 - Un servizio che non risponde, o risponde con un'eccezione OGC o XML non valido, dà una riga con `name` `null` ed `error`.
 - Le capabilities si scaricano con le stesse protezioni di `--check` (host non pubblici bloccati, anche dopo un redirect), fino a 10 MB.
-- Solo WMS: le immagini ArcGIS REST (`~arcgis~`) non sono ancora coperte (#33).
+- Prima i WMS, poi i WMTS: un nome già visto in un WMS della scheda vale per quello (il Veneto pubblica gli stessi layer in WMS e WMTS).
+- Un servizio è WMTS se lo dice l'URL (`/wmts` nel path o `SERVICE=WMTS`), anche quando la scheda dichiara altro: le ortofoto AGEA hanno `url_type_s` «ImageServer» su `…/ImageServer/WMTS?`.
+- WMTS (porting di `src/rndt/wmts.ts` del plugin 0.5.0): GeoLibre web disegna solo un template `{z}/{x}/{y}`, quindi solo una griglia Web Mercator (EPSG:3857, 900913, 102100) con tile da 256 px, angolo -20037508,34, scale 559082264,03/2^z e id delle matrici «prefisso + zoom» (`0`, `EPSG:900913:0`). Prima `GoogleMapsCompatible`. Id con lo zero davanti (`00`, `01`, MapProxy di Bolzano) o con nomi danno la nota «livelli che GeoLibre non sa indirizzare»; un layer solo in sistemi nazionali dà la nota con i sistemi offerti. `tile_url` è il template RESTful (`ResourceURL`) o, se manca, il GetTile KVP; un indirizzo dichiarato in `http://` sullo stesso host delle capabilities lette in https torna https (GeoWebCache del Veneto).
+- WMTS e CORS: le tile le scarica il browser, quindi per ogni servizio si scarica una tile di prova (del layer voluto o del primo disegnabile) con `Origin: https://web.geolibre.app`. `cors` `true` → link; `false` → nota «senza CORS»; `null` → la tile non risponde, con la causa nella nota.
+- ArcGIS REST (`~arcgis~`) non è ancora coperto (#33).
 
 # Examples
 
@@ -40,6 +44,9 @@ openrndt resources age:D_E973_MARSAGLIA --no-check
 
 # Layer dei WMS, ognuno con il suo geolibre_url
 openrndt resources r_emiro:2022-03-11T113115 --layers | jq -r '.layers[] | "\(.name)\t\(.geolibre_url)"'
+
+# Ortofoto AGEA 2022: WMTS in GoogleMapsCompatible, con il template delle tile
+openrndt resources agea:OI:ORTOIMMAGINI:m004 --layers | jq -r '.layers[] | .tile_url, .geolibre_url'
 ```
 
 # Comportamento ed errori
