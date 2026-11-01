@@ -106,14 +106,21 @@ def _fetch_item(item_id: str) -> dict[str, Any]:
 
 def _fetch_text(item_id: str, suffix: str) -> str:
     """XML o HTML della scheda. Per un id che non esiste come ``_id`` il server
-    risponde 500 (xml) o 501 (html): si riprova dal fileid, come in :func:`get_item`."""
+    risponde 500 (xml) o 501 (html): se l'id è il fileid di un'altra scheda si
+    riprova con il suo ``_id``, altrimenti resta l'errore HTTP originale."""
     resolved = resolve_item_id(item_id)
     try:
         response = rndt_request(f"{ITEM_PATH}/{_encode_id(resolved)}/{suffix}")
         response.raise_for_status()
     except httpx.HTTPStatusError:
-        catalog_id = _catalog_id_from_fileid(item_id, resolved)
-        response = rndt_request(f"{ITEM_PATH}/{_encode_id(catalog_id)}/{suffix}")
+        # Il ripiego solo se il fileid porta davvero a un altro `_id`: altrimenti
+        # l'errore è del server (403, 429, 5xx) e resta quello originale.
+        ids = [i for i in catalog_ids_for_fileid(resolved) if i != resolved]
+        if len(ids) > 1:
+            raise AmbiguousItemIdError(item_id, ids) from None
+        if not ids:
+            raise
+        response = rndt_request(f"{ITEM_PATH}/{_encode_id(ids[0])}/{suffix}")
         response.raise_for_status()
     return response.text
 

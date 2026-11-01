@@ -233,26 +233,26 @@ def test_cli_get_not_found_shows_message():
 
 @respx.mock
 def test_cli_get_xml_not_found_shows_message():
-    """--xml con ID inesistente: il server risponde 500, nessun fileid uguale → «non trovato», exit 1."""
+    """--xml con ID inesistente: il server risponde 500, nessun fileid porta altrove → resta l'errore HTTP, exit 1."""
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente/xml").mock(
         return_value=httpx.Response(500, json={"error": {"message": "NullPointerException"}})
     )
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json={"results": []}))
     result = runner.invoke(app, ["get", "inesistente", "--xml"])
     assert result.exit_code == 1
-    assert "non trovato" in result.output.lower()
+    assert "500" in result.output
 
 
 @respx.mock
 def test_cli_get_html_not_found_shows_message():
-    """--html con ID inesistente: il server risponde 501, nessun fileid uguale → «non trovato», exit 1."""
+    """--html con ID inesistente: il server risponde 501, nessun fileid porta altrove → resta l'errore HTTP, exit 1."""
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente/html").mock(
         return_value=httpx.Response(501)
     )
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(return_value=httpx.Response(200, json={"results": []}))
     result = runner.invoke(app, ["get", "inesistente", "--html"])
     assert result.exit_code == 1
-    assert "non trovato" in result.output.lower()
+    assert "501" in result.output
 
 
 @respx.mock
