@@ -3,13 +3,23 @@
 from __future__ import annotations
 
 import ipaddress
+import math
 import re
 import socket
 import ssl
 import time
+import unicodedata
 import xml.etree.ElementTree as ET
 from typing import Any
-from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlunparse
+from urllib.parse import (
+    parse_qs,
+    parse_qsl,
+    quote,
+    urlencode,
+    urljoin,
+    urlparse,
+    urlunparse,
+)
 
 import httpx
 
@@ -515,42 +525,107 @@ def _fetch_bytes(url: str, timeout: float) -> bytes:
     raise ValueError("too-many-redirects")
 
 
-def list_layers(
-    item_id: str, resources: list[dict[str, str]], *, timeout: float | None = None
-) -> list[dict[str, Any]]:
-    """Layer con nome dei servizi WMS di una scheda, ognuno con un `geolibre_url`.
+def upgrade_to_https(target: str, fetched_from: str) -> str:
+    """URL di operazione in `http://` riportato a https se le capabilities sono arrivate in https dallo stesso host.
 
-    Un servizio per base URL (lo schema non conta), nell'ordine della scheda.
-    Ogni riga: ``service``, ``name``, ``title``, ``crs`` (quello in cui GeoLibre
-    lo chiederebbe), ``geolibre_url`` (apre GeoLibre web col layer sulla mappa),
-    ``note`` ed ``error``. Un servizio che non risponde dà una riga con
-    ``name`` ``None`` ed ``error``. Come il plugin, un nome già visto in un
-    servizio precedente si risolve su quello: ``geolibre_url`` ``None`` e una nota.
+    Porting di `upgradeToHttps` del plugin: i server passati a https tengono
+    spesso i vecchi indirizzi (GeoWebCache del Veneto dichiara il GetTile in http).
+    """
+    t, f = urlparse(target), urlparse(fetched_from)
+    if f.scheme == "https" and t.scheme == "http" and t.hostname and t.hostname == f.hostname:
+        return urlunparse(t._replace(scheme="https"))
+    return target
+
+
+def preselected_name(url: str) -> str | None:
+    """Layer nominato dall'URL (`LAYERS`, `LAYER`, `TYPENAME`, `TYPENAMES`), il primo se sono più d'uno."""
+    for key, value in parse_qsl(urlparse(url).query, keep_blank_values=True):
+        if key.lower() in {"layers", "layer", "typename", "typenames"} and value:
+            return value.split(",")[0]
+    return None
+
+
+def _tokens(value: str) -> set[str]:
+    plain = unicodedata.normalize("NFD", value.lower())
+    plain = "".join(c for c in plain if not unicodedata.combining(c))
+    return {t for t in re.split(r"[^a-z0-9]+", plain) if len(t) > 2}
+
+
+def best_matching_layer(title: str, layers: list[dict[str, Any]]) -> str | None:
+    """Layer il cui nome o titolo ha più parole in comune col titolo della scheda (`bestMatchingLayer` del plugin).
+
+    ``None`` se nessun layer ha almeno una parola in comune.
+    """
+    wanted = _tokens(title)
+    best: str | None = None
+    best_score = 0
+    for layer in layers:
+        score = len(wanted & _tokens(f"{layer['name']} {layer.get('title') or ''}"))
+        if score > best_score:
+            best, best_score = layer["name"], score
+    return best
+
+
+def _services_of(resources: list[dict[str, str]], kind: str) -> list[str]:
+    """Un servizio per base URL (lo schema non conta), nell'ordine della scheda; https se dichiarato in entrambi."""
+    services: dict[str, str] = {}
+    for resource in resources:
+        if resource.get("type") != kind or not re.match(r"https?://", resource["url"], re.IGNORECASE):
+            continue
+        url = resource["url"]
+        base = url if kind == "WMTS" and urlparse(url).path.lower().endswith(".xml") else service_base_url(url)
+        key = re.sub(r"^https?://", "", base, flags=re.IGNORECASE).lower()
+        if key not in services or (base.lower().startswith("https://") and services[key].lower().startswith("http://")):
+            services[key] = base
+    return list(services.values())
+
+
+_HTTP_NOTE = "servizio in http://: GeoLibre web (https) potrebbe non mostrarlo"
+_WMTS_REASONS = {
+    "no-web-mercator": "non offerto in una griglia Web Mercator (solo {systems}): GeoLibre non sa disegnarlo",
+    "matrix-ids": "griglia Web Mercator con livelli che GeoLibre non sa indirizzare (id non numerati per zoom)",
+    "template": "l'indirizzo delle tile chiede valori che GeoLibre non sa riempire (tempo o altre dimensioni)",
+}
+
+
+def list_layers(
+    item_id: str,
+    resources: list[dict[str, str]],
+    *,
+    timeout: float | None = None,
+    title: str | None = None,
+) -> list[dict[str, Any]]:
+    """Layer con nome dei servizi WMS e WMTS di una scheda, ognuno con un `geolibre_url`.
+
+    Un servizio per base URL (lo schema non conta), nell'ordine della scheda,
+    prima i WMS poi i WMTS. Ogni riga: ``service``, ``kind`` (``wms``/``wmts``),
+    ``name``, ``title``, ``crs`` (quello in cui GeoLibre lo chiederebbe),
+    ``tile_url`` (WMTS: il template ``{z}/{x}/{y}``), ``cors`` (WMTS: se le tile
+    rispondono a GeoLibre web, provato su una tile per servizio),
+    ``geolibre_url`` (apre GeoLibre web col layer sulla mappa), ``note`` ed
+    ``error``. Un servizio che non risponde dà una riga con ``name`` ``None``
+    ed ``error``. Come il plugin, un nome già visto in un servizio precedente
+    si risolve su quello: ``geolibre_url`` ``None`` e una nota. ``title`` (il
+    titolo della scheda) sceglie il layer su cui provare il CORS, come il plugin.
     """
     from openrndt.search import geolibre_url
 
     if timeout is None:
         timeout = get_timeout()
-    # Un servizio per base URL, nell'ordine della scheda; se la scheda lo
-    # dichiara sia in http sia in https, si usa https.
-    services: dict[str, str] = {}
-    for resource in resources:
-        if resource.get("type") != "WMS" or not re.match(r"https?://", resource["url"], re.IGNORECASE):
-            continue
-        base = service_base_url(resource["url"])
-        key = re.sub(r"^https?://", "", base, flags=re.IGNORECASE).lower()
-        if key not in services or (base.lower().startswith("https://") and services[key].lower().startswith("http://")):
-            services[key] = base
+    empty: dict[str, Any] = {
+        "service": None, "kind": None, "name": None, "title": None, "crs": None,
+        "tile_url": None, "cors": None, "geolibre_url": None, "note": None, "error": None,
+    }
     rows: list[dict[str, Any]] = []
     seen_names: set[str] = set()
-    for base in services.values():
-        row_base: dict[str, Any] = {"service": base, "name": None, "title": None, "crs": None, "geolibre_url": None, "note": None, "error": None}
+    for base in _services_of(resources, "WMS"):
+        row_base = {**empty, "service": base, "kind": "wms"}
         try:
             caps = parse_wms_capabilities(_fetch_bytes(capabilities_url(base), timeout))
         except (httpx.HTTPError, ValueError) as exc:
             rows.append({**row_base, "error": str(exc) or type(exc).__name__})
             continue
-        http_note = "servizio in http://: GeoLibre web (https) potrebbe non mostrarlo" if base.lower().startswith("http://") else None
+        http_note = _HTTP_NOTE if base.lower().startswith("http://") else None
         for layer in caps["layers"]:
             name = layer["name"]
             row = {**row_base, "name": name, "title": layer["title"], "note": http_note}
@@ -565,4 +640,338 @@ def list_layers(
                 else:
                     row["geolibre_url"] = geolibre_url(item_id, [("wms", name)])
             rows.append(row)
+    hints = [h for h in (preselected_name(r["url"]) for r in resources if r.get("type") == "WMTS") if h]
+    for base in _services_of(resources, "WMTS"):
+        rows.extend(_wmts_rows(item_id, base, {**empty, "service": base, "kind": "wmts"}, seen_names, hints, title, timeout))
     return rows
+
+
+def _wmts_rows(
+    item_id: str,
+    base: str,
+    row_base: dict[str, Any],
+    seen_names: set[str],
+    hints: list[str],
+    title: str | None,
+    timeout: float,
+) -> list[dict[str, Any]]:
+    from openrndt.search import geolibre_url
+
+    caps_url = wmts_capabilities_url(base)
+    try:
+        caps = parse_wmts_capabilities(_fetch_bytes(caps_url, timeout))
+    except (httpx.HTTPError, ValueError) as exc:
+        return [{**row_base, "error": str(exc) or type(exc).__name__}]
+    if caps["get_tile_url"]:
+        caps["get_tile_url"] = upgrade_to_https(caps["get_tile_url"], caps_url)
+    for layer in caps["layers"]:
+        for t in layer["templates"]:
+            t["template"] = upgrade_to_https(t["template"], caps_url)
+    plans = {layer["name"]: plan_wmts_layer(caps, layer) for layer in caps["layers"]}
+    addable = [layer for layer in caps["layers"] if plans[layer["name"]]["ok"]]
+    # Una tile del layer voluto (o del primo disegnabile), come la chiederebbe il browser.
+    cors: bool | None = None
+    cors_error: str | None = None
+    if addable:
+        wanted = next((h for h in hints if h in plans), None) or best_matching_layer(title or "", addable)
+        sample = next((layer for layer in addable if layer["name"] == wanted), addable[0])
+        plan = plans[sample["name"]]
+        probe = wmts_probe_url(plan["template"], sample["bbox"], plan["minzoom"], plan["maxzoom"])
+        cors, cors_error = tile_cors(probe, timeout)
+    http_note = _HTTP_NOTE if base.lower().startswith("http://") else None
+    rows: list[dict[str, Any]] = []
+    for layer in caps["layers"]:
+        name = layer["name"]
+        plan = plans[name]
+        row = {**row_base, "name": name, "title": layer["title"], "note": http_note}
+        if name in seen_names:
+            row["note"] = "nome già in un servizio precedente della scheda: GeoLibre usa quello"
+        elif not plan["ok"]:
+            seen_names.add(name)
+            row["note"] = _WMTS_REASONS[plan["reason"]].format(systems=", ".join(plan["systems"][:6]) or "?")
+        else:
+            seen_names.add(name)
+            row["crs"] = "EPSG:3857"
+            row["tile_url"] = plan["template"]
+            row["cors"] = cors
+            if cors:
+                row["geolibre_url"] = geolibre_url(item_id, [("wmts", name)])
+            elif cors is False:
+                row["note"] = "le tile non hanno l'intestazione CORS: GeoLibre web non può mostrarle"
+            else:
+                row["note"] = f"la tile di prova non risponde ({cors_error})"
+        rows.append(row)
+    return rows
+
+
+# --- layer dei servizi WMTS ---------------------------------------------------
+# Porting di `src/rndt/wmts.ts` del plugin openrndt-geolibre (0.5.0): GeoLibre
+# web disegna un WMTS solo da un template `{z}/{x}/{y}`, quindi solo in una
+# griglia Web Mercator con tile da 256 px e id delle matrici "prefisso + zoom".
+
+GEOLIBRE_ORIGIN = "https://web.geolibre.app"
+_ZOOM0_SCALE = 559082264.0287178
+_WORLD = 20037508.342789244
+_WEB_MERCATOR_RE = re.compile(r"(?:^|[:/])(3857|900913|102100|102113|3785)$")
+_URN_EPSG_RE = re.compile(r"^urn:ogc:def:crs:EPSG:(?:[\d.]*:)?", re.IGNORECASE)
+
+
+def wmts_capabilities_url(url: str) -> str:
+    """GetCapabilities WMTS: un documento statico `…/WMTSCapabilities.xml` si legge com'è."""
+    if urlparse(url).path.lower().endswith(".xml"):
+        return url
+    base = service_base_url(url)
+    return f"{base}{'&' if urlparse(base).query else '?'}SERVICE=WMTS&REQUEST=GetCapabilities"
+
+
+def _numbers(value: str) -> list[float]:
+    try:
+        return [float(v) for v in value.split()]
+    except ValueError:
+        return []
+
+
+def parse_wmts_capabilities(xml: str | bytes) -> dict[str, Any]:
+    """Layer, tile matrix set ed endpoint GetTile KVP di una GetCapabilities WMTS.
+
+    ``layers``: ``name`` (Identifier), ``title``, ``bbox`` in gradi, ``style``
+    (quello di default, altrimenti il primo), ``formats``, ``links``
+    (``{"set", "limits"}``) e ``templates`` RESTful (``{"format", "template"}``).
+    ``sets``: per id, ``crs``, ``well_known`` e ``matrices``. ``get_tile_url``:
+    l'endpoint KVP senza ``?`` finale, o ``None``. Solleva ``ValueError`` su
+    XML non valido, su un'eccezione OGC o su un documento che non è WMTS.
+    """
+    raw = xml.encode("utf-8") if isinstance(xml, str) else xml
+    try:
+        root = ET.fromstring(_strip_doctype(raw))
+    except ET.ParseError as exc:
+        raise ValueError("Il servizio non ha restituito XML valido.") from exc
+    if _local(root.tag) in {"ServiceExceptionReport", "ExceptionReport"}:
+        message = " ".join("".join(root.itertext()).split())
+        raise ValueError(f"Errore del servizio: {message[:300]}")
+    if _local(root.tag) != "Capabilities":
+        raise ValueError("Il documento non è una GetCapabilities WMTS.")
+    contents = next((el for el in root.iter() if _local(el.tag) == "Contents"), None)
+
+    sets: dict[str, dict[str, Any]] = {}
+    for el in _children(contents, "TileMatrixSet") if contents is not None else []:
+        set_id = _text(_child(el, "Identifier"))
+        if not set_id:
+            continue
+        matrices = []
+        for m in _children(el, "TileMatrix"):
+            corner = _numbers(_text(_child(m, "TopLeftCorner")))
+            try:
+                scale = float(_text(_child(m, "ScaleDenominator")))
+                width = int(float(_text(_child(m, "TileWidth"))))
+                height = int(float(_text(_child(m, "TileHeight"))))
+            except ValueError:
+                scale, width, height = 0.0, 0, 0
+            matrices.append(
+                {
+                    "id": _text(_child(m, "Identifier")),
+                    "scale": scale,
+                    "top_left": corner[:2] if len(corner) >= 2 else None,
+                    "tile_width": width,
+                    "tile_height": height,
+                }
+            )
+        sets[set_id] = {
+            "id": set_id,
+            "crs": _text(_child(el, "SupportedCRS")),
+            "well_known": _text(_child(el, "WellKnownScaleSet")),
+            "matrices": matrices,
+        }
+
+    layers: list[dict[str, Any]] = []
+    for el in _children(contents, "Layer") if contents is not None else []:
+        name = _text(_child(el, "Identifier"))
+        if not name:
+            continue
+        box = _child(el, "WGS84BoundingBox")
+        lower = _numbers(_text(_child(box, "LowerCorner"))) if box is not None else []
+        upper = _numbers(_text(_child(box, "UpperCorner"))) if box is not None else []
+        bbox = lower[:2] + upper[:2] if len(lower) >= 2 and len(upper) >= 2 else None
+        styles = _children(el, "Style")
+        style_el = next((s for s in styles if s.get("isDefault") == "true"), styles[0] if styles else None)
+        links = []
+        for link in _children(el, "TileMatrixSetLink"):
+            limits = _child(link, "TileMatrixSetLimits")
+            links.append(
+                {
+                    "set": _text(_child(link, "TileMatrixSet")),
+                    "limits": (
+                        [_text(_child(lim, "TileMatrix")) for lim in _children(limits, "TileMatrixLimits")]
+                        if limits is not None
+                        else None
+                    ),
+                }
+            )
+        templates = [
+            {"format": r.get("format") or "", "template": r.get("template") or ""}
+            for r in _children(el, "ResourceURL")
+            if (r.get("resourceType") or "tile") == "tile" and r.get("template")
+        ]
+        layers.append(
+            {
+                "name": name,
+                "title": _text(_child(el, "Title")) or name,
+                "bbox": bbox,
+                "style": _text(_child(style_el, "Identifier")) if style_el is not None else "default",
+                "formats": [f for f in (_text(x) for x in _children(el, "Format")) if f],
+                "links": links,
+                "templates": templates,
+            }
+        )
+
+    get_tile = next(
+        (op for op in root.iter() if _local(op.tag) == "Operation" and op.get("name") == "GetTile"), None
+    )
+    get_el = next((g for g in get_tile.iter() if _local(g.tag) == "Get"), None) if get_tile is not None else None
+    href = ""
+    if get_el is not None:
+        href = next((v for k, v in get_el.attrib.items() if _local(k) == "href"), "")
+    get_tile_url = re.sub(r"[?&]+$", "", href) or None
+    return {"get_tile_url": get_tile_url, "sets": sets, "layers": layers}
+
+
+def web_mercator_zooms(matrix_set: dict[str, Any]) -> tuple[str, dict[str, int]] | str | None:
+    """Zoom di ogni matrice di una griglia Web Mercator e prefisso degli id.
+
+    ``None`` se la griglia non è Web Mercator a 256 px dall'angolo del mondo;
+    ``"matrix-ids"`` se lo è ma gli id non sono "prefisso + zoom" (zero-padded
+    come `00` di MapProxy a Bolzano, o con nomi): GeoLibre non sa riempirli.
+    """
+    if not _WEB_MERCATOR_RE.search(matrix_set["crs"].strip()) or not matrix_set["matrices"]:
+        return None
+    zooms: dict[str, int] = {}
+    for m in matrix_set["matrices"]:
+        if m["tile_width"] != 256 or m["tile_height"] != 256 or not m["top_left"] or m["scale"] <= 0:
+            return None
+        # I server arrotondano l'angolo in modo diverso (GeoWebCache: -2.003750834E7 2.0037508E7).
+        if abs(m["top_left"][0] + _WORLD) > 1 or abs(m["top_left"][1] - _WORLD) > 1:
+            return None
+        z = round(math.log2(_ZOOM0_SCALE / m["scale"]))
+        if not 0 <= z <= 30 or abs(m["scale"] * 2**z / _ZOOM0_SCALE - 1) > 0.01:
+            return None
+        zooms[m["id"]] = z
+    first, first_zoom = next(iter(zooms.items()))
+    if not first.endswith(str(first_zoom)):
+        return "matrix-ids"
+    prefix = first[: len(first) - len(str(first_zoom))]
+    if prefix[-1:].isdigit():
+        return "matrix-ids"
+    if any(i != f"{prefix}{z}" for i, z in zooms.items()):
+        return "matrix-ids"
+    return prefix, zooms
+
+
+def _pick_format(formats: list[str]) -> str:
+    return (
+        next((f for f in formats if re.search("png", f, re.I)), None)
+        or next((f for f in formats if re.search("jpe?g", f, re.I)), None)
+        or (formats[0] if formats else "image/png")
+    )
+
+
+def _tile_template(caps: dict[str, Any], layer: dict[str, Any], set_id: str, prefix: str, fmt: str) -> str | None:
+    rest = next((t for t in layer["templates"] if t["format"] == fmt), None) or (
+        layer["templates"][0] if layer["templates"] else None
+    )
+    if rest:
+        filled = rest["template"]
+        for pattern, value in (
+            (r"\{Style\}", quote(layer["style"], safe="")),
+            (r"\{TileMatrixSet\}", quote(set_id, safe="")),
+            (r"\{TileMatrix\}", f"{quote(prefix, safe='')}{{z}}"),
+            (r"\{TileRow\}", "{y}"),
+            (r"\{TileCol\}", "{x}"),
+        ):
+            filled = re.sub(pattern, value.replace("\\", "\\\\"), filled, flags=re.IGNORECASE)
+        return None if re.search(r"\{(?![zxy]\})[^}]*\}", filled) else filled
+    if not caps["get_tile_url"]:
+        return None
+    params = [
+        "SERVICE=WMTS",
+        "REQUEST=GetTile",
+        "VERSION=1.0.0",
+        f"LAYER={quote(layer['name'], safe='')}",
+        f"STYLE={quote(layer['style'], safe='')}",
+        f"TILEMATRIXSET={quote(set_id, safe='')}",
+        f"TILEMATRIX={quote(prefix, safe='')}{{z}}",
+        "TILEROW={y}",
+        "TILECOL={x}",
+        f"FORMAT={quote(fmt, safe='')}",
+    ]
+    base = caps["get_tile_url"]
+    return f"{base}{'&' if '?' in base else '?'}{'&'.join(params)}"
+
+
+def _is_google_maps(matrix_set: dict[str, Any]) -> bool:
+    return bool(re.search("GoogleMapsCompatible", matrix_set["well_known"] + " " + matrix_set["id"], re.I))
+
+
+def plan_wmts_layer(caps: dict[str, Any], layer: dict[str, Any]) -> dict[str, Any]:
+    """Come GeoLibre aggiungerebbe il layer: griglia, template `{z}/{x}/{y}` e zoom.
+
+    ``{"ok": True, "set", "template", "minzoom", "maxzoom", "format"}``, oppure
+    ``{"ok": False, "reason", "systems"}`` con ``reason`` fra ``no-web-mercator``,
+    ``matrix-ids`` e ``template``, e i sistemi in cui il layer è offerto.
+    """
+    linked = [(link, caps["sets"][link["set"]]) for link in layer["links"] if link["set"] in caps["sets"]]
+    systems = list(dict.fromkeys(_URN_EPSG_RE.sub("EPSG:", s["crs"]) for _, s in linked))
+    reason = "no-web-mercator"
+    candidates = []
+    for link, matrix_set in linked:
+        mercator = web_mercator_zooms(matrix_set)
+        if mercator == "matrix-ids":
+            reason = "matrix-ids"
+        elif isinstance(mercator, tuple):
+            candidates.append((link, matrix_set, mercator))
+    candidates.sort(key=lambda c: not _is_google_maps(c[1]))
+    for link, matrix_set, (prefix, zooms) in candidates:
+        ids = link["limits"] if link["limits"] is not None else [m["id"] for m in matrix_set["matrices"]]
+        covered = [zooms[i] for i in ids if i in zooms]
+        if not covered:
+            continue
+        fmt = _pick_format(layer["formats"] or [t["format"] for t in layer["templates"]])
+        template = _tile_template(caps, layer, matrix_set["id"], prefix, fmt)
+        if not template:
+            reason = "template"
+            continue
+        return {"ok": True, "set": matrix_set["id"], "template": template, "minzoom": min(covered), "maxzoom": max(covered), "format": fmt}
+    return {"ok": False, "reason": reason, "systems": systems}
+
+
+def wmts_probe_url(template: str, bbox: list[float] | None, minzoom: int, maxzoom: int) -> str:
+    """Una tile del template per provare il servizio: al centro dell'estensione, dove la coprono poche tile."""
+    w, s, e, n = bbox or [6.6, 36.6, 18.5, 47.1]
+    lon = (w + e) / 2
+    lat = max(-85.0, min(85.0, (s + n) / 2))
+    span = max(e - w, n - s, 1e-6)
+    z = max(minzoom, min(maxzoom, math.floor(math.log2(360 / span)) + 2))
+    count = 2**z
+    x = min(count - 1, math.floor((lon + 180) / 360 * count))
+    rad = math.radians(lat)
+    y = min(count - 1, math.floor((1 - math.log(math.tan(rad) + 1 / math.cos(rad)) / math.pi) / 2 * count))
+    return template.replace("{z}", str(z), 1).replace("{x}", str(x), 1).replace("{y}", str(y), 1)
+
+
+def tile_cors(url: str, timeout: float) -> tuple[bool | None, str | None]:
+    """GET di una tile con ``Origin`` di GeoLibre web: ``(cors, errore)``.
+
+    ``cors`` è True se ``Access-Control-Allow-Origin`` è ``*`` o l'origine di
+    GeoLibre, False se manca, ``None`` se la tile non risponde (con l'errore).
+    """
+    blocked = _validate_check_url(url)
+    if blocked is not None:
+        return None, f"url-blocked:{blocked}"
+    headers = {"User-Agent": USER_AGENT, "Origin": GEOLIBRE_ORIGIN}
+    try:
+        with httpx.stream("GET", url, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT) as r:
+            if r.status_code >= 400:
+                return None, f"tile HTTP {r.status_code}"
+            allow = r.headers.get("access-control-allow-origin", "").strip()
+            return allow in {"*", GEOLIBRE_ORIGIN}, None
+    except httpx.HTTPError as exc:
+        return None, f"tile: {type(exc).__name__}"

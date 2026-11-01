@@ -430,9 +430,12 @@ def test_list_layers_one_service_per_base_url():
     assert rows == [
         {
             "service": AGEA_WMS,
+            "kind": "wms",
             "name": "Agea2020_RGB",
             "title": "Agea2020_RGB",
             "crs": "EPSG:3857",
+            "tile_url": None,
+            "cors": None,
             "geolibre_url": "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=r_emiro%3A2022-03-11T113115"
             "&rndtLayer=r_emiro%3A2022-03-11T113115~wms~Agea2020_RGB",
             "note": None,
@@ -574,3 +577,172 @@ def test_extract_resources_service_wms_on_wmts_host_stays_wms():
     """`wmts` nel nome host non conta: `SERVICE=WMS` resta WMS."""
     url = "https://wmtscatasto-gis.csi.it/mapproxy/service?request=GetCapabilities&service=WMS"
     assert extract_resources({"_source": {"links_s": [url]}})[0]["type"] == "WMS"
+
+
+# --- layer dei servizi WMTS ---------------------------------------------------
+
+from openrndt.resources import (  # noqa: E402
+    best_matching_layer,
+    parse_wmts_capabilities,
+    plan_wmts_layer,
+    preselected_name,
+    upgrade_to_https,
+    web_mercator_zooms,
+    wmts_capabilities_url,
+    wmts_probe_url,
+)
+
+AGEA22_ID = "agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55"
+AGEA22_WMTS = "https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2022/ImageServer/WMTS"
+AGEA22_TEMPLATE = f"{AGEA22_WMTS}/tile/1.0.0/AgEA_Ortofoto_AgEA_2022/default/GoogleMapsCompatible/{{z}}/{{y}}/{{x}}"
+
+
+def _wmts(name: str) -> dict:
+    return parse_wmts_capabilities((FIXTURES / name).read_bytes())
+
+
+def test_wmts_capabilities_url_static_xml_or_kvp():
+    static = f"{AGEA22_WMTS}/1.0.0/WMTSCapabilities.xml"
+    assert wmts_capabilities_url(static) == static
+    assert wmts_capabilities_url(f"{AGEA22_WMTS}?") == f"{AGEA22_WMTS}?SERVICE=WMTS&REQUEST=GetCapabilities"
+
+
+def test_wmts_agea_arcgis_restful_google_maps_compatible():
+    """ArcGIS ImageServer: griglia GoogleMapsCompatible scelta prima di default028mm, template RESTful."""
+    caps = _wmts("wmts_caps_agea2022.xml")
+    layer = caps["layers"][0]
+    assert layer["name"] == "AgEA_Ortofoto_AgEA_2022"
+    assert layer["style"] == "default"
+    plan = plan_wmts_layer(caps, layer)
+    assert plan["ok"] and plan["set"] == "GoogleMapsCompatible"
+    assert plan["template"] == AGEA22_TEMPLATE
+    assert (plan["minzoom"], plan["maxzoom"]) == (0, 18)
+
+
+def test_wmts_veneto_geowebcache_kvp_prefixed_ids():
+    """GeoWebCache: `EPSG:900913` con id `EPSG:900913:<z>`, angolo arrotondato, solo GetTile KVP."""
+    caps = _wmts("wmts_caps_veneto_gwc.xml")
+    assert web_mercator_zooms(caps["sets"]["EPSG:900913"])[0] == "EPSG:900913:"
+    gm, national = caps["layers"]
+    plan = plan_wmts_layer(caps, gm)
+    assert plan["ok"] and plan["set"] == "EPSG:900913"
+    assert "REQUEST=GetTile" in plan["template"] and "TILEMATRIX=EPSG%3A900913%3A{z}" in plan["template"]
+    assert plan["template"].startswith("http://idt2.regione.veneto.it/")  # come lo dichiara il server
+    assert plan_wmts_layer(caps, national) == {"ok": False, "reason": "no-web-mercator", "systems": ["EPSG:3003"]}
+
+
+def test_wmts_bolzano_zero_padded_ids_not_addressable():
+    """MapProxy di Bolzano: `EPSG_3857` con id `00`, `01`…: GeoLibre non sa indirizzarli."""
+    caps = _wmts("wmts_caps_bz_mapproxy.xml")
+    assert web_mercator_zooms(caps["sets"]["EPSG_3857"]) == "matrix-ids"
+    plan = plan_wmts_layer(caps, caps["layers"][0])
+    assert plan["ok"] is False and plan["reason"] == "matrix-ids"
+    assert "EPSG:3857" in plan["systems"]
+
+
+def test_wmts_csi_utm_only():
+    caps = _wmts("wmts_caps_csi_agea2015.xml")
+    plan = plan_wmts_layer(caps, caps["layers"][0])
+    assert plan == {"ok": False, "reason": "no-web-mercator", "systems": ["EPSG:32632"]}
+
+
+def test_wmts_template_with_unfillable_placeholder():
+    caps = _wmts("wmts_caps_agea2022.xml")
+    layer = caps["layers"][0]
+    layer["templates"] = [{"format": "image/png", "template": "https://x.it/{Time}/{TileMatrix}/{TileRow}/{TileCol}"}]
+    assert plan_wmts_layer(caps, layer)["reason"] == "template"
+
+
+def test_parse_wmts_capabilities_rejects_wms_and_exceptions():
+    with pytest.raises(ValueError):
+        parse_wmts_capabilities(_caps("wms_caps_agea2020_rgb.xml"))
+    with pytest.raises(ValueError, match="Errore del servizio"):
+        parse_wmts_capabilities("<ExceptionReport><Exception>boom</Exception></ExceptionReport>")
+
+
+def test_upgrade_to_https_same_host_only():
+    fetched = "https://idt2.regione.veneto.it/gwc/service/wmts?SERVICE=WMTS&REQUEST=GetCapabilities"
+    assert upgrade_to_https("http://idt2.regione.veneto.it/gwc/service/wmts?x=1", fetched) == (
+        "https://idt2.regione.veneto.it/gwc/service/wmts?x=1"
+    )
+    assert upgrade_to_https("http://altro.it/wmts", fetched) == "http://altro.it/wmts"
+    assert upgrade_to_https("http://idt2.regione.veneto.it/a", fetched.replace("https", "http")).startswith("http://")
+
+
+def test_wmts_probe_url_inside_extent():
+    url = wmts_probe_url("https://t/{z}/{y}/{x}", [13.0, 38.0, 13.5, 38.3], 0, 18)
+    assert url == "https://t/11/788/1099"
+
+
+def test_preselected_name_and_best_matching_layer():
+    assert preselected_name("https://a.it/wms?SERVICE=WMS&LAYERS=uno,due") == "uno"
+    assert preselected_name("https://a.it/wms?SERVICE=WMS") is None
+    layers = [{"name": "rv:ctr", "title": "Carta tecnica"}, {"name": "rv:orto", "title": "Ortofoto 2021 Veneto"}]
+    assert best_matching_layer("Ortofoto del Veneto 2021", layers) == "rv:orto"
+    assert best_matching_layer("Niente in comune", layers) is None
+
+
+@respx.mock
+def test_list_layers_wmts_with_cors_gives_geolibre_url():
+    respx.get(f"{AGEA22_WMTS}?SERVICE=WMTS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, content=(FIXTURES / "wmts_caps_agea2022.xml").read_bytes())
+    )
+    tile = respx.get(url__startswith=f"{AGEA22_WMTS}/tile/").mock(
+        return_value=httpx.Response(200, content=b"jpg", headers={"Access-Control-Allow-Origin": "https://web.geolibre.app"})
+    )
+    rows = list_layers(AGEA22_ID, [{"type": "WMTS", "url": f"{AGEA22_WMTS}?", "source": "resources_nst"}], timeout=1)
+    assert tile.calls.last.request.headers["Origin"] == "https://web.geolibre.app"
+    assert rows == [
+        {
+            "service": AGEA22_WMTS,
+            "kind": "wmts",
+            "name": "AgEA_Ortofoto_AgEA_2022",
+            "title": "AgEA_Ortofoto_AgEA_2022",
+            "crs": "EPSG:3857",
+            "tile_url": AGEA22_TEMPLATE,
+            "cors": True,
+            "geolibre_url": "https://web.geolibre.app/?plugin=openrndt-geolibre"
+            "&rndt=agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55"
+            "&rndtLayer=agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55~wmts~AgEA_Ortofoto_AgEA_2022",
+            "note": None,
+            "error": None,
+        }
+    ]
+
+
+@respx.mock
+def test_list_layers_wmts_without_cors_no_link():
+    respx.get(f"{AGEA22_WMTS}?SERVICE=WMTS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, content=(FIXTURES / "wmts_caps_agea2022.xml").read_bytes())
+    )
+    respx.get(url__startswith=f"{AGEA22_WMTS}/tile/").mock(return_value=httpx.Response(200, content=b"jpg"))
+    row = list_layers(AGEA22_ID, [{"type": "WMTS", "url": f"{AGEA22_WMTS}?", "source": "links_s"}], timeout=1)[0]
+    assert row["cors"] is False and row["geolibre_url"] is None
+    assert "CORS" in row["note"]
+
+
+@respx.mock
+def test_list_layers_wmts_upgrades_declared_http_and_skips_national():
+    """Veneto: GetTile dichiarato in http, capabilities lette in https → tile in https; il layer solo EPSG:3003 ha la nota."""
+    base = "https://idt2.regione.veneto.it/gwc/service/wmts"
+    respx.get(f"{base}?SERVICE=WMTS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, content=(FIXTURES / "wmts_caps_veneto_gwc.xml").read_bytes())
+    )
+    tile = respx.get(url__startswith=f"{base}?SERVICE=WMTS&REQUEST=GetTile").mock(
+        return_value=httpx.Response(200, content=b"png", headers={"Access-Control-Allow-Origin": "*"})
+    )
+    gm, national = list_layers("r_veneto:x", [{"type": "WMTS", "url": base, "source": "links_s"}], timeout=1)
+    assert tile.called
+    assert gm["tile_url"].startswith("https://") and gm["geolibre_url"].endswith("~wmts~rv%3Actr_128_bicubic")
+    assert national["geolibre_url"] is None and "EPSG:3003" in national["note"]
+
+
+@respx.mock
+def test_list_layers_wmts_tile_error_no_link():
+    respx.get(f"{AGEA22_WMTS}?SERVICE=WMTS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, content=(FIXTURES / "wmts_caps_agea2022.xml").read_bytes())
+    )
+    respx.get(url__startswith=f"{AGEA22_WMTS}/tile/").mock(return_value=httpx.Response(404))
+    row = list_layers(AGEA22_ID, [{"type": "WMTS", "url": f"{AGEA22_WMTS}?", "source": "links_s"}], timeout=1)[0]
+    assert row["cors"] is None and row["geolibre_url"] is None
+    assert "tile HTTP 404" in row["note"]

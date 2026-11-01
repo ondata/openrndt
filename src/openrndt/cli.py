@@ -932,10 +932,10 @@ def resources(
     layers: bool = typer.Option(
         False,
         "--layers",
-        help="Legge le GetCapabilities di ogni WMS ed elenca i layer, ognuno con un geolibre_url che lo mette sulla mappa. Sostituisce --check.",
+        help="Legge le GetCapabilities di ogni WMS e WMTS ed elenca i layer, ognuno con un geolibre_url che lo mette sulla mappa (WMTS: solo in griglia Web Mercator, con CORS provato su una tile). Sostituisce --check.",
     ),
 ) -> None:
-    """Estrae risorse fruibili (WMS/WFS/download) e, opzionalmente, le verifica."""
+    """Estrae risorse fruibili (WMS/WMTS/WFS/download) e, opzionalmente, le verifica."""
     if layers:
         check = False
     batch = len(item_ids) > 1
@@ -972,7 +972,9 @@ def resources(
         entry["resources"] = rows_checked
         if layers:
             # id risolto (un UUID nudo diventa prefisso:uuid): è quello che il plugin apre
-            entry["layers"] = list_layers(payload.get("_id") or item_id, rows)
+            entry["layers"] = list_layers(
+                payload.get("_id") or item_id, rows, title=item_record(payload).get("title")
+            )
         entries.append(entry)
 
     if not batch:
@@ -991,7 +993,7 @@ def resources(
             return
         if layers:
             if not response["layers"]:
-                typer.echo("Nessun servizio WMS nel metadato.", err=True)
+                typer.echo("Nessun servizio WMS o WMTS nel metadato.", err=True)
                 return
             output.emit(response, table_rows=response["layers"], table_title=f"RNDT layers — {item_ids[0]}")
             return

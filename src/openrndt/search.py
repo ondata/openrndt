@@ -457,9 +457,11 @@ def geolibre_url(item_id: Any, layers: list[tuple[str, str]] | None = None) -> s
     """Indirizzo che apre il record in GeoLibre web, nel plugin openrndt-geolibre.
 
     L'id è codificato per l'URL (contiene `:`). ``None`` senza id.
-    ``layers``: coppie ``(tipo, nome)`` con tipo ``wms`` o ``arcgis``, dal basso
-    verso l'alto; ognuna diventa un ``rndtLayer=<id>~<tipo>~<nome>`` e il plugin
-    (dalla 0.3.5) aggiunge il layer dal primo servizio della scheda che lo elenca.
+    ``layers``: coppie ``(tipo, nome)`` con tipo ``wms``, ``wmts`` o ``arcgis``,
+    dal basso verso l'alto; ognuna diventa un ``rndtLayer=<id>~<tipo>~<nome>`` e
+    il plugin aggiunge il layer dal primo servizio della scheda che lo elenca
+    (``wms`` e ``arcgis`` dalla 0.3.5, ``wmts`` dalla 0.5.0). L'id è l'``_id`` del
+    catalogo: il ``+`` delle schede AGEA diventa ``%2B``.
     """
     if not isinstance(item_id, str) or not item_id:
         return None
