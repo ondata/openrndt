@@ -839,3 +839,12 @@ def test_results_bbox_straightens_reversed_bounds():
     """Le schede AVEPA hanno ovest maggiore di est: il riquadro va raddrizzato, non preso così."""
     payload = {"results": [{"bbox": {"xmin": 12.2, "ymin": 45.1, "xmax": 11.39, "ymax": 45.69}}]}
     assert results_bbox(payload) == [11.39, 45.1, 12.2, 45.69]
+
+
+def test_item_record_geolibre_url_uses_catalog_id():
+    """`geolibre_url` di `get` dall'`_id` del catalogo, anche quando il fileid è diverso (AGEA)."""
+    record = item_record(
+        {"_id": "agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55", "_source": {"fileid": "agea:OI:ORTOIMMAGINI:m004"}}
+    )
+    assert record["id"] == "agea:OI:ORTOIMMAGINI:m004"
+    assert record["geolibre_url"].endswith("rndt=agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55")

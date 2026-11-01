@@ -7,7 +7,7 @@ from typing import Any
 from urllib.parse import quote
 
 from openrndt.client import rndt_request
-from openrndt.search import SEARCH_PATH
+from openrndt.search import SEARCH_PATH, catalog_ids_for_fileid
 
 ITEM_PATH = "/rest/metadata/item"
 
@@ -65,16 +65,32 @@ def get_item(item_id: str) -> dict[str, Any]:
     """JSON Elasticsearch del singolo metadato (_source + flag).
 
     Un UUID nudo viene prima risolto nella forma `prefisso:uuid` (vedi
-    :func:`resolve_item_id`). Solleva ``ItemNotFoundError`` se l'ID non esiste
+    :func:`resolve_item_id`). Un id che il catalogo non ha come ``_id`` si
+    cerca anche come ``fileid`` (vedi :func:`openrndt.search.catalog_ids_for_fileid`).
+    Solleva ``ItemNotFoundError`` se l'ID non esiste
     e ``httpx.HTTPError`` (status o rete) se la richiesta fallisce. Una
     risposta con body non-JSON valido (pur status 2xx) solleva
     ``json.JSONDecodeError`` (``ValueError``).
     """
-    response = rndt_request(f"{ITEM_PATH}/{_encode_id(resolve_item_id(item_id))}")
+    resolved = resolve_item_id(item_id)
+    data = _fetch_item(resolved)
+    if data.get("found") is False:
+        # Un fileid diverso dall'`_id` del catalogo (schede AGEA): si risale all'`_id`.
+        ids = [i for i in catalog_ids_for_fileid(resolved) if i != resolved]
+        if not ids:
+            raise ItemNotFoundError(item_id)
+        if len(ids) > 1:
+            raise AmbiguousItemIdError(item_id, ids)
+        data = _fetch_item(ids[0])
+        if data.get("found") is False:
+            raise ItemNotFoundError(item_id)
+    return data
+
+
+def _fetch_item(item_id: str) -> dict[str, Any]:
+    response = rndt_request(f"{ITEM_PATH}/{_encode_id(item_id)}")
     response.raise_for_status()
     data: dict[str, Any] = response.json()
-    if data.get("found") is False:
-        raise ItemNotFoundError(item_id)
     return data
 
 
