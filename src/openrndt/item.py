@@ -6,6 +6,8 @@ import re
 from typing import Any
 from urllib.parse import quote
 
+import httpx
+
 from openrndt.client import rndt_request
 from openrndt.search import SEARCH_PATH, catalog_ids_for_fileid
 
@@ -75,16 +77,24 @@ def get_item(item_id: str) -> dict[str, Any]:
     resolved = resolve_item_id(item_id)
     data = _fetch_item(resolved)
     if data.get("found") is False:
-        # Un fileid diverso dall'`_id` del catalogo (schede AGEA): si risale all'`_id`.
-        ids = [i for i in catalog_ids_for_fileid(resolved) if i != resolved]
-        if not ids:
-            raise ItemNotFoundError(item_id)
-        if len(ids) > 1:
-            raise AmbiguousItemIdError(item_id, ids)
-        data = _fetch_item(ids[0])
+        data = _fetch_item(_catalog_id_from_fileid(item_id, resolved))
         if data.get("found") is False:
             raise ItemNotFoundError(item_id)
     return data
+
+
+def _catalog_id_from_fileid(item_id: str, resolved: str) -> str:
+    """L'``_id`` del catalogo per un id che il catalogo ha solo come fileid (schede AGEA).
+
+    ``ItemNotFoundError`` se nessuna scheda ha quel fileid, ``AmbiguousItemIdError``
+    se più d'una.
+    """
+    ids = [i for i in catalog_ids_for_fileid(resolved) if i != resolved]
+    if not ids:
+        raise ItemNotFoundError(item_id)
+    if len(ids) > 1:
+        raise AmbiguousItemIdError(item_id, ids)
+    return ids[0]
 
 
 def _fetch_item(item_id: str) -> dict[str, Any]:
@@ -94,15 +104,25 @@ def _fetch_item(item_id: str) -> dict[str, Any]:
     return data
 
 
-def get_item_xml(item_id: str) -> str:
-    """XML ISO 19139 (gmd:MD_Metadata). Accetta anche un UUID nudo."""
-    response = rndt_request(f"{ITEM_PATH}/{_encode_id(resolve_item_id(item_id))}/xml")
-    response.raise_for_status()
+def _fetch_text(item_id: str, suffix: str) -> str:
+    """XML o HTML della scheda. Per un id che non esiste come ``_id`` il server
+    risponde 500 (xml) o 501 (html): si riprova dal fileid, come in :func:`get_item`."""
+    resolved = resolve_item_id(item_id)
+    try:
+        response = rndt_request(f"{ITEM_PATH}/{_encode_id(resolved)}/{suffix}")
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        catalog_id = _catalog_id_from_fileid(item_id, resolved)
+        response = rndt_request(f"{ITEM_PATH}/{_encode_id(catalog_id)}/{suffix}")
+        response.raise_for_status()
     return response.text
+
+
+def get_item_xml(item_id: str) -> str:
+    """XML ISO 19139 (gmd:MD_Metadata). Accetta anche un UUID nudo o un fileid diverso dall'``_id``."""
+    return _fetch_text(item_id, "xml")
 
 
 def get_item_html(item_id: str) -> str:
-    """HTML pronto per renderizzare. Accetta anche un UUID nudo."""
-    response = rndt_request(f"{ITEM_PATH}/{_encode_id(resolve_item_id(item_id))}/html")
-    response.raise_for_status()
-    return response.text
+    """HTML pronto per renderizzare. Accetta anche un UUID nudo o un fileid diverso dall'``_id``."""
+    return _fetch_text(item_id, "html")

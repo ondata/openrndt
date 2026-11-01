@@ -160,3 +160,21 @@ def test_resolve_item_id_passthrough_without_search(item_response_json):
     )
     assert resolve_item_id("age:D_E973_MARSAGLIA") == "age:D_E973_MARSAGLIA"
     assert search_route.call_count == 0
+
+
+
+@respx.mock
+@pytest.mark.parametrize("suffix", ["xml", "html"])
+def test_get_item_xml_html_fall_back_from_fileid(suffix):
+    """`--xml`/`--html` con un fileid: il server risponde 500/501, si risale all'`_id` e si riprova."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/agea%3AOI%3AORTOIMMAGINI%3Am004/{suffix}").mock(
+        return_value=httpx.Response(500)
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": _AGEA_ID}]})
+    )
+    respx.get(
+        f"{DEFAULT_BASE_URL}/rest/metadata/item/agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55/{suffix}"
+    ).mock(return_value=httpx.Response(200, text="<ok/>"))
+    fetch = get_item_xml if suffix == "xml" else get_item_html
+    assert fetch(_AGEA_FILEID) == "<ok/>"
