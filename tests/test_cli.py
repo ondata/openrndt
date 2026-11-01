@@ -536,7 +536,7 @@ def test_cli_resources_layers_csv_batch(item_response_json):
     result = runner.invoke(app, ["--format", "csv", "resources", "a:1", "b:2", "--layers"])
     assert result.exit_code == 0, result.output
     lines = result.stdout.strip().splitlines()
-    assert lines[0] == "id,service,name,title,crs,geolibre_url,note,error"
+    assert lines[0] == "id,service,kind,name,title,crs,tile_url,cors,geolibre_url,note,error"
     assert len(lines) == 3
 
 
