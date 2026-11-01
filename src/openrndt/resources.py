@@ -72,6 +72,9 @@ def _infer_kind(url: str) -> str:
         return service[0].upper()
 
     path_lower = parsed.path.lower()
+    # Prima delle estensioni: `…/WMTS/1.0.0/WMTSCapabilities.xml` è un WMTS, non un download.
+    if "/wmts" in path_lower:
+        return "WMTS"
     if path_lower.endswith(tuple(_DOWNLOAD_EXTENSIONS)):
         return "download"
     if "wms" in path_lower:
@@ -178,7 +181,9 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
             continue
         declared = entry.get("url_type_s")
         kind = _normalize_kind(declared) if isinstance(declared, str) else "link"
-        if kind == "link":
+        if kind == "link" or _infer_kind(url) == "WMTS":
+            # L'URL che dice WMTS vince sul tipo dichiarato: le ortofoto AGEA
+            # hanno `url_type_s` "ImageServer" su un `…/ImageServer/WMTS?`.
             kind = _normalize_kind(_infer_kind(url))
         seen.add(url)
         rows.append({"type": kind, "url": url, "source": "resources_nst"})
@@ -192,6 +197,8 @@ def extract_resources(item_payload: dict[str, Any]) -> list[dict[str, str]]:
             continue
         kind_raw = link.get("dctype")
         kind = _normalize_kind(kind_raw) if isinstance(kind_raw, str) else _normalize_kind(_infer_kind(href))
+        if _infer_kind(href) == "WMTS":
+            kind = "WMTS"
         if kind == "link":
             continue
         if href in seen:

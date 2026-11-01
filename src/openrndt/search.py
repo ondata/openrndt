@@ -10,7 +10,7 @@ from urllib.parse import quote
 from openrndt.client import rndt_request
 from openrndt.codelists import DATA_CATEGORIES
 from openrndt.ipa import ipa_clause
-from openrndt.resources import extract_resources
+from openrndt.resources import _infer_kind, extract_resources
 
 SEARCH_PATH = "/rest/metadata/search"
 MAX_NUM = 5000
@@ -361,7 +361,11 @@ def _resource_types(links: list[dict[str, Any]]) -> list[str]:
         if link.get("rel") in _NON_RESOURCE_RELS:
             continue
         dctype = link.get("dctype")
-        if dctype:
+        href = link.get("href")
+        if isinstance(href, str) and _infer_kind(href) == "WMTS":
+            # come `extract_resources`: l'URL che dice WMTS vince sul dctype (AGEA: "ImageServer")
+            types.add("WMTS")
+        elif dctype:
             types.add(dctype)
         elif link.get("rel") == "enclosure":
             types.add("download")
