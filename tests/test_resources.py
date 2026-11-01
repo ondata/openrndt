@@ -746,3 +746,27 @@ def test_list_layers_wmts_tile_error_no_link():
     row = list_layers(AGEA22_ID, [{"type": "WMTS", "url": f"{AGEA22_WMTS}?", "source": "links_s"}], timeout=1)[0]
     assert row["cors"] is None and row["geolibre_url"] is None
     assert "tile HTTP 404" in row["note"]
+
+
+
+def _row(kind, name, crs="EPSG:3857", service="https://s.it/wms", url="x"):
+    return {"kind": kind, "name": name, "title": name, "crs": crs, "service": service, "geolibre_url": url}
+
+
+def test_pick_map_layer_rules():
+    from openrndt.resources import pick_map_layer
+
+    rows = [
+        _row("wms", "a:strade"),
+        _row("wms", "a:fiumi"),
+        _row("wms", "a:http", service="http://s.it/wms"),
+        _row("wms", "a:utm", crs="EPSG:32632"),
+        _row("wms", "a:none", url=None),
+    ]
+    getmap = [{"type": "WMS", "url": "https://s.it/wms?REQUEST=GetMap&LAYERS=a:fiumi"}]
+    assert pick_map_layer(rows, getmap)["name"] == "a:fiumi"
+    assert pick_map_layer(rows, [], title="Rete dei fiumi")["name"] == "a:fiumi"
+    assert pick_map_layer(rows, [], title="Niente") is None
+    assert pick_map_layer(rows, [], title="Rete dei fiumi", record_type="service") is None
+    assert pick_map_layer(rows[2:], [], title="x") is None
+    assert pick_map_layer([_row("wmts", "o", crs="EPSG:3857")], [])["name"] == "o"

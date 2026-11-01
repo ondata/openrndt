@@ -975,3 +975,63 @@ def tile_cors(url: str, timeout: float) -> tuple[bool | None, str | None]:
             return allow in {"*", GEOLIBRE_ORIGIN}, None
     except httpx.HTTPError as exc:
         return None, f"tile: {type(exc).__name__}"
+
+
+def pick_map_layer(
+    rows: list[dict[str, Any]], resources: list[dict[str, str]], *, title: str | None = None, record_type: str | None = None
+) -> dict[str, Any] | None:
+    """Il layer da mettere sulla mappa di GeoLibre web, fra le righe di :func:`list_layers`.
+
+    Candidati: le righe con ``geolibre_url`` che GeoLibre web disegna, cioè i
+    WMTS (già verificati: griglia Web Mercator e CORS) e i WMS https offerti in
+    EPSG:3857. Scelta come il plugin (`wantedLayer`): il layer nominato da un
+    link della scheda (`LAYERS=`…), altrimenti l'unico candidato, altrimenti
+    quello col titolo più vicino a quello della scheda; per una scheda di tipo
+    ``service`` nessuna scelta per titolo. ``None`` se non c'è un candidato sicuro.
+    """
+    candidates = [
+        r
+        for r in rows
+        if r.get("geolibre_url")
+        and (r["kind"] == "wmts" or (r["crs"] == "EPSG:3857" and str(r["service"]).lower().startswith("https://")))
+    ]
+    if not candidates:
+        return None
+    hints = [h for h in (preselected_name(r["url"]) for r in resources) if h]
+    for hint in hints:
+        hit = next((r for r in candidates if r["name"] == hint), None)
+        if hit:
+            return hit
+    if len(candidates) == 1:
+        return candidates[0]
+    if record_type == "service":
+        return None
+    name = best_matching_layer(title or "", candidates)
+    return next((r for r in candidates if r["name"] == name), None)
+
+
+def geolibre_map_url(item_payload: dict[str, Any], *, timeout: float | None = None) -> str | None:
+    """Indirizzo che apre GeoLibre web con il layer della scheda già sulla mappa.
+
+    Legge le capabilities dei WMS e WMTS della scheda (vedi :func:`list_layers`)
+    e sceglie il layer con :func:`pick_map_layer`. ``item_payload`` è la busta
+    di :func:`openrndt.item.get_item`. ``None`` se nessun layer è disegnabile
+    in GeoLibre web o la scelta non è sicura.
+    """
+    source = item_payload.get("_source") or {}
+    item_id = item_payload.get("_id") or source.get("fileid")
+    if not item_id:
+        return None
+    title = source.get("title")
+    record_type = source.get("apiso_Type_s")
+    resources = extract_resources(item_payload)
+    rows = list_layers(
+        str(item_id), resources, timeout=timeout, title=title if isinstance(title, str) else None
+    )
+    picked = pick_map_layer(
+        rows,
+        resources,
+        title=title if isinstance(title, str) else None,
+        record_type=record_type if isinstance(record_type, str) else None,
+    )
+    return picked["geolibre_url"] if picked else None

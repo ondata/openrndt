@@ -383,7 +383,9 @@ def test_cli_get_table_success(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    result = runner.invoke(app, ["--format", "table", "get", "age:D_E973_MARSAGLIA"], env={"COLUMNS": "300"})
+    result = runner.invoke(
+        app, ["--format", "table", "get", "age:D_E973_MARSAGLIA", "--no-map-link"], env={"COLUMNS": "300"}
+    )
     assert result.exit_code == 0, result.output
     assert "MARSAGLIA" in result.output
 
@@ -904,9 +906,10 @@ def test_cli_get_json_normalized(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA", "--no-map-link"])
     assert result.exit_code == 0, result.output
     doc = json.loads(result.stdout)
+    assert "geolibre_map_url" not in doc
     assert doc["id"] == "age:D_E973_MARSAGLIA"
     assert doc["org"] == "Agenzia delle Entrate"
     assert doc["contact"]["email"] == "assistenzaweb@agenziaentrate.it"
@@ -1172,3 +1175,54 @@ def test_cli_search_id_unknown_clear_message():
     assert result.exit_code == 1
     assert "non trovato" in result.output.lower()
     assert "Errore HTTP 404" not in result.output
+
+
+
+AE_CAPS_3857_XML = """<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms"><Capability>
+<Layer><CRS>EPSG:3857</CRS><Layer><Name>CP.CadastralParcel</Name><Title>Particelle</Title></Layer>
+<Layer><Name>CP.CadastralZoning</Name><Title>Fogli catastali</Title></Layer></Layer>
+</Capability></WMS_Capabilities>"""
+
+
+@respx.mock
+def test_cli_get_map_link_after_geolibre_url(item_response_json):
+    """`get`: `geolibre_map_url` subito dopo `geolibre_url`, layer scelto per titolo fra quelli in EPSG:3857."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_3857_XML))
+    payload = json.loads(json.dumps(item_response_json))
+    payload["_source"]["title"] = "Particelle catastali del comune"
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=payload)
+    )
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    doc = json.loads(result.stdout)
+    keys = list(doc)
+    assert keys[keys.index("geolibre_url") + 1] == "geolibre_map_url"
+    assert doc["geolibre_map_url"].endswith("&rndtLayer=age%3AD_E973_MARSAGLIA~wms~CP.CadastralParcel")
+
+
+@respx.mock
+def test_cli_get_map_link_none_when_not_web_drawable(item_response_json):
+    """Layer solo in EPSG:6706: GeoLibre web non lo ridisegna, nessun link."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["geolibre_map_url"] is None
+
+
+@respx.mock
+def test_cli_get_map_link_service_down_is_none(item_response_json):
+    """Servizio che non risponde: `get` non fallisce, il link è None."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
+        return_value=httpx.Response(200, json=item_response_json)
+    )
+    respx.get(AE_CAPS).mock(side_effect=httpx.ConnectError("down"))
+    result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["geolibre_map_url"] is None
