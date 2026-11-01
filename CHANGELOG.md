@@ -4,6 +4,24 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.12.0] - 2026-11-01
+
+### Added
+
+- **`geolibre_map_url` in `get`**: subito dopo `geolibre_url`, l'indirizzo che apre GeoLibre web con il layer della scheda già sulla mappa, quando ce n'è uno che GeoLibre web sa disegnare (WMTS in griglia Web Mercator con CORS sulle tile, WMS https in EPSG:3857); altrimenti `null`. Il layer si sceglie come nel plugin: quello nominato da un link della scheda (`LAYERS=`), l'unico, o quello col titolo più vicino. `get` legge le capabilities dei servizi; `--no-map-link` salta queste chiamate. Ortofoto AGEA 2022: `…&rndtLayer=agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55~wmts~AgEA_Ortofoto_AgEA_2022`. In libreria: `geolibre_map_url()` e `pick_map_layer()`.
+- **WMTS in `resources --layers`**: un `geolibre_url` per ogni layer WMTS disegnabile in GeoLibre web, con le regole del plugin openrndt-geolibre 0.5.0: griglia Web Mercator (EPSG:3857, 900913, 102100) a 256 px con id delle matrici «prefisso + zoom», template RESTful o GetTile KVP, indirizzi `http://` riportati a https sullo stesso host, e una tile di prova per servizio con `Origin: https://web.geolibre.app` per il CORS. Le righe hanno `kind`, `tile_url` e `cors` in più (anche nel CSV). Verificato dal vivo: AGEA 2022 e Lombardia Ortofoto 2021 sì; Lombardia 2024 (solo EPSG:7791), CSI Piemonte (solo 32632) e Bolzano (id `00`, `01`) no, con la nota che dice perché. In libreria: `parse_wmts_capabilities()`, `plan_wmts_layer()`, `web_mercator_zooms()`, `upgrade_to_https()`.
+
+### Fixed
+
+- **`get` e `search --id` con un fileid diverso dall'id del catalogo**: le ortofoto AGEA hanno `_id` `agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55` e fileid `agea:OI:ORTOIMMAGINI:m004`. Con il fileid `get` diceva «Metadato non trovato» e `search --id` usciva con il 404 grezzo; ora si risale all'`_id` con `fileid:"…"`, e un id che non esiste in nessuna delle due forme dà «Metadato non trovato». `geolibre_url` di `get` usa l'`_id`, che è quello che il plugin apre.
+- **WMTS riconosciuto dall'URL**: un indirizzo con `/wmts` nel path o `SERVICE=WMTS` è WMTS anche se la scheda dichiara un altro tipo (AGEA: «ImageServer»), in `resources` e nei `resources` di `compact`; un `…/WMTSCapabilities.xml` non è più un download.
+
+### Changed
+
+- Skill `rndt-explorer` 3.13.0: `geolibre_map_url` e i WMTS in `references/browser-links.md`.
+- `get --xml` e `--html` accettano anche il fileid (ortofoto AGEA); un errore del server su una scheda esistente resta l'errore HTTP originale.
+- Vocabolario IPA rigenerato (2026-11-01): 182 codici (169 nell'Indice PA), 23.747 schede; anagrafica 23.771 enti.
+
 ## [3.11.0] - 2026-10-10
 
 ### Added

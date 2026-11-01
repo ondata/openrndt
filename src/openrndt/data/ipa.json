@@ -1,6 +1,6 @@
 {
- "generato": "2026-10-10",
- "schede": 23883,
+ "generato": "2026-11-01",
+ "schede": 23747,
  "codici": [
   {
    "codice": "age",
@@ -27,7 +27,7 @@
    "enti": [
     "Regione Autonoma Friuli-Venezia Giulia"
    ],
-   "schede": 1796,
+   "schede": 1797,
    "grafie": [
     "r_friuve"
    ]
@@ -42,7 +42,7 @@
    "enti": [
     "Regione Emilia-Romagna"
    ],
-   "schede": 1416,
+   "schede": 1440,
    "grafie": [
     "r_emiro"
    ]
@@ -150,7 +150,7 @@
    "enti": [
     "Comune di Firenze"
    ],
-   "schede": 548,
+   "schede": 549,
    "grafie": [
     "c_d612"
    ]
@@ -196,7 +196,7 @@
    "enti": [
     "Regione Lombardia"
    ],
-   "schede": 461,
+   "schede": 462,
    "grafie": [
     "r_lombar"
    ]
@@ -211,7 +211,7 @@
    "enti": [
     "Istituto Superiore per la Protezione e la Ricerca Ambientale"
    ],
-   "schede": 418,
+   "schede": 419,
    "grafie": [
     "ispra_rm"
    ]
@@ -356,22 +356,6 @@
    ]
   },
   {
-   "codice": "c_f205",
-   "ipa": true,
-   "nome_ipa": "Comune di Milano",
-   "acronimo": null,
-   "categoria": "L6",
-   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
-   "enti": [
-    "Comune di Milano"
-   ],
-   "schede": 230,
-   "grafie": [
-    "C_F205",
-    "c_f205"
-   ]
-  },
-  {
    "codice": "r_lazio",
    "ipa": true,
    "nome_ipa": "Regione Lazio",
@@ -447,6 +431,21 @@
    ]
   },
   {
+   "codice": "c_d969",
+   "ipa": true,
+   "nome_ipa": "Comune di Genova",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Genova"
+   ],
+   "schede": 145,
+   "grafie": [
+    "c_d969"
+   ]
+  },
+  {
    "codice": "cmfi",
    "ipa": true,
    "nome_ipa": "Citta' Metropolitana di Firenze",
@@ -462,21 +461,6 @@
    ]
   },
   {
-   "codice": "c_d969",
-   "ipa": true,
-   "nome_ipa": "Comune di Genova",
-   "acronimo": null,
-   "categoria": "L6",
-   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
-   "enti": [
-    "Comune di Genova"
-   ],
-   "schede": 144,
-   "grafie": [
-    "c_d969"
-   ]
-  },
-  {
    "codice": "arlpa_to",
    "ipa": true,
    "nome_ipa": "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
@@ -487,7 +471,7 @@
     "Agenzia Regionale per la Protezione dell'Ambiente del Piemonte",
     "Agenzia Regionale per la protezione dell'Ambiente del Piemonte"
    ],
-   "schede": 143,
+   "schede": 138,
    "grafie": [
     "ARLPA_TO",
     "arlpa_to"
@@ -598,6 +582,21 @@
    "schede": 74,
    "grafie": [
     "udcvs"
+   ]
+  },
+  {
+   "codice": "c_e625",
+   "ipa": true,
+   "nome_ipa": "Comune di Livorno",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Livorno"
+   ],
+   "schede": 71,
+   "grafie": [
+    "c_e625"
    ]
   },
   {
@@ -719,21 +718,6 @@
    "schede": 40,
    "grafie": [
     "c_f132"
-   ]
-  },
-  {
-   "codice": "c_e625",
-   "ipa": true,
-   "nome_ipa": "Comune di Livorno",
-   "acronimo": null,
-   "categoria": "L6",
-   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
-   "enti": [
-    "Comune di Livorno"
-   ],
-   "schede": 36,
-   "grafie": [
-    "c_e625"
    ]
   },
   {
@@ -915,6 +899,21 @@
    ]
   },
   {
+   "codice": "c_c990",
+   "ipa": true,
+   "nome_ipa": "Comune di Corciano",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Corciano"
+   ],
+   "schede": 21,
+   "grafie": [
+    "c_c990"
+   ]
+  },
+  {
    "codice": "c_i608",
    "ipa": true,
    "nome_ipa": "Comune di Senigallia",
@@ -973,21 +972,6 @@
    "grafie": [
     "M_D",
     "m_d"
-   ]
-  },
-  {
-   "codice": "cmrc",
-   "ipa": true,
-   "nome_ipa": "Citta' Metropolitana di Roma Capitale",
-   "acronimo": "CMR",
-   "categoria": "L45",
-   "nome_categoria": "Citta' Metropolitane",
-   "enti": [
-    "Città Metropolitana di Roma Capitale"
-   ],
-   "schede": 16,
-   "grafie": [
-    "cmrc"
    ]
   },
   {
@@ -1064,6 +1048,22 @@
    ]
   },
   {
+   "codice": "c_f205",
+   "ipa": true,
+   "nome_ipa": "Comune di Milano",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Milano"
+   ],
+   "schede": 14,
+   "grafie": [
+    "C_F205",
+    "c_f205"
+   ]
+  },
+  {
    "codice": "c_l833",
    "ipa": true,
    "nome_ipa": "Comune di Viareggio",
@@ -1076,6 +1076,21 @@
    "schede": 14,
    "grafie": [
     "c_l833"
+   ]
+  },
+  {
+   "codice": "cmrc",
+   "ipa": true,
+   "nome_ipa": "Citta' Metropolitana di Roma Capitale",
+   "acronimo": "CMR",
+   "categoria": "L45",
+   "nome_categoria": "Citta' Metropolitane",
+   "enti": [
+    "Città Metropolitana di Roma Capitale"
+   ],
+   "schede": 14,
+   "grafie": [
+    "cmrc"
    ]
   },
   {
@@ -2500,6 +2515,21 @@
    ]
   },
   {
+   "codice": "c_d496",
+   "ipa": true,
+   "nome_ipa": "Comune di Fara Vicentino",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Fara Vicentino"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_d496"
+   ]
+  },
+  {
    "codice": "c_d509",
    "ipa": true,
    "nome_ipa": "Comune di Fascia",
@@ -2602,6 +2632,21 @@
    "schede": 1,
    "grafie": [
     "c_f376"
+   ]
+  },
+  {
+   "codice": "c_f382",
+   "ipa": true,
+   "nome_ipa": "Comune di Monselice",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Monselice"
+   ],
+   "schede": 1,
+   "grafie": [
+    "c_f382"
    ]
   },
   {

@@ -1,5 +1,18 @@
 # LOG
 
+## 2026-11-01 (3.12.0: geolibre_map_url, WMTS in --layers, fileid)
+
+- **Richiesta dalla sessione openrndt-geolibre**, per conto dell'utente: un link GeoLibre web con il layer della scheda già sulla mappa. Decisioni dell'utente: in `get` sempre (`--no-map-link` per saltare la rete), niente `search --map-links`, CORS provato su una tile, ArcGIS (#33) dopo, rilascio subito.
+- **Parte offline in `search` scartata**: solo ~41 schede hanno `LAYERS=` nei link (`links_s:*layers=*`), quasi tutte `http://` e in EPSG:25833/4326, che GeoLibre web non ridisegna. Un link senza verifica sarebbe stato quasi sempre sbagliato.
+- **WMTS portato dal plugin 0.5.0** (`src/rndt/wmts.ts`, `wantedLayer`, `upgradeToHttps`), per avere le stesse regole. Bolzano (MapProxy, `EPSG_3857` con id `00`, `01`) è scartato come nel plugin: nell'analisi dei WMTS mandata alla sessione del plugin lo avevo contato fra i disegnabili.
+- **Analisi dei WMTS nel RNDT** (2026-11-01): 795 schede, 81 endpoint, 12 host; il GeoWebCache del Veneto da solo ne copre 667. 17 servizi ArcGIS ARPA Piemonte rispondono 499 «Token Required».
+- **AGEA ImageServer**: `exportImage` dà la scacchiera a ogni zoom, le tile in cache (WMTS) danno l'ortofoto: per queste schede il link giusto è il WMTS.
+- **fileid ≠ `_id`** sulle ortofoto AGEA: `get` e `search --id` ora risalgono all'`_id`.
+- **Prova dal vivo in GeoLibre web** (plugin 0.5.0, nel registro dal 2026-11-01, browser headed con WebGL): il `geolibre_map_url` AGEA apre l'ortofoto su Siena, quello di Bolzano il WMS CIR con la mappa inquadrata sul layer.
+- **PR #47** (chiude #46), merge in rebase dopo tre giri di Greptile: quattro rilievi, tutti corretti. `--xml`/`--html` col fileid (500/501 dal server), `NaN` nelle griglie WMTS che fermava `get`, redirect sulla tile di prova che saltava il controllo CORS, e un errore del server su `--xml` che diventava «non trovato». Ultimo giro: «no outstanding findings».
+- **Vocabolario IPA rigenerato** prima del rilascio (266 s): 182 codici (prima 179), 23.747 schede.
+- **GeoLibre 3.5.0** disegna la mappa in altri CRS (anche EPSG a scelta): lì vanno WMS, ArcGIS export, GeoJSON e immagini, non XYZ/WMTS/vector tile né probabilmente i COG (deck.gl). Il CRS è una preferenza, non un parametro del link: `geolibre_map_url` resta su Web Mercator. Idea in `docs/future-ideas.md`.
+
 ## 2026-10-10 (rilascio 3.11.0, skill 3.12.0)
 
 - **Pubblicata**: tag `v3.11.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.11.0` riuscita. Smoke test sulla CLI da PyPI: `discover --what ipa --match "comune di palermo"` → `c_g273`, `L6`, 0 schede; `--org "comune di palermo"` lo propone nei suggerimenti.
