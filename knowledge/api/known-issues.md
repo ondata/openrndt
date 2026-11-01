@@ -76,6 +76,9 @@ Un ente assente da tutti e tre non è un difetto di query: il Comune di Bologna 
   - 25 record di enti locali (nome che inizia per Comune, Provincia, Città, Unione) con estensione larga almeno 12° e alta almeno 10°: Provincia Autonoma di Trento 16 (il mondo intero, `-180,-90,180,90`), Comune di Livorno 5 e Comune di Selvazzano Dentro 2 (tutta l'Italia), Comune di Firenze 1 (i quattro valori in ordine sbagliato: `11.15,11.35,43.72,43.84`), Comune di Modena 1 (riquadro che parte da `0,0`). Sono il rumore del punto precedente.
   - Le forme dell'errore sono troppe per una correzione automatica: il riquadro di Capannori scambiato cade nel Tirreno, dentro il riquadro dell'Italia, e un controllo «scambiato rientra in Italia» lo prenderebbe per uno scambio (100 falsi su 106).
 
+- **`_id` del catalogo diverso dal fileid** (2026-11-01): le ortofoto AGEA 2022, 2023 e 2024 hanno `_id` come `agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55` e fileid `agea:OI:ORTOIMMAGINI:m004`; l'ortofoto 2022 e i quadri di unione condividono anche la radice `agea:OI:DATEVOLO:m001`, distinta solo dal suffisso con la data. L'endpoint item con il fileid risponde 200 con `found: false`, `search?id=<fileid>` risponde 404; `q=fileid:"<fileid>"` trova la scheda. Compensazione: dalla 3.12.0 `get` e `search --id` risalgono all'`_id` dal fileid.
+- **Tipo di servizio dichiarato diverso dall'URL**: sulle stesse schede AGEA `resources_nst.url_type_s` è «ImageServer» per un `…/ImageServer/WMTS?`. Dalla 3.12.0 la CLI classifica come WMTS ogni URL con `/wmts` nel path o `SERVICE=WMTS`.
+
 # Citations
 
 [1] `ref/rest-api-rndt.md` e `LOG.md` nel repository (verifiche live datate).

@@ -225,3 +225,10 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 - Campione: prime 500 schede di `search?q=*:*` (sort di default, non casuale) su 23.738. Presenze: `PuntoDiContattoEmail_s` 500/500 (email designata del dataset, 107 distinte; è quella che il mirror CKAN proietta in `contact_email`), `envelope_geo` 500/500 (bbox), `apiso_Lineage_txt` 431/500, `url_download_s`/`url_http_download_s` 488/500. In `_source` compaiono anche `resources_nst`, `PuntoDiContatto_s` (nome) e `PuntoDiContattoSitoWeb_s`.
 - Verificato dopo: email e licenza del mirror CKAN sono proiezioni del RNDT grezzo (XML: `gmd:electronicMailAddress`, `gmd:resourceConstraints`); le URI `resource/pointOfContact/...` sono identificatori, rispondono 404.
 - Idea: esporre nei campi normalizzati di openrndt email, bbox (`envelope_geo`), lineage e URL di download tipizzati, invece di lasciarli solo nel JSON grezzo.
+
+
+## 2026-11-01 - link GeoLibre per i WMS in un sistema nazionale
+
+- GeoLibre 3.5.0 disegna la mappa in un CRS a scelta (Settings → Map → Map coordinate reference system, `preferences.map.mapCrs`) e chiede i WMS in quel CRS; la 3.5.1 lo espone ai plugin con `getMapCrs()`. Un WMS offerto solo in EPSG:32632 o 3003 (CSI Piemonte, molte Regioni) si vedrebbe, ma il CRS non si imposta da un link.
+- Se il plugin openrndt-geolibre (o GeoLibre) accetterà un parametro URL per il CRS della mappa, `geolibre_map_url` potrà dare il link anche per quei WMS, con il CRS del layer. WMTS e XYZ in quel caso non si vedono.
+- Da chiedere alla sessione del plugin o a GeoLibre (`opengeos/GeoLibre`).

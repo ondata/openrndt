@@ -98,8 +98,11 @@ openrndt get age:D_E973_MARSAGLIA --raw
 # Estrai e verifica endpoint WMS/WFS/download di un metadato
 openrndt resources age:D_E973_MARSAGLIA
 
-# Layer di ogni WMS, ognuno con un geolibre_url che lo apre già sulla mappa
+# Layer di ogni WMS e WMTS, ognuno con un geolibre_url che lo apre già sulla mappa
 openrndt resources r_emiro:2022-03-11T113115 --layers
+
+# Il link a GeoLibre web con il layer della scheda già sulla mappa
+openrndt get agea:OI:ORTOIMMAGINI:m004 | jq -r .geolibre_map_url
 
 # XML ISO 19139 grezzo
 openrndt get age:D_E973_MARSAGLIA --xml > meta.xml
@@ -185,6 +188,8 @@ stampata, `open` esce come sì/no e `license` è troncata: in `csv` e `compact`
 restano intere.
 
 `geolibre_url` apre lo stesso record in [GeoLibre](https://geolibre.app) web, dentro il plugin [openrndt-geolibre](https://github.com/ondata/openrndt-geolibre): `https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=<id>`. Il pannello si apre sulla scheda, con i servizi WMS/WFS pronti da aggiungere alla mappa; a chi non ha il plugin GeoLibre lo propone con «Trust and load». C'è in tutti gli output tranne `--format table`, anche nel JSON di `search` accanto a ogni risultato. Funziona su web.geolibre.app, non ancora in GeoLibre Desktop (la 3.2.0 non legge `?plugin=` per i plugin del registro) né con `layout=viewer` ([opengeos/GeoLibre#2898](https://github.com/opengeos/GeoLibre/issues/2898)).
+
+`get` dà anche `geolibre_map_url`, subito dopo `geolibre_url`: lo stesso record con il suo layer già sulla mappa, quando ce n'è uno che GeoLibre web sa disegnare. Per trovarlo `get` legge le capabilities dei WMS e WMTS della scheda (come `resources --layers`) e sceglie il layer come il plugin: quello nominato da un link della scheda (`LAYERS=`), altrimenti l'unico, altrimenti quello col titolo più vicino a quello della scheda. Valgono i WMTS in griglia Web Mercator le cui tile rispondono con CORS e i WMS https offerti in EPSG:3857; altrimenti il campo è `null`. `--no-map-link` salta queste chiamate di rete. I link WMTS richiedono il plugin 0.5.0, nel registro dal 2026-11-01. `get` e `search --id` accettano anche il fileid di una scheda quando è diverso dal suo id nel catalogo (le ortofoto AGEA: `agea:OI:ORTOIMMAGINI:m004` è `agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55`).
 
 `--geolibre-link` dà invece l'indirizzo che apre l'intera ricerca nel plugin, con i footprint sulla mappa (plugin 0.3.8 o successivo):
 
