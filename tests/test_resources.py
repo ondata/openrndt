@@ -548,3 +548,29 @@ def test_list_layers_prefers_https_variant():
     assert route.call_count == 1
     assert {r["service"] for r in rows} == {"https://a.test/wms"}
     assert all(r["note"] is None or "http://" not in r["note"] for r in rows)
+
+
+def test_extract_resources_wmts_from_url_beats_declared_type():
+    """AGEA: `url_type_s` "ImageServer" su un URL `…/ImageServer/WMTS?` → WMTS."""
+    url = "https://geoportale.agea.gov.it/image/rest/services/AgEA/Ortofoto_AgEA_2022/ImageServer/WMTS?"
+    payload = {"_source": {"resources_nst": [{"url_s": url, "url_type_s": "ImageServer"}], "links_s": [url]}}
+    assert extract_resources(payload) == [{"type": "WMTS", "url": url, "source": "resources_nst"}]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://x.it/arcgis/rest/services/A/MapServer/WMTS/1.0.0/WMTSCapabilities.xml",
+        "https://idt2.regione.veneto.it/gwc/service/wmts",
+        "https://geoservices.buergernetz.bz.it/mapproxy/service?REQUEST=GetCapabilities&SERVICE=WMTS",
+    ],
+)
+def test_extract_resources_wmts_inferred_from_bare_urls(url):
+    """URL nudi in `links_s`: WMTS dal path (anche prima dell'estensione `.xml`) o da `SERVICE=WMTS`."""
+    assert extract_resources({"_source": {"links_s": [url]}})[0]["type"] == "WMTS"
+
+
+def test_extract_resources_service_wms_on_wmts_host_stays_wms():
+    """`wmts` nel nome host non conta: `SERVICE=WMS` resta WMS."""
+    url = "https://wmtscatasto-gis.csi.it/mapproxy/service?request=GetCapabilities&service=WMS"
+    assert extract_resources({"_source": {"links_s": [url]}})[0]["type"] == "WMS"
