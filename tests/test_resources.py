@@ -770,3 +770,43 @@ def test_pick_map_layer_rules():
     assert pick_map_layer(rows, [], title="Rete dei fiumi", record_type="service") is None
     assert pick_map_layer(rows[2:], [], title="x") is None
     assert pick_map_layer([_row("wmts", "o", crs="EPSG:3857")], [])["name"] == "o"
+
+
+
+def test_web_mercator_zooms_rejects_nan_scale():
+    """`ScaleDenominator` "NaN" passa `float()`: la griglia non è usabile, niente eccezione."""
+    caps = _wmts("wmts_caps_agea2022.xml")
+    caps["sets"]["GoogleMapsCompatible"]["matrices"][0]["scale"] = float("nan")
+    assert web_mercator_zooms(caps["sets"]["GoogleMapsCompatible"]) is None
+    assert plan_wmts_layer(caps, caps["layers"][0])["ok"] is True  # resta default028mm
+
+
+@respx.mock
+def test_list_layers_wmts_nan_everywhere_no_crash():
+    xml = (FIXTURES / "wmts_caps_agea2022.xml").read_text(encoding="utf-8")
+    import re
+
+    xml = re.sub(r"<ScaleDenominator>[^<]*</ScaleDenominator>", "<ScaleDenominator>NaN</ScaleDenominator>", xml)
+    respx.get(f"{AGEA22_WMTS}?SERVICE=WMTS&REQUEST=GetCapabilities").mock(return_value=httpx.Response(200, text=xml))
+    row = list_layers(AGEA22_ID, [{"type": "WMTS", "url": f"{AGEA22_WMTS}?", "source": "links_s"}], timeout=1)[0]
+    assert row["geolibre_url"] is None and "Web Mercator" in row["note"]
+
+
+@respx.mock
+def test_tile_cors_follows_redirect_and_reads_final_response():
+    from openrndt.resources import tile_cors
+
+    respx.get("https://a.test/tile/1/2/3").mock(
+        return_value=httpx.Response(302, headers={"location": "https://b.test/t.png", "Access-Control-Allow-Origin": "*"})
+    )
+    respx.get("https://b.test/t.png").mock(return_value=httpx.Response(200, content=b"png"))
+    assert tile_cors("https://a.test/tile/1/2/3", 1) == (False, None)
+
+
+def test_tile_cors_blocks_redirect_to_private_host():
+    from openrndt.resources import tile_cors
+
+    with respx.mock:
+        respx.get("https://a.test/tile").mock(return_value=httpx.Response(302, headers={"location": "http://10.0.0.1/t"}))
+        cors, error = tile_cors("https://a.test/tile", 1)
+    assert cors is None and error.startswith("url-blocked:")

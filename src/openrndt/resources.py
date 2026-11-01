@@ -667,7 +667,11 @@ def _wmts_rows(
     for layer in caps["layers"]:
         for t in layer["templates"]:
             t["template"] = upgrade_to_https(t["template"], caps_url)
-    plans = {layer["name"]: plan_wmts_layer(caps, layer) for layer in caps["layers"]}
+    try:
+        plans = {layer["name"]: plan_wmts_layer(caps, layer) for layer in caps["layers"]}
+    except (ValueError, ArithmeticError) as exc:
+        # Capabilities con valori che il piano non regge: errore del servizio, non di `get`.
+        return [{**row_base, "error": f"capabilities WMTS non utilizzabili: {exc}"}]
     addable = [layer for layer in caps["layers"] if plans[layer["name"]]["ok"]]
     # Una tile del layer voluto (o del primo disegnabile), come la chiederebbe il browser.
     cors: bool | None = None
@@ -846,7 +850,10 @@ def web_mercator_zooms(matrix_set: dict[str, Any]) -> tuple[str, dict[str, int]]
         return None
     zooms: dict[str, int] = {}
     for m in matrix_set["matrices"]:
-        if m["tile_width"] != 256 or m["tile_height"] != 256 or not m["top_left"] or m["scale"] <= 0:
+        if m["tile_width"] != 256 or m["tile_height"] != 256 or not m["top_left"]:
+            return None
+        # `float()` accetta "NaN" e "inf": un server che li scrive non ha una griglia usabile.
+        if not all(math.isfinite(v) for v in (m["scale"], *m["top_left"])) or m["scale"] <= 0:
             return None
         # I server arrotondano l'angolo in modo diverso (GeoWebCache: -2.003750834E7 2.0037508E7).
         if abs(m["top_left"][0] + _WORLD) > 1 or abs(m["top_left"][1] - _WORLD) > 1:
@@ -960,21 +967,31 @@ def wmts_probe_url(template: str, bbox: list[float] | None, minzoom: int, maxzoo
 def tile_cors(url: str, timeout: float) -> tuple[bool | None, str | None]:
     """GET di una tile con ``Origin`` di GeoLibre web: ``(cors, errore)``.
 
-    ``cors`` è True se ``Access-Control-Allow-Origin`` è ``*`` o l'origine di
-    GeoLibre, False se manca, ``None`` se la tile non risponde (con l'errore).
+    Segue fino a `_MAX_REDIRECTS` redirect, validando ogni destinazione come
+    `check_resources`, e legge l'intestazione dalla risposta finale. ``cors`` è
+    True se ``Access-Control-Allow-Origin`` è ``*`` o l'origine di GeoLibre,
+    False se manca, ``None`` se la tile non risponde (con l'errore).
     """
-    blocked = _validate_check_url(url)
-    if blocked is not None:
-        return None, f"url-blocked:{blocked}"
     headers = {"User-Agent": USER_AGENT, "Origin": GEOLIBRE_ORIGIN}
-    try:
-        with httpx.stream("GET", url, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT) as r:
-            if r.status_code >= 400:
-                return None, f"tile HTTP {r.status_code}"
-            allow = r.headers.get("access-control-allow-origin", "").strip()
-            return allow in {"*", GEOLIBRE_ORIGIN}, None
-    except httpx.HTTPError as exc:
-        return None, f"tile: {type(exc).__name__}"
+    current = url
+    for _ in range(_MAX_REDIRECTS + 1):
+        blocked = _validate_check_url(current)
+        if blocked is not None:
+            return None, f"url-blocked:{blocked}"
+        try:
+            with httpx.stream(
+                "GET", current, headers=headers, timeout=timeout, follow_redirects=False, verify=_PROBE_SSL_CONTEXT
+            ) as r:
+                if r.status_code in _REDIRECT_STATUSES and r.headers.get("location"):
+                    current = urljoin(current, r.headers["location"])
+                    continue
+                if r.status_code >= 400:
+                    return None, f"tile HTTP {r.status_code}"
+                allow = r.headers.get("access-control-allow-origin", "").strip()
+                return allow in {"*", GEOLIBRE_ORIGIN}, None
+        except httpx.HTTPError as exc:
+            return None, f"tile: {type(exc).__name__}"
+    return None, "tile: too-many-redirects"
 
 
 def pick_map_layer(
