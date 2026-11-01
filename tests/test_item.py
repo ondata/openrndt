@@ -51,8 +51,46 @@ def test_get_item_not_found_raises():
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
         return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
     )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
     with pytest.raises(ItemNotFoundError):
         get_item("inesistente")
+
+
+_AGEA_FILEID = "agea:OI:ORTOIMMAGINI:m004"
+_AGEA_ID = "agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55"
+
+
+@respx.mock
+def test_get_item_falls_back_from_fileid_to_catalog_id():
+    """Un fileid che non è l'`_id` del catalogo (schede AGEA): si risale all'`_id` con `fileid:"…"`."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/agea%3AOI%3AORTOIMMAGINI%3Am004").mock(
+        return_value=httpx.Response(200, json={"_id": _AGEA_FILEID, "found": False})
+    )
+    search_route = respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": _AGEA_ID}]})
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/agea%3AOI%3ADATEVOLO%3Am001%2B-%2B%2B-%2B2026-09-25%2B12%3A42%3A55").mock(
+        return_value=httpx.Response(200, json={"_id": _AGEA_ID, "found": True, "_source": {"fileid": _AGEA_FILEID}})
+    )
+    payload = get_item(_AGEA_FILEID)
+    assert payload["_id"] == _AGEA_ID
+    assert search_route.calls.last.request.url.params["q"] == f'fileid:"{_AGEA_FILEID}"'
+
+
+@respx.mock
+def test_get_item_fileid_ambiguous():
+    """Lo stesso fileid su più schede: AmbiguousItemIdError con gli `_id`."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/dup").mock(
+        return_value=httpx.Response(200, json={"_id": "dup", "found": False})
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": "a:1"}, {"id": "a:2"}]})
+    )
+    with pytest.raises(AmbiguousItemIdError) as exc:
+        get_item("dup")
+    assert exc.value.candidates == ["a:1", "a:2"]
 
 _UUID = "7832b30d-8e4a-4900-836d-1d4e960c3325"
 

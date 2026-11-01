@@ -222,6 +222,9 @@ def test_cli_get_not_found_shows_message():
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
         return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
     )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
     result = runner.invoke(app, ["get", "inesistente"])
     assert result.exit_code == 1
     assert "non trovato" in result.output.lower()
@@ -577,6 +580,9 @@ def test_cli_resources_batch_collects_errors(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
         return_value=httpx.Response(200, json={"found": False})
     )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
     result = runner.invoke(app, ["resources", "--no-check", "age:D_E973_MARSAGLIA", "inesistente"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
@@ -589,6 +595,9 @@ def test_cli_resources_batch_collects_errors(item_response_json):
 def test_cli_resources_not_found():
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/inesistente").mock(
         return_value=httpx.Response(200, json={"_id": "inesistente", "found": False})
+    )
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
     )
     result = runner.invoke(app, ["resources", "inesistente"])
     assert result.exit_code == 1
@@ -1124,3 +1133,42 @@ def test_cli_search_geolibre_link_quotes_comma_in_org(search_response_json):
     assert result.exit_code == 0, result.output
     assert "rndtOrg=%22Agenzia%20per%20la%20Prevenzione,%20l%27Ambiente%22" in result.stdout
     assert "Nota sul link" not in result.stderr
+
+
+@respx.mock
+def test_cli_search_id_fileid_falls_back_to_catalog_id():
+    """`search --id <fileid>` diverso dall'`_id`: il 404 di `id=` porta a `fileid:"…"`, poi all'`_id`."""
+    fileid = "agea:OI:ORTOIMMAGINI:m004"
+    catalog_id = "agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+        if params.get("id") == fileid:
+            return httpx.Response(404, text="not found")
+        if params.get("q") == f'fileid:"{fileid}"':
+            return httpx.Response(200, json={"results": [{"id": catalog_id}], "total": 1})
+        if params.get("id") == catalog_id:
+            return httpx.Response(200, json={"results": [{"id": catalog_id, "title": "Ortofoto AgEA volo 2022"}], "total": 1})
+        return httpx.Response(500)
+
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(side_effect=handler)
+    result = runner.invoke(app, ["--format", "json", "search", "--id", fileid])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["results"][0]["id"] == catalog_id
+
+
+@respx.mock
+def test_cli_search_id_unknown_clear_message():
+    """`search --id` inesistente né come `_id` né come fileid: messaggio chiaro, non il 404 grezzo."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("id"):
+            return httpx.Response(404, text="not found")
+        return httpx.Response(200, json={"results": [], "total": 0})
+
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(side_effect=handler)
+    result = runner.invoke(app, ["--format", "json", "search", "--id", "nessuno:x"])
+    assert result.exit_code == 1
+    assert "non trovato" in result.output.lower()
+    assert "Errore HTTP 404" not in result.output

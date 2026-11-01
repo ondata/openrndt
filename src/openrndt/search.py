@@ -309,6 +309,18 @@ def search(
         params["id"] = item_id
 
     response = rndt_request(SEARCH_PATH, params=params)
+    if item_id and response.status_code == 404:
+        # `id=` vuole l'`_id` del catalogo: un fileid diverso (schede AGEA) dà
+        # 404. Si risale all'`_id` dal fileid, come fa il plugin (#67).
+        from openrndt.item import AmbiguousItemIdError, ItemNotFoundError
+
+        ids = catalog_ids_for_fileid(item_id)
+        if not ids:
+            raise ItemNotFoundError(item_id)
+        if len(ids) > 1:
+            raise AmbiguousItemIdError(item_id, ids)
+        params["id"] = ids[0]
+        response = rndt_request(SEARCH_PATH, params=params)
     response.raise_for_status()
     if fmt in {"json", "json-source"}:
         data: dict[str, Any] = response.json()
@@ -320,6 +332,22 @@ def search(
                     result["geolibre_url"] = geolibre_url(result.get("id"))
         return data
     return response.text
+
+
+def catalog_ids_for_fileid(fileid: str) -> list[str]:
+    """``_id`` del catalogo delle schede il cui ``fileid`` è ``fileid``.
+
+    Di solito coincidono, ma non sempre: le ortofoto AGEA hanno ``_id``
+    ``agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55`` e fileid
+    ``agea:OI:ORTOIMMAGINI:m004``. L'endpoint item e ``search(item_id=…)``
+    vogliono l'``_id``. Lista vuota se nessuna scheda ha quel fileid.
+    """
+    response = rndt_request(
+        SEARCH_PATH, params={"f": "json", "start": 1, "num": 5, "q": f'fileid:"{_escape_phrase(fileid)}"'}
+    )
+    response.raise_for_status()
+    results = response.json().get("results") or []
+    return [str(r["id"]) for r in results if isinstance(r, dict) and r.get("id")]
 
 
 def _resource_types(links: list[dict[str, Any]]) -> list[str]:
@@ -679,7 +707,8 @@ def item_record(payload: dict[str, Any]) -> dict[str, Any]:
             if item_id
             else None
         ),
-        "geolibre_url": geolibre_url(item_id),
+        # Il plugin apre la scheda dall'`_id` del catalogo, che può differire dal fileid.
+        "geolibre_url": geolibre_url(payload.get("_id") or item_id),
     }
     for key in ("_index", "_id", "_version", "_seq_no", "_primary_term", "found", "_source"):
         if key in payload:
