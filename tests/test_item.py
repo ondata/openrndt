@@ -178,3 +178,16 @@ def test_get_item_xml_html_fall_back_from_fileid(suffix):
     ).mock(return_value=httpx.Response(200, text="<ok/>"))
     fetch = get_item_xml if suffix == "xml" else get_item_html
     assert fetch(_AGEA_FILEID) == "<ok/>"
+
+
+
+@respx.mock
+def test_get_item_xml_server_error_kept_when_no_fileid_match():
+    """Errore vero del server (403) su una scheda esistente: niente «non trovato», resta l'errore HTTP."""
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AX/xml").mock(return_value=httpx.Response(403))
+    respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/search").mock(
+        return_value=httpx.Response(200, json={"results": [{"id": "age:X"}]})
+    )
+    with pytest.raises(httpx.HTTPStatusError) as exc:
+        get_item_xml("age:X")
+    assert exc.value.response.status_code == 403
