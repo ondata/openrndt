@@ -25,7 +25,12 @@ from openrndt.item import (
     get_item_xml,
     resolve_item_id,
 )
-from openrndt.resources import check_resources, extract_resources, list_layers
+from openrndt.resources import (
+    check_resources,
+    extract_resources,
+    geolibre_map_url,
+    list_layers,
+)
 from openrndt.search import (
     ORG_EXACT_FIELD,
     compact_results,
@@ -881,13 +886,23 @@ def get(
         "--raw",
         help="Busta Elasticsearch grezza (comportamento ante 3.3.0), senza normalizzazione.",
     ),
+    map_link: bool = typer.Option(
+        True,
+        "--map-link/--no-map-link",
+        help=(
+            "Calcola geolibre_map_url (GeoLibre web col layer della scheda già sulla mappa) leggendo le "
+            "capabilities dei WMS/WMTS. --no-map-link evita queste chiamate di rete."
+        ),
+    ),
 ) -> None:
     """Recupera il dettaglio di un singolo metadato.
 
     Con `--format json` (default) emette il documento normalizzato: gli stessi
     campi delle risposte di `search` più email/bbox/lineage/date del dato
     (vedi references/result-structure.md). `--raw` ripristina la busta
-    Elasticsearch completa.
+    Elasticsearch completa. `geolibre_map_url` apre GeoLibre web con il layer
+    della scheda già sulla mappa, quando ce n'è uno disegnabile: legge le
+    capabilities dei servizi, `--no-map-link` per non farlo.
     """
     if as_xml and as_html:
         raise typer.BadParameter("Specifica --xml oppure --html, non entrambi.")
@@ -915,7 +930,17 @@ def get(
         raise typer.Exit(1)
     except httpx.HTTPError as exc:
         _http_error(exc)
-    output.emit(payload if as_raw else item_record(payload))
+    if as_raw:
+        output.emit(payload)
+        return
+    record = item_record(payload)
+    if map_link:
+        # Dopo `geolibre_url`: il secondo link è la stessa scheda con il layer sulla mappa.
+        items = list(record.items())
+        at = next((i for i, (k, _) in enumerate(items) if k == "geolibre_url"), len(items) - 1) + 1
+        items.insert(at, ("geolibre_map_url", geolibre_map_url(payload)))
+        record = dict(items)
+    output.emit(record)
 
 
 @app.command()
