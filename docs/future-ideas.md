@@ -231,4 +231,4 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 
 - GeoLibre 3.5.0 disegna la mappa in un CRS a scelta (Settings → Map → Map coordinate reference system, `preferences.map.mapCrs`) e chiede i WMS in quel CRS; la 3.5.1 lo espone ai plugin con `getMapCrs()`. Un WMS offerto solo in EPSG:32632 o 3003 (CSI Piemonte, molte Regioni) si vedrebbe, ma il CRS non si imposta da un link.
 - Se il plugin openrndt-geolibre (o GeoLibre) accetterà un parametro URL per il CRS della mappa, `geolibre_map_url` potrà dare il link anche per quei WMS, con il CRS del layer. WMTS e XYZ in quel caso non si vedono.
-- Da chiedere alla sessione del plugin o a GeoLibre (`opengeos/GeoLibre`).
+- Collegata a [ondata/openrndt-geolibre#65](https://github.com/ondata/openrndt-geolibre/issues/65) («Decide WMS layers on the map's CRS, not only EPSG:3857», aperta): la decisione sul parametro è dell'utente, lato plugin (risposta della sessione del plugin, 2026-11-01).
