@@ -2,6 +2,7 @@
 
 ## 2026-11-01 (3.12.0: geolibre_map_url, WMTS in --layers, fileid)
 
+- **Pubblicata**: tag `v3.12.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.12.0` riuscita. Smoke test sulla CLI da PyPI: `get agea:OI:ORTOIMMAGINI:m004` dà `geolibre_map_url` con `~wmts~AgEA_Ortofoto_AgEA_2022`, `--xml` dal fileid restituisce la scheda, `resources --layers` sulla Lombardia 2024 dà la nota «solo EPSG:7791».
 - **Richiesta dalla sessione openrndt-geolibre**, per conto dell'utente: un link GeoLibre web con il layer della scheda già sulla mappa. Decisioni dell'utente: in `get` sempre (`--no-map-link` per saltare la rete), niente `search --map-links`, CORS provato su una tile, ArcGIS (#33) dopo, rilascio subito.
 - **Parte offline in `search` scartata**: solo ~41 schede hanno `LAYERS=` nei link (`links_s:*layers=*`), quasi tutte `http://` e in EPSG:25833/4326, che GeoLibre web non ridisegna. Un link senza verifica sarebbe stato quasi sempre sbagliato.
 - **WMTS portato dal plugin 0.5.0** (`src/rndt/wmts.ts`, `wantedLayer`, `upgradeToHttps`), per avere le stesse regole. Bolzano (MapProxy, `EPSG_3857` con id `00`, `01`) è scartato come nel plugin: nell'analisi dei WMTS mandata alla sessione del plugin lo avevo contato fra i disegnabili.
