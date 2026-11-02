@@ -544,6 +544,7 @@ def test_list_layers_probe_3857_draws():
         httpx.Response(200, content=_png(500, 500), headers=CORS),  # immagine fissa (catasto AdE)
         httpx.Response(200, text="<ServiceExceptionReport/>", headers=CORS),  # CRS rifiutato
         httpx.Response(500, headers=CORS),
+        httpx.Response(200, content=_png(64, 64)[:20], headers=CORS),  # PNG troncato prima della misura
     ],
 )
 @respx.mock
