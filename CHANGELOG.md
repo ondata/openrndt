@@ -4,6 +4,16 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Changed
+
+- **`geolibre_map_url` e `resources --layers` anche per i WMS che non dichiarano EPSG:3857**: se un layer del servizio non lo dichiara, una GetMap di prova in EPSG:3857 (64x64 px, `Origin: https://web.geolibre.app`) dice se il server lo disegna lo stesso, come `prepareWms` del plugin openrndt-geolibre. Se sì, i layer hanno `crs` EPSG:3857 e possono avere il link: ortofoto 2015 della Lombardia (solo 32632), PAI della Sicilia (solo 25833), Edifici 3D di ARPA Piemonte. In libreria: `wms_probe_url()` e `wms_draws_3857()`.
+
+### Fixed
+
+- **CORS dei WMS**: `geolibre_url` e `geolibre_map_url` davano il link anche a WMS il cui GetCapabilities non risponde con CORS, che GeoLibre web non sa leggere. Ora `cors` vale anche per i WMS (dal GetCapabilities, nessuna chiamata in più) e senza CORS il link è `null`, con una nota.
+
 ## [3.13.0] - 2026-11-02
 
 ### Changed

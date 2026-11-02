@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-11-02 (geolibre_map_url: WMS nazionali con prova in EPSG:3857, CORS dei WMS)
+
+- **Origine**: la sessione openrndt-geolibre segnala `crs=` di GeoLibre (#3309, già su web.geolibre.app) per i WMS solo nazionali. Fra i 2889 link WMS https dei primi 5000 record con «wms» ci sono 7 schede su 4 host con CORS e layer senza EPSG:3857, ma tutte rispondono anche a una GetMap in 3857: il server riproietta. `crs=` quindi non serve al link.
+- **Prova in EPSG:3857**: porting di `prepareWms`/`probeGetMapUrl`/`testTile` del plugin (0485673), regola confermata dalla sessione del plugin. Una GetMap 64x64 per servizio, solo se un layer non dichiara 3857; vale un'immagine 64x64 con CORS. Il plugin, se la prova fallisce, aggiunge il layer nel CRS nazionale anche in web, dove resta vuoto: difetto del plugin, la CLI resta su «solo 3857».
+- **CORS dei WMS** (decisione dell'utente): prima non si controllava; ora dal GetCapabilities letto con `Origin`, nessuna chiamata in più. Senza CORS niente link.
+- **Verificato dal vivo**: `get` dà il link per l'ortofoto 2015 della Lombardia, il PAI della Sicilia ed Edifici 3D di ARPA Piemonte; catasto AdE `null`. La Bassa Romagna passa la prova ma resta `null`: scheda di tipo service con 5 layer, nessuno nominato nei link. 329 test.
+
 ## 2026-11-02 (3.13.0: license anche dai vincoli d'uso)
 
 - **Pubblicata**: tag `v3.13.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.13.0` riuscita. Smoke test sulla CLI da PyPI: le tre ortofoto AGEA con `open=false` e `license` `…/licence/CC_BY_4_0`.
