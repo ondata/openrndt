@@ -232,6 +232,7 @@ In openrndt la parte di probe è già coperta da `resources --check` (batch, `la
 - GeoLibre 3.5.0 disegna la mappa in un CRS a scelta (Settings → Map → Map coordinate reference system, `preferences.map.mapCrs`) e chiede i WMS in quel CRS; la 3.5.1 lo espone ai plugin con `getMapCrs()`. Un WMS offerto solo in EPSG:32632 o 3003 (CSI Piemonte, molte Regioni) si vedrebbe, ma il CRS non si imposta da un link.
 - Se il plugin openrndt-geolibre (o GeoLibre) accetterà un parametro URL per il CRS della mappa, `geolibre_map_url` potrà dare il link anche per quei WMS, con il CRS del layer. WMTS e XYZ in quel caso non si vedono.
 - Collegata a [ondata/openrndt-geolibre#65](https://github.com/ondata/openrndt-geolibre/issues/65) («Decide WMS layers on the map's CRS, not only EPSG:3857», aperta): la decisione sul parametro è dell'utente, lato plugin (risposta della sessione del plugin, 2026-11-01).
+- Il parametro c'è: `crs=EPSG:<code>` (o un preset) nell'URL di GeoLibre, richiesto in [opengeos/GeoLibre#3308](https://github.com/opengeos/GeoLibre/issues/3308) e fatto in [opengeos/GeoLibre#3309](https://github.com/opengeos/GeoLibre/pull/3309) (su main il 2026-11-02, non ancora in release; ultima 3.6.0 del 2026-10-31). Vale solo per WMS ed export ArcGIS, non per WMTS e XYZ. Prima di usarlo in `geolibre_map_url` servono la release di GeoLibre con #3309 e la chiusura di ondata/openrndt-geolibre#65 (oggi il plugin valuta i WMS solo su EPSG:3857).
 
 ## 2026-11-02 - catalogo RNDT come STAC statico (stac-geoparquet), non Portolan
 
