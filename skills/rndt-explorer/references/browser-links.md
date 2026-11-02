@@ -20,14 +20,14 @@ openrndt search --q fiumi --bbox 9,45,10,46 --published-from 2020-01-01 --geolib
 openrndt resources r_emiro:2022-03-11T113115 --layers | jq -r '.layers[] | "\(.name)\t\(.geolibre_url)"'
 ```
 
-Un `geolibre_url` di layer `null` ha una `note` che dice perché: nessun CRS che GeoLibre disegna, nome già in un altro servizio della scheda, per un WMTS nessuna griglia Web Mercator, livelli non numerati per zoom (Bolzano) o tile senza CORS.
+Un `geolibre_url` di layer `null` ha una `note` che dice perché: nessun CRS che GeoLibre disegna, nome già in un altro servizio della scheda, per un WMTS nessuna griglia Web Mercator, livelli non numerati per zoom (Bolzano), tile senza CORS o, per un WMS, GetCapabilities senza CORS.
 
 ```bash
 # Il link più diretto: la scheda con il suo layer sulla mappa (ortofoto AGEA 2022)
 openrndt get agea:OI:ORTOIMMAGINI:m004 | jq -r .geolibre_map_url
 ```
 
-`geolibre_map_url` è più severo di `--layers`: tiene solo i WMTS con CORS sulle tile e i WMS https offerti in EPSG:3857, perché il link apre la mappa in Web Mercator. GeoLibre 3.5 sa disegnare la mappa in altri sistemi (anche UTM), ma va impostato a mano in Settings, e i WMTS lì non si vedono.
+`geolibre_map_url` è più severo di `--layers`: tiene solo i WMTS con CORS sulle tile e i WMS https con CORS offerti in EPSG:3857, perché il link apre la mappa in Web Mercator. Un WMS che dichiara solo un sistema nazionale vale se una GetMap di prova in EPSG:3857 dice che il server lo disegna lo stesso (succede spesso: ArcGIS e GeoServer riproiettano); in `--layers` lo segnala la nota «EPSG:3857 non dichiarato, ma il server lo disegna». GeoLibre 3.5 sa disegnare la mappa in altri sistemi (anche UTM), ma va impostato a mano in Settings, e i WMTS lì non si vedono.
 
 ## Come si traduce la ricerca
 
