@@ -4,6 +4,12 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Changed
+
+- **`license` anche dai vincoli d'uso**: quando `isOpendata` non nomina una licenza, `license` prende i valori di `apiso_OtherConstraints_s` e `apiso_AccessConstraints_s` che ne nominano una (URL Creative Commons, URI delle licenze EU, sigle CC BY/CC0, IODL, ODbL), riportati come sono. Le frasi sull'accesso («Nessuna limitazione al pubblico accesso», «Dato pubblico») restano fuori. `open` non cambia e resta legato a `isOpendata` (#28). Le ortofoto AGEA e il DUSAF lombardo passano da `license: null` a CC BY 4.0; delle 6.944 schede con `apiso_OtherConstraints_s` e senza `isOpendata`, 3.105 ottengono una licenza (2026-11-02). Vale per `compact`, per il JSON di `get` e per `record_license()` in libreria.
+
 ## [3.12.0] - 2026-11-01
 
 ### Added

@@ -169,7 +169,7 @@ di `search` più i dettagli utili alla scheda. `_source` e i flag della busta
 | `updated`          | data della **scheda** (`apiso_Modified_dt`), come in `compact` |
 | `indexed`          | indicizzazione nel catalogo (`sys_modified_dt`)               |
 | `data_date`        | data del **dato** (`apiso_RevisionDate_dt`, poi Creation/Publication) |
-| `open`, `license`  | come in `compact` (isOpendata e licenza dichiarata, non normalizzate) |
+| `open`, `license`  | come in `compact` (isOpendata; licenza da isOpendata o dai vincoli d'uso, non normalizzata) |
 | `contact`          | `{name, email, website}` del punto di contatto designato (`PuntoDiContatto*`) |
 | `bbox`             | `{xmin,ymin,xmax,ymax}` ricavato da `envelope_geo`            |
 | `lineage`          | provenienza/qualità del dato (`apiso_Lineage_txt`)            |

@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-11-02 (license anche dai vincoli d'uso)
+
+- **Origine**: Andrea Nelson Mauro chiede se openrndt arriva alle ortofoto AGEA. Le trova (`search --ipa agea -q ortofoto`, tre voli 2022-2024, WMTS EPSG:3857 con CORS), ma dava `license: null`: AGEA dichiara CC BY 4.0 solo in `apiso_OtherConstraints_s` (URI licenze EU), `isOpendata` vuoto. Stesso caso del DUSAF (#28).
+- **Decisione dell'utente**: si arricchisce solo `license`; `open` resta legato a `isOpendata` come in #28.
+- **Regola stretta**: URL Creative Commons, URI licenze EU, «Creative Commons», sigle CC BY/CC0/CCBY, IODL, ODbL, opendatacommons. Escluse le frasi sull'accesso e gli URL generici di «licenze» (es. pagina Emilia-Romagna sull'uso ristretto). Su 6.944 schede con `apiso_OtherConstraints_s` e senza `isOpendata`, 3.105 ottengono una licenza.
+- **Verificato dal vivo**: le tre ortofoto AGEA e DUSAF 2024 con `open=false` e `license` CC BY 4.0, anche in `get`. 322 test.
+
 ## 2026-11-01 (3.12.0: geolibre_map_url, WMTS in --layers, fileid)
 
 - **Pubblicata**: tag `v3.12.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.12.0` riuscita. Smoke test sulla CLI da PyPI: `get agea:OI:ORTOIMMAGINI:m004` dà `geolibre_map_url` con `~wmts~AgEA_Ortofoto_AgEA_2022`, `--xml` dal fileid restituisce la scheda, `resources --layers` sulla Lombardia 2024 dà la nota «solo EPSG:7791».
