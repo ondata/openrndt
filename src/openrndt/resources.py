@@ -582,7 +582,8 @@ def wms_draws_3857(url: str, timeout: float) -> bool:
 
     Come `testTile` del plugin: un'immagine e, per un PNG, larga e alta 64 px
     (un'immagine fissa di altra misura, come quella del catasto dell'Agenzia
-    delle Entrate, non vale). In più l'intestazione CORS, che nel plugin
+    delle Entrate, non vale; un PNG troncato prima della misura nemmeno, più
+    severo del plugin). In più l'intestazione CORS, che nel plugin
     impone il browser stesso.
     """
     try:
@@ -591,8 +592,9 @@ def wms_draws_3857(url: str, timeout: float) -> bool:
         return False
     if not _cors_ok(headers) or not _is_image(data):
         return False
-    if data[:4] == b"\x89PNG" and len(data) >= 24:
-        return int.from_bytes(data[16:20], "big") == PROBE_TILE_SIZE == int.from_bytes(data[20:24], "big")
+    if data[:4] == b"\x89PNG":
+        # Un PNG senza IHDR completo (troncato) non è una tile che il browser sa mostrare.
+        return len(data) >= 24 and int.from_bytes(data[16:20], "big") == PROBE_TILE_SIZE == int.from_bytes(data[20:24], "big")
     return True
 
 
