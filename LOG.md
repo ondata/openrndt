@@ -1,6 +1,9 @@
 # LOG
 
-## 2026-11-02 (license anche dai vincoli d'uso)
+## 2026-11-02 (3.13.0: license anche dai vincoli d'uso)
+
+- **PR #49** mergiata in rebase: Greptile al primo giro «no actionable issues», nessun commento. Vocabolario IPA rigenerato prima del rilascio (267 s): identico, 182 codici, 23.747 schede.
+- **Harvest verso dati.gov.it**: criterio (filtro CSW `OpenData=true`, esclusi `age_D*`, `c_d612*` e le categorie HVD) e licenza CC BY 4.0 unica anche per schede IODL 2.0 e CC BY-NC-ND, in `knowledge/api/known-issues.md`. Non stabilito se la mette il convertitore GeoDCAT-AP_IT o il harvester.
 
 - **Origine**: Andrea Nelson Mauro chiede se openrndt arriva alle ortofoto AGEA. Le trova (`search --ipa agea -q ortofoto`, tre voli 2022-2024, WMTS EPSG:3857 con CORS), ma dava `license: null`: AGEA dichiara CC BY 4.0 solo in `apiso_OtherConstraints_s` (URI licenze EU), `isOpendata` vuoto. Stesso caso del DUSAF (#28).
 - **Decisione dell'utente**: si arricchisce solo `license`; `open` resta legato a `isOpendata` come in #28.
