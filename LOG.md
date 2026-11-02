@@ -1,6 +1,8 @@
 # LOG
 
-## 2026-11-02 (geolibre_map_url: WMS nazionali con prova in EPSG:3857, CORS dei WMS)
+## 2026-11-02 (3.14.0: geolibre_map_url per WMS nazionali con prova in EPSG:3857, CORS dei WMS)
+
+- **PR #50** mergiata in rebase: Greptile al primo giro un rilievo (PNG troncato prima di IHDR accettato come tile), corretto; secondo giro «no new actionable issues». Vocabolario IPA rigenerato prima del rilascio (263 s): 183 codici (prima 182), 23.753 schede. Skill rndt-explorer 3.13.2 (`references/browser-links.md`).
 
 - **Origine**: la sessione openrndt-geolibre segnala `crs=` di GeoLibre (#3309, già su web.geolibre.app) per i WMS solo nazionali. Fra i 2889 link WMS https dei primi 5000 record con «wms» ci sono 7 schede su 4 host con CORS e layer senza EPSG:3857, ma tutte rispondono anche a una GetMap in 3857: il server riproietta. `crs=` quindi non serve al link.
 - **Prova in EPSG:3857**: porting di `prepareWms`/`probeGetMapUrl`/`testTile` del plugin (0485673), regola confermata dalla sessione del plugin. Una GetMap 64x64 per servizio, solo se un layer non dichiara 3857; vale un'immagine 64x64 con CORS. Il plugin, se la prova fallisce, aggiunge il layer nel CRS nazionale anche in web, dove resta vuoto: difetto del plugin, la CLI resta su «solo 3857».

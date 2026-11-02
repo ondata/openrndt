@@ -1,6 +1,6 @@
 {
  "generato": "2026-11-02",
- "schede": 23747,
+ "schede": 23753,
  "codici": [
   {
    "codice": "age",
@@ -1657,6 +1657,21 @@
    "schede": 7,
    "grafie": [
     "c_e715"
+   ]
+  },
+  {
+   "codice": "c_a093",
+   "ipa": true,
+   "nome_ipa": "Comune di Agugliaro",
+   "acronimo": null,
+   "categoria": "L6",
+   "nome_categoria": "Comuni e loro Consorzi e Associazioni",
+   "enti": [
+    "Comune di Agugliaro"
+   ],
+   "schede": 6,
+   "grafie": [
+    "c_a093"
    ]
   },
   {
