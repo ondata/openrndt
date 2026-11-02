@@ -423,6 +423,76 @@ def test_record_license_absent_field_is_not_open():
     assert record_license({"isOpendata": ["  "]}) == (False, None)
 
 
+def test_record_license_falls_back_to_other_constraints():
+    # Ortofoto AGEA: licenza solo nel blocco INSPIRE, `open` resta False (#28).
+    agea = {
+        "apiso_AccessConstraints_s": ["Dato pubblico"],
+        "apiso_OtherConstraints_s": [
+            "Nessuna Limitazione al Pubblico Accesso",
+            "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0",
+        ],
+    }
+    assert record_license(agea) == (
+        False,
+        "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0",
+    )
+
+
+def test_record_license_fallback_recognises_common_forms():
+    for value in [
+        "https://creativecommons.org/licenses/by/4.0/deed.it",
+        "https://creativecommons.org/publicdomain/zero/1.0/deed.it",
+        "CC BY 3.0",
+        " Licenza CCBY",
+        "Creative Commons Attribution 4.0",
+        "Licenza IODL 2.0 - link: https://www.dati.gov.it/content/italian-open-data-license-v20",
+        "ODbL",
+    ]:
+        assert record_license({"apiso_OtherConstraints_s": [value]}) == (False, value.strip())
+    # Anche quando il campo arriva come stringa singola.
+    assert record_license({"apiso_AccessConstraints_s": "CC0"}) == (False, "CC0")
+
+
+def test_record_license_fallback_ignores_access_statements():
+    source = {
+        "apiso_AccessConstraints_s": ["Dato pubblico"],
+        "apiso_OtherConstraints_s": [
+            "Nessuna limitazione al pubblico accesso",
+            "no limitations to public access",
+            "https://geoportale.regione.emilia-romagna.it/approfondimenti/licenze-di-utilizzo-dei-dati/utilizzo-ristretto",
+            "",
+        ],
+    }
+    assert record_license(source) == (False, None)
+
+
+def test_record_license_fallback_joins_and_dedupes():
+    source = {
+        "apiso_OtherConstraints_s": ["CC BY 4.0", "https://creativecommons.org/licenses/by/4.0"],
+        "apiso_AccessConstraints_s": ["CC BY 4.0"],
+    }
+    assert record_license(source) == (
+        False,
+        "CC BY 4.0; https://creativecommons.org/licenses/by/4.0",
+    )
+
+
+def test_record_license_named_isopendata_wins_over_fallback():
+    source = {
+        "isOpendata": ["CC BY 4.0"],
+        "apiso_OtherConstraints_s": ["https://creativecommons.org/publicdomain/zero/1.0/"],
+    }
+    assert record_license(source) == (True, "CC BY 4.0")
+
+
+def test_record_license_marker_only_uses_fallback():
+    source = {
+        "isOpendata": ["opendata"],
+        "apiso_OtherConstraints_s": ["https://creativecommons.org/licenses/by/4.0/"],
+    }
+    assert record_license(source) == (True, "https://creativecommons.org/licenses/by/4.0/")
+
+
 def test_record_url_takes_html_alternate():
     result = {
         "links": [

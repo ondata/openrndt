@@ -419,31 +419,58 @@ def record_dates(result: dict[str, Any]) -> tuple[str | None, str | None]:
 # output riporterebbe il marcatore al posto della licenza.
 _OPENDATA_MARKERS = {"opendata", "open data"}
 
+# Campi dei vincoli in cui molte schede dichiarano la licenza (blocco INSPIRE
+# `useConstraints`/`otherConstraints`) quando `isOpendata` è vuoto.
+_CONSTRAINT_FIELDS = ("apiso_OtherConstraints_s", "apiso_AccessConstraints_s")
+# Segnali che un valore nomina una licenza. Volutamente stretto: gli stessi
+# campi contengono soprattutto frasi sull'accesso («Nessuna limitazione al
+# pubblico accesso», «Dato pubblico»), che non sono licenze, e URL di pagine
+# di condizioni d'uso restrittive. Misurato il 2026-11-02 su 6.944 schede con
+# `apiso_OtherConstraints_s` e senza `isOpendata`: 3.105 ne danno una licenza.
+_LICENSE_RE = re.compile(
+    r"creativecommons\.org/(licenses|publicdomain)"
+    r"|publications\.europa\.eu/resource/authority/licen[cs]e/"
+    r"|creative ?commons"
+    r"|\bcc[- ]?(by|0)\b|\bccby\b"
+    r"|\biodl\b|\bodbl\b|opendatacommons\.org|italian open data licen",
+    re.IGNORECASE,
+)
+
+
+def _strings(raw: Any) -> list[str]:
+    """Valori stringa non vuoti e senza spazi ai bordi, da un campo lista o scalare."""
+    values = raw if isinstance(raw, list) else [raw] if raw is not None else []
+    return [v.strip() for v in values if isinstance(v, str) and v.strip()]
+
 
 def record_license(source: dict[str, Any]) -> tuple[bool, str | None]:
     """Licenza dichiarata da un record: ``(open, license)``.
 
     ``open`` è vero quando ``isOpendata`` è presente e non vuoto, cioè quando la
-    scheda si dichiara open data. ``license`` sono i valori dello stesso campo
-    diversi dal marcatore, uniti da ``; ``, riportati **come sono**: il RNDT non
-    li normalizza e nello stesso campo convivono ``CC BY 4.0``, ``CCBY``, URL e
-    interi paragrafi di disclaimer. ``None`` se resta solo il marcatore.
+    scheda si dichiara open data secondo la definizione di RNDT. ``license``
+    sono i valori dello stesso campo diversi dal marcatore; se non ce ne sono,
+    i valori di ``apiso_OtherConstraints_s`` e ``apiso_AccessConstraints_s`` che
+    nominano una licenza (URL Creative Commons, URI delle licenze EU, sigle
+    CC BY/CC0, IODL, ODbL). In entrambi i casi uniti da ``; `` e riportati
+    **come sono**: il RNDT non li normalizza e convivono ``CC BY 4.0``,
+    ``CCBY``, URL e interi paragrafi di disclaimer. ``None`` se non se ne trova.
+
+    Il ripiego non tocca ``open``: una scheda può avere ``open=False`` e una
+    licenza aperta, come le ortofoto AGEA o il DUSAF lombardo, che la
+    dichiarano solo nel blocco INSPIRE delle condizioni d'uso. ``open`` resta
+    allineato a RNDT finché AgID non chiarisce come ricava ``isOpendata`` (#28).
 
     Misurato su 3000 record (2026-08-29): ``isOpendata`` è presente sul 72%, ma
     1177 di quei record sono dell'Agenzia delle Entrate e senza di essi la
     copertura scende al 55%; in un terzo dei casi contiene il solo marcatore.
-    Alcuni dataset aperti dichiarano la licenza soltanto in
-    ``apiso_OtherConstraints_s`` o ``apiso_ConditionApplyingToAccessAndUse_txt``
-    e qui risultano ``open=False``: il campo dice cosa ha dichiarato l'ente, non
-    se il dato sia riusabile.
     """
-    raw = source.get("isOpendata")
-    values = raw if isinstance(raw, list) else [raw] if raw is not None else []
-    texts = [v.strip() for v in values if isinstance(v, str) and v.strip()]
-    if not texts:
-        return (False, None)
+    texts = _strings(source.get("isOpendata"))
+    is_open = bool(texts)
     named = [v for v in texts if v.lower() not in _OPENDATA_MARKERS]
-    return (True, "; ".join(named) if named else None)
+    if not named:
+        candidates = [v for field in _CONSTRAINT_FIELDS for v in _strings(source.get(field))]
+        named = list(dict.fromkeys(v for v in candidates if _LICENSE_RE.search(v)))
+    return (is_open, "; ".join(named) if named else None)
 
 
 # GeoLibre web con il plugin openrndt-geolibre: `?rndt=<id>` apre il record nel
