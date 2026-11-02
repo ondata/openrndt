@@ -2,6 +2,8 @@
 
 ## 2026-11-02 (3.13.0: license anche dai vincoli d'uso)
 
+- **Pubblicata**: tag `v3.13.0`, GitHub Release, PyPI. Reinstallazione da PyPI con `==3.13.0` riuscita. Smoke test sulla CLI da PyPI: le tre ortofoto AGEA con `open=false` e `license` `…/licence/CC_BY_4_0`.
+
 - **PR #49** mergiata in rebase: Greptile al primo giro «no actionable issues», nessun commento. Vocabolario IPA rigenerato prima del rilascio (267 s): identico, 182 codici, 23.747 schede.
 - **Harvest verso dati.gov.it**: criterio (filtro CSW `OpenData=true`, esclusi `age_D*`, `c_d612*` e le categorie HVD) e licenza CC BY 4.0 unica anche per schede IODL 2.0 e CC BY-NC-ND, in `knowledge/api/known-issues.md`. Non stabilito se la mette il convertitore GeoDCAT-AP_IT o il harvester.
 
