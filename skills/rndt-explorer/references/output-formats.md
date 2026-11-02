@@ -41,10 +41,12 @@ openrndt --format compact search --q "frane AND isOpendata:*" --num 30
 - `resources` elenca i tipi di servizio/download fruibili (`WMS`, `WFS`,
   `download`, …). Se è `[]` il record non linka servizi: per i dettagli fai
   `get <id>` e guarda il suo campo `resources`, con `type` e `url` già risolti.
-- `open` e `license` vengono da `isOpendata`, non normalizzato: `license` può
-  essere `CC BY 4.0` come un intero paragrafo di disclaimer, e `open=false`
-  significa «l'ente non l'ha dichiarato lì», non «dato chiuso» (alcune schede
-  aperte hanno la licenza solo in `apiso_OtherConstraints_s`).
+- `open` viene da `isOpendata`: `open=false` significa «l'ente non l'ha
+  dichiarato lì», non «dato chiuso». `license` viene da `isOpendata` o, se lì
+  non c'è, dai vincoli d'uso (`apiso_OtherConstraints_s`,
+  `apiso_AccessConstraints_s`), non normalizzata: può essere `CC BY 4.0`, un URL
+  o un intero paragrafo di disclaimer. Una scheda può avere `open=false` e
+  `license` CC BY 4.0 (ortofoto AGEA, DUSAF): per il riuso conta `license`.
 - `url` è il permalink della scheda sul portale: usalo per citare la fonte.
 - `geolibre_url` apre lo stesso record in GeoLibre web, nel plugin openrndt-geolibre (solo web.geolibre.app, non Desktop 3.2.0 né `layout=viewer`). C'è anche nel JSON di `search`, accanto a ogni risultato. Con `--format json`, `search` porta anche l'oggetto `geolibre_search` accanto a `total`: il link alla ricerca intera, con i filtri non tradotti (vedi [`browser-links.md`](./browser-links.md)).
 - In `--format table` `url` e `geolibre_url` non vengono stampate, `open` esce come `sì`/`no` e

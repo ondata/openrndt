@@ -176,13 +176,17 @@ la lista degli URL di download dichiarati (`url_download_s` e
 download diretti non sono). Insieme rispondono alle due domande che vengono
 subito dopo una ricerca: chi contatto, e da dove scarico.
 
-`open`, `license` e `url` servono a chi deve riusare o citare il dato. `open` e
-`license` riportano quello che l'ente ha dichiarato nel campo `isOpendata`, senza
-normalizzarlo: `license` può essere `CC BY 4.0` come un intero paragrafo di
-disclaimer, e `open: false` significa che l'ente non l'ha dichiarato lì, non che
-il dato sia chiuso (misurato su 3000 record: il campo è presente sul 72%, che
-scende al 55% escludendo l'Agenzia delle Entrate, e in un terzo dei casi contiene
-il solo marcatore `opendata`). `url` è il permalink della scheda sul portale, da
+`open`, `license` e `url` servono a chi deve riusare o citare il dato. `open`
+riporta quello che l'ente ha dichiarato nel campo `isOpendata`, la definizione di
+dato aperto di RNDT: `open: false` significa che l'ente non l'ha dichiarato lì,
+non che il dato sia chiuso (misurato su 3000 record: il campo è presente sul 72%,
+che scende al 55% escludendo l'Agenzia delle Entrate, e in un terzo dei casi
+contiene il solo marcatore `opendata`). `license` prende la licenza da
+`isOpendata` e, se lì non c'è, dai vincoli d'uso (`apiso_OtherConstraints_s`,
+`apiso_AccessConstraints_s`), dove molte schede la dichiarano nel blocco INSPIRE:
+le ortofoto AGEA e il DUSAF lombardo hanno `open: false` e `license` CC BY 4.0.
+Il valore non è normalizzato: può essere `CC BY 4.0`, un URL o un intero
+paragrafo di disclaimer. `url` è il permalink della scheda sul portale, da
 mettere in nota quando si cita la fonte. In `--format table` `url` non viene
 stampata, `open` esce come sì/no e `license` è troncata: in `csv` e `compact`
 restano intere.
