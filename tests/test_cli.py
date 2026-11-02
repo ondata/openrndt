@@ -500,6 +500,8 @@ AE_CAPS = "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php?S
 AE_CAPS_XML = """<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms"><Capability>
 <Layer><CRS>EPSG:6706</CRS><Layer><Name>CP.CadastralParcel</Name><Title>Particelle</Title></Layer></Layer>
 </Capability></WMS_Capabilities>"""
+AE_GETMAP = r"https://wms\.cartografia\.agenziaentrate\.gov\.it/.*REQUEST=GetMap"
+CORS = {"Access-Control-Allow-Origin": "*"}
 
 
 @respx.mock
@@ -507,7 +509,8 @@ def test_cli_resources_layers_json(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    caps = respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    caps = respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML, headers=CORS))
+    respx.get(url__regex=AE_GETMAP).mock(return_value=httpx.Response(200, text="<ServiceExceptionReport/>", headers=CORS))
     head = respx.head(url__regex=r".*").mock(return_value=httpx.Response(200))
     result = runner.invoke(app, ["resources", "age:D_E973_MARSAGLIA", "--layers"])
     assert result.exit_code == 0, result.output
@@ -524,7 +527,8 @@ def test_cli_resources_layers_json(item_response_json):
 def test_cli_resources_layers_bare_uuid_links_resolved_id(item_response_json, monkeypatch):
     # get_item risolve l'UUID nudo; i link devono portare l'id risolto, che il plugin sa aprire
     monkeypatch.setattr("openrndt.cli.get_item", lambda item_id: item_response_json)
-    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML, headers=CORS))
+    respx.get(url__regex=AE_GETMAP).mock(return_value=httpx.Response(404))
     result = runner.invoke(app, ["resources", "D_E973_MARSAGLIA", "--layers"])
     assert result.exit_code == 0, result.output
     (layer,) = json.loads(result.stdout)["layers"]
@@ -1192,7 +1196,7 @@ def test_cli_get_map_link_after_geolibre_url(item_response_json):
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_3857_XML))
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_3857_XML, headers=CORS))
     payload = json.loads(json.dumps(item_response_json))
     payload["_source"]["title"] = "Particelle catastali del comune"
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
@@ -1208,13 +1212,16 @@ def test_cli_get_map_link_after_geolibre_url(item_response_json):
 
 @respx.mock
 def test_cli_get_map_link_none_when_not_web_drawable(item_response_json):
-    """Layer solo in EPSG:6706: GeoLibre web non lo ridisegna, nessun link."""
+    """Layer solo in EPSG:6706 e GetMap di prova in 3857 con l'immagine fissa 500x500 del catasto: nessun link."""
     respx.get(f"{DEFAULT_BASE_URL}/rest/metadata/item/age%3AD_E973_MARSAGLIA").mock(
         return_value=httpx.Response(200, json=item_response_json)
     )
-    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML))
+    respx.get(AE_CAPS).mock(return_value=httpx.Response(200, text=AE_CAPS_XML, headers=CORS))
+    png_500 = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + (500).to_bytes(4, "big") * 2
+    probe = respx.get(url__regex=AE_GETMAP).mock(return_value=httpx.Response(200, content=png_500, headers=CORS))
     result = runner.invoke(app, ["--format", "json", "get", "age:D_E973_MARSAGLIA"])
     assert result.exit_code == 0, result.output
+    assert probe.call_count == 1
     assert json.loads(result.stdout)["geolibre_map_url"] is None
 
 

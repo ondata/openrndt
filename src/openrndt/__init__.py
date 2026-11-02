@@ -25,7 +25,9 @@ from openrndt.resources import (
     list_layers,
     parse_wms_capabilities,
     service_base_url,
+    wms_draws_3857,
     wms_layer_crs,
+    wms_probe_url,
 )
 from openrndt.search import (
     bbox_from_envelope,
@@ -65,7 +67,9 @@ __all__ = [
     "geolibre_map_url",
     "list_layers",
     "parse_wms_capabilities",
+    "wms_draws_3857",
     "wms_layer_crs",
+    "wms_probe_url",
     "capabilities_url",
     "service_base_url",
     "organization_names",

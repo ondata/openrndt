@@ -502,7 +502,14 @@ def wms_layer_crs(layer: dict[str, Any], version: str) -> str | None:
 
 def _fetch_bytes(url: str, timeout: float) -> bytes:
     """GET con la stessa validazione anti-SSRF di `check_resources`, anche a ogni redirect."""
+    return _fetch(url, timeout)[0]
+
+
+def _fetch(url: str, timeout: float, origin: str | None = None) -> tuple[bytes, httpx.Headers]:
+    """Come `_fetch_bytes`, con le intestazioni della risposta finale; ``origin`` va nell'intestazione ``Origin``."""
     headers = {"User-Agent": USER_AGENT}
+    if origin:
+        headers["Origin"] = origin
     current = url
     for _ in range(_MAX_REDIRECTS + 1):
         blocked = _validate_check_url(current)
@@ -521,8 +528,72 @@ def _fetch_bytes(url: str, timeout: float) -> bytes:
                 body.extend(chunk)
                 if len(body) > _MAX_CAPABILITIES_BYTES:
                     raise ValueError("risposta troppo grande")
-            return bytes(body)
+            return bytes(body), response.headers
     raise ValueError("too-many-redirects")
+
+
+def _cors_ok(headers: httpx.Headers) -> bool:
+    """``Access-Control-Allow-Origin`` che lascia leggere la risposta a GeoLibre web."""
+    return headers.get("access-control-allow-origin", "").strip() in {"*", GEOLIBRE_ORIGIN}
+
+
+PROBE_TILE_SIZE = 64
+
+
+def wms_probe_url(base: str, version: str, layer: str, bbox: list[float] | None) -> str:
+    """GetMap di prova in EPSG:3857: 64x64 px, 4 km al centro di ``bbox`` (WGS84).
+
+    Porting di `probeGetMapUrl`/`probeBbox3857` del plugin openrndt-geolibre:
+    dice se il server disegna in EPSG:3857 un layer che non lo dichiara.
+    """
+    w, s, e, n = bbox or [12, 41.5, 13, 42.5]
+    lon = (w + e) / 2
+    lat = max(-85.0, min(85.0, (s + n) / 2))
+    x = lon * _WORLD / 180
+    y = math.log(math.tan(math.radians(90 + lat) / 2)) / (math.pi / 180) * (_WORLD / 180)
+    half = 2000
+    box = ",".join(f"{v:.2f}" for v in (x - half, y - half, x + half, y + half))
+    v13 = version.startswith("1.3")
+    params = [
+        ("SERVICE", "WMS"),
+        ("VERSION", "1.3.0" if v13 else "1.1.1"),
+        ("REQUEST", "GetMap"),
+        ("LAYERS", layer),
+        ("STYLES", ""),
+        ("CRS" if v13 else "SRS", "EPSG:3857"),
+        ("BBOX", box),
+        ("WIDTH", str(PROBE_TILE_SIZE)),
+        ("HEIGHT", str(PROBE_TILE_SIZE)),
+        ("FORMAT", "image/png"),
+        ("TRANSPARENT", "true"),
+    ]
+    return f"{base}{'&' if urlparse(base).query else '?'}{urlencode(params, safe='/:,')}"
+
+
+def _is_image(data: bytes) -> bool:
+    """PNG, JPEG, GIF o WebP, dai primi byte (`isImage` del plugin)."""
+    return (
+        data[:4] == b"\x89PNG" or data[:2] == b"\xff\xd8" or data[:3] == b"GIF" or data[8:12] == b"WEBP"
+    )
+
+
+def wms_draws_3857(url: str, timeout: float) -> bool:
+    """True se la GetMap di prova di :func:`wms_probe_url` dà a GeoLibre web una tile.
+
+    Come `testTile` del plugin: un'immagine e, per un PNG, larga e alta 64 px
+    (un'immagine fissa di altra misura, come quella del catasto dell'Agenzia
+    delle Entrate, non vale). In più l'intestazione CORS, che nel plugin
+    impone il browser stesso.
+    """
+    try:
+        data, headers = _fetch(url, timeout, origin=GEOLIBRE_ORIGIN)
+    except (httpx.HTTPError, ValueError):
+        return False
+    if not _cors_ok(headers) or not _is_image(data):
+        return False
+    if data[:4] == b"\x89PNG" and len(data) >= 24:
+        return int.from_bytes(data[16:20], "big") == PROBE_TILE_SIZE == int.from_bytes(data[20:24], "big")
+    return True
 
 
 def upgrade_to_https(target: str, fetched_from: str) -> str:
@@ -600,13 +671,17 @@ def list_layers(
     Un servizio per base URL (lo schema non conta), nell'ordine della scheda,
     prima i WMS poi i WMTS. Ogni riga: ``service``, ``kind`` (``wms``/``wmts``),
     ``name``, ``title``, ``crs`` (quello in cui GeoLibre lo chiederebbe),
-    ``tile_url`` (WMTS: il template ``{z}/{x}/{y}``), ``cors`` (WMTS: se le tile
-    rispondono a GeoLibre web, provato su una tile per servizio),
+    ``tile_url`` (WMTS: il template ``{z}/{x}/{y}``), ``cors`` (se GeoLibre web
+    può leggere il servizio: WMS dal GetCapabilities, WMTS da una tile per
+    servizio; senza CORS niente ``geolibre_url``),
     ``geolibre_url`` (apre GeoLibre web col layer sulla mappa), ``note`` ed
     ``error``. Un servizio che non risponde dà una riga con ``name`` ``None``
     ed ``error``. Come il plugin, un nome già visto in un servizio precedente
     si risolve su quello: ``geolibre_url`` ``None`` e una nota. ``title`` (il
     titolo della scheda) sceglie il layer su cui provare il CORS, come il plugin.
+    Un WMS con CORS in cui un layer non dichiara EPSG:3857 riceve una GetMap
+    di prova in EPSG:3857 (:func:`wms_probe_url`): se il server la disegna,
+    tutti i suoi layer valgono come EPSG:3857, come nel plugin.
     """
     from openrndt.search import geolibre_url
 
@@ -621,10 +696,26 @@ def list_layers(
     for base in _services_of(resources, "WMS"):
         row_base = {**empty, "service": base, "kind": "wms"}
         try:
-            caps = parse_wms_capabilities(_fetch_bytes(capabilities_url(base), timeout))
+            data, headers = _fetch(capabilities_url(base), timeout, origin=GEOLIBRE_ORIGIN)
+            caps = parse_wms_capabilities(data)
         except (httpx.HTTPError, ValueError) as exc:
             rows.append({**row_base, "error": str(exc) or type(exc).__name__})
             continue
+        # GeoLibre web legge capabilities e tile col fetch del browser: senza CORS non aggiunge nulla.
+        cors = _cors_ok(headers)
+        row_base["cors"] = cors
+        # Come il plugin (`prepareWms`): una GetMap di prova in EPSG:3857 se un layer non lo
+        # dichiara; molti server (ArcGIS, GeoServer con elenco ristretto) lo disegnano lo stesso.
+        undeclared = [layer for layer in caps["layers"] if wms_layer_crs(layer, caps["version"]) != "EPSG:3857"]
+        draws_3857 = False
+        if cors and undeclared:
+            sample = next(
+                (layer for layer in undeclared if not layer["group"] and layer["bbox"]),
+                next((layer for layer in undeclared if layer["bbox"]), undeclared[0]),
+            )
+            draws_3857 = wms_draws_3857(
+                wms_probe_url(base, caps["version"], sample["name"], sample["bbox"]), timeout
+            )
         http_note = _HTTP_NOTE if base.lower().startswith("http://") else None
         for layer in caps["layers"]:
             name = layer["name"]
@@ -634,9 +725,16 @@ def list_layers(
             else:
                 seen_names.add(name)
                 crs = wms_layer_crs(layer, caps["version"])
+                if crs != "EPSG:3857" and draws_3857:
+                    crs = "EPSG:3857"
+                    row["note"] = "; ".join(
+                        n for n in (http_note, "EPSG:3857 non dichiarato, ma il server lo disegna (GetMap di prova)") if n
+                    )
                 row["crs"] = crs
                 if crs is None:
                     row["note"] = "nessun CRS che GeoLibre sa disegnare"
+                elif not cors:
+                    row["note"] = "il servizio non ha l'intestazione CORS: GeoLibre web non può leggerlo"
                 else:
                     row["geolibre_url"] = geolibre_url(item_id, [("wms", name)])
             rows.append(row)
@@ -1000,8 +1098,8 @@ def pick_map_layer(
     """Il layer da mettere sulla mappa di GeoLibre web, fra le righe di :func:`list_layers`.
 
     Candidati: le righe con ``geolibre_url`` che GeoLibre web disegna, cioè i
-    WMTS (già verificati: griglia Web Mercator e CORS) e i WMS https offerti in
-    EPSG:3857. Scelta come il plugin (`wantedLayer`): il layer nominato da un
+    WMTS (già verificati: griglia Web Mercator e CORS) e i WMS https con CORS
+    offerti in EPSG:3857, dichiarato o disegnato nella GetMap di prova. Scelta come il plugin (`wantedLayer`): il layer nominato da un
     link della scheda (`LAYERS=`…), altrimenti l'unico candidato, altrimenti
     quello col titolo più vicino a quello della scheda; per una scheda di tipo
     ``service`` nessuna scelta per titolo. ``None`` se non c'è un candidato sicuro.
