@@ -371,6 +371,14 @@ def test_parse_wms_capabilities_real_pcn_mapserver():
     assert caps["layers"][0]["bbox"] == [15.3871, 38.0182, 15.5482, 38.1634]
 
 
+CORS = {"Access-Control-Allow-Origin": "*"}
+
+
+def _png(width: int, height: int) -> bytes:
+    """Inizio di un PNG: firma e IHDR, quanto basta per misura e tipo."""
+    return b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + width.to_bytes(4, "big") + height.to_bytes(4, "big") + b"\x08\x06\x00\x00\x00"
+
+
 WMS_111 = """<?xml version="1.0"?>
 <!DOCTYPE WMT_MS_Capabilities SYSTEM "x.dtd" [ <!ELEMENT VendorSpecificCapabilities EMPTY> ]>
 <WMT_MS_Capabilities version="1.1.1"><Capability>
@@ -416,7 +424,9 @@ def test_wms_layer_crs_follows_plugin_rule(crs, version, expected):
 
 @respx.mock
 def test_list_layers_one_service_per_base_url():
-    route = respx.get(AGEA_CAPS).mock(return_value=httpx.Response(200, text=_caps("wms_caps_agea2020_rgb.xml")))
+    route = respx.get(AGEA_CAPS).mock(
+        return_value=httpx.Response(200, text=_caps("wms_caps_agea2020_rgb.xml"), headers=CORS)
+    )
     rows = list_layers(
         AGEA_ID,
         [
@@ -435,7 +445,7 @@ def test_list_layers_one_service_per_base_url():
             "title": "Agea2020_RGB",
             "crs": "EPSG:3857",
             "tile_url": None,
-            "cors": None,
+            "cors": True,
             "geolibre_url": "https://web.geolibre.app/?plugin=openrndt-geolibre&rndt=r_emiro%3A2022-03-11T113115"
             "&rndtLayer=r_emiro%3A2022-03-11T113115~wms~Agea2020_RGB",
             "note": None,
@@ -482,11 +492,83 @@ def test_list_layers_reports_errors_http_and_duplicate_names():
 @respx.mock
 def test_list_layers_http_service_gets_note():
     respx.get("http://b.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
-        return_value=httpx.Response(200, text=WMS_111)
+        return_value=httpx.Response(200, text=WMS_111, headers=CORS)
     )
+    respx.get(url__regex=r"http://b\.test/wms\?.*REQUEST=GetMap").mock(return_value=httpx.Response(404))
     rows = list_layers("x:1", [{"type": "WMS", "url": "http://b.test/wms", "source": "links_s"}], timeout=1)
     assert rows[0]["geolibre_url"] is not None
     assert rows[0]["note"].startswith("servizio in http://")
+
+
+GETMAP_C = r"https://c\.test/wms\?.*REQUEST=GetMap"
+
+
+@respx.mock
+def test_list_layers_without_cors_gives_no_link_and_no_probe():
+    respx.get("https://c.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111)  # solo 32633: senza CORS la prova non parte
+    )
+    probe = respx.get(url__regex=GETMAP_C).mock(return_value=httpx.Response(200, content=_png(64, 64), headers=CORS))
+    rows = list_layers("x:1", [{"type": "WMS", "url": "https://c.test/wms", "source": "links_s"}], timeout=1)
+    assert not probe.called
+    assert all(r["cors"] is False and r["geolibre_url"] is None for r in rows)
+    assert rows[1]["crs"] == "EPSG:32633"
+    assert rows[1]["note"] == "il servizio non ha l'intestazione CORS: GeoLibre web non può leggerlo"
+
+
+@respx.mock
+def test_list_layers_probe_3857_draws():
+    """Solo EPSG:32633 dichiarato, ma il server disegna in 3857: tutti i layer valgono come 3857."""
+    respx.get("https://c.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111, headers=CORS)
+    )
+    probe = respx.get(url__regex=GETMAP_C).mock(return_value=httpx.Response(200, content=_png(64, 64), headers=CORS))
+    rows = list_layers("x:1", [{"type": "WMS", "url": "https://c.test/wms", "source": "links_s"}], timeout=1)
+    assert probe.call_count == 1
+    sent = probe.calls[0].request
+    params = sent.url.params
+    assert sent.headers["origin"] == "https://web.geolibre.app"
+    # campione: il primo layer non di gruppo con bbox (foglia eredita quella della radice)
+    assert (params["VERSION"], params["SRS"], params["LAYERS"], params["WIDTH"]) == ("1.1.1", "EPSG:3857", "foglia", "64")
+    assert [(r["name"], r["crs"]) for r in rows] == [("gruppo", "EPSG:3857"), ("foglia", "EPSG:3857")]
+    assert all(r["geolibre_url"] and "non dichiarato" in r["note"] for r in rows)
+    from openrndt.resources import pick_map_layer
+
+    assert pick_map_layer(rows, [], title="foglia")["name"] == "foglia"
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        httpx.Response(200, content=_png(64, 64)),  # immagine senza CORS
+        httpx.Response(200, content=_png(500, 500), headers=CORS),  # immagine fissa (catasto AdE)
+        httpx.Response(200, text="<ServiceExceptionReport/>", headers=CORS),  # CRS rifiutato
+        httpx.Response(500, headers=CORS),
+    ],
+)
+@respx.mock
+def test_list_layers_probe_3857_fails(answer):
+    respx.get("https://c.test/wms?SERVICE=WMS&REQUEST=GetCapabilities").mock(
+        return_value=httpx.Response(200, text=WMS_111, headers=CORS)
+    )
+    respx.get(url__regex=GETMAP_C).mock(return_value=answer)
+    rows = list_layers("x:1", [{"type": "WMS", "url": "https://c.test/wms", "source": "links_s"}], timeout=1)
+    foglia = rows[1]
+    assert foglia["crs"] == "EPSG:32633" and foglia["note"] is None
+    from openrndt.resources import pick_map_layer
+
+    assert pick_map_layer(rows, [], title="foglia") is None
+
+
+def test_wms_probe_url_130_uses_crs():
+    from openrndt.resources import wms_probe_url
+
+    url = wms_probe_url("https://s.it/wms?map=x", "1.3.0", "a", [12.0, 41.5, 13.0, 42.5])
+    params = httpx.URL(url).params
+    assert params["map"] == "x" and params["CRS"] == "EPSG:3857" and "SRS" not in params
+    minx, miny, maxx, maxy = (float(v) for v in params["BBOX"].split(","))
+    assert round(maxx - minx) == 4000 and round(maxy - miny) == 4000
+    assert round((minx + maxx) / 2) == 1391494  # 12,5° E in Web Mercator
 
 
 def test_list_layers_blocks_private_hosts():
