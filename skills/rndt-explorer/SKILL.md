@@ -124,6 +124,8 @@ Filtri principali:
 | `--bbox`            | bounding box WGS84 `xmin,ymin,xmax,ymax`                    |
 | `--bbox-crs`        | CRS dichiarato bbox: accetta `EPSG:4326`, `CRS:84`, `WGS84` (niente reproiezione) |
 | `--data-category`   | categoria ISO 19115 (es. `planningCadastre`)                |
+| `--inspire-theme`   | tema INSPIRE per codice o nome, tutte le forme del catalogo (`hy,ps`); solo dataset e serie |
+| `--inspire-cluster` | cluster di temi INSPIRE (`mare-atmosfera`); elenco: `discover --what inspire_themes` |
 | `--org`             | ente responsabile (`EnteResponsabile_s`) che contiene il testo, case-insensitive; le sigle (`arpae`) non bastano, su zero risultati la CLI propone il nome per esteso |
 | `--org-exact`       | ente responsabile, confronto esatto e case-sensitive su `EnteResponsabile_s` |
 | `--ipa`             | codice IPA dell'ente titolare (prefisso dell'id), senza maiuscole, più codici con la virgola; trova anche le schede senza ente responsabile e tutte le grafie del nome. Il codice da `discover --what ipa --match <nome o sigla>` (dalla CLI 3.9.0) |
@@ -164,7 +166,9 @@ openrndt search --q "isOpendata:*"                    # dichiarati open data: 16
 openrndt search --q "isOpendata:\"CC BY 4.0\""        # licenza specifica: 10.534
 
 # Per tema INSPIRE
-openrndt search --q "INSPIRETheme_s:\"Parcelle catastali\""
+openrndt search --inspire-theme cp               # tutte le forme del tema (nome italiano, inglese, codice)
+openrndt search --inspire-cluster mare-atmosfera --ipa r_sardeg   # si combina con gli altri filtri
+openrndt discover --what inspire_themes          # albero offline di cluster e temi
 
 # Aggiornati dopo una data
 openrndt search --q "apiso_RevisionDate_dt:[2024-01-01T00:00:00Z TO *]"

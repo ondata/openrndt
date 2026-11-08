@@ -1,5 +1,14 @@
 # LOG
 
+## 2026-11-08 (temi e cluster INSPIRE)
+
+- **Origine**: pagina https://www.dati.gov.it/geodati (9 cluster, 34 temi). La CLI i temi li usava solo a mano con `--q`.
+- **`--inspire-theme` e `--inspire-cluster`** su `search` e `footprints`, `search(inspire_theme=, inspire_cluster=)`, `discover --what inspire_themes`, `inspire_tree()`. Si interviene solo sulla ricerca, l'output resta quello del RNDT. Valgono solo equivalenze certe: italiano, inglese, codice, grafie osservate.
+- **Scansione di 23.801 schede**: `INSPIRETheme_s` ha 104 valori per 34 temi. Solo nome italiano 18.626 schede, tutte le forme 20.713 su 20.740 dataset e serie. Requisito 1.4: 18.447 conformi, 2.268 no, concentrate in 53 enti. Dettagli in `knowledge/api/known-issues.md`.
+- **Verificato dal vivo**: totali della libreria uguali alla scansione per tutti i 34 temi e i 9 cluster, 0 differenze. 349 test, ruff e mypy puliti.
+- **Link GeoLibre**: un solo tema → `rndtTheme` con nota (il plugin cerca solo il nome italiano); più temi o cluster → `untranslated`. Avvisata la sessione del plugin.
+- **AgID**: bozza sui temi in Gmail, thread «Alcune osservazioni», non inviata.
+
 ## 2026-11-02 (3.14.0: geolibre_map_url per WMS nazionali con prova in EPSG:3857, CORS dei WMS)
 
 - **PR #50** mergiata in rebase: Greptile al primo giro un rilievo (PNG troncato prima di IHDR accettato come tile), corretto; secondo giro «no new actionable issues». Vocabolario IPA rigenerato prima del rilascio (263 s): 183 codici (prima 182), 23.753 schede. Skill rndt-explorer 3.13.2 (`references/browser-links.md`).

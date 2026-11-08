@@ -40,6 +40,8 @@ Il link porta i filtri che il plugin ha. Gli altri il link li ignora e la CLI li
 | `--bbox` | `rndtBbox` | |
 | `--org`, `--org-exact` | `rndtOrg` | nel plugin è sempre «contiene»: `--org-exact` può trovare anche varianti del nome; un nome con una virgola va tra virgolette doppie, dal plugin 0.3.9 |
 | `--data-category` | `rndtKeywords` | |
+| `--inspire-theme` | `rndtTheme` | un solo tema; il plugin lo cerca solo con il nome italiano e può trovare meno schede. Con più temi non passa nel link |
+| `--inspire-cluster` | nessuno | non passa nel link |
 | `--updated-from/to` | `rndtDate=modified`, `rndtFrom`/`rndtTo` | |
 | `--published-from/to` | `rndtDate=publication`, `rndtFrom`/`rndtTo` | un solo intervallo: con `--updated-*` le date di pubblicazione restano fuori |
 | `--sort` | `rndtSort` | solo `title:asc`/`desc` e `apiso_Modified_dt:desc`/`asc` |

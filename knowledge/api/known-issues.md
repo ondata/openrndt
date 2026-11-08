@@ -79,6 +79,18 @@ Un ente assente da tutti e tre non è un difetto di query: il Comune di Bologna 
 - **`_id` del catalogo diverso dal fileid** (2026-11-01): le ortofoto AGEA 2022, 2023 e 2024 hanno `_id` come `agea:OI:DATEVOLO:m001+-++-+2026-09-25+12:42:55` e fileid `agea:OI:ORTOIMMAGINI:m004`; l'ortofoto 2022 e i quadri di unione condividono anche la radice `agea:OI:DATEVOLO:m001`, distinta solo dal suffisso con la data. L'endpoint item con il fileid risponde 200 con `found: false`, `search?id=<fileid>` risponde 404; `q=fileid:"<fileid>"` trova la scheda. Compensazione: dalla 3.12.0 `get` e `search --id` risalgono all'`_id` dal fileid.
 - **Tipo di servizio dichiarato diverso dall'URL**: sulle stesse schede AGEA `resources_nst.url_type_s` è «ImageServer» per un `…/ImageServer/WMTS?`. Dalla 3.12.0 la CLI classifica come WMTS ogni URL con `/wmts` nel path o `SERVICE=WMTS`.
 
+# Temi INSPIRE in `INSPIRETheme_s` (verificato 2026-11-08)
+
+Scansione di tutte le 23.801 schede. Il campo non è un elenco controllato: nell'XML visto su cinque schede riporta il valore come è scritto nel blocco «GEMET - INSPIRE themes», ed è case-sensitive.
+
+- **104 valori distinti per 34 temi**: 34 nomi italiani, 33 inglesi (manca solo `Meteorological geographical features`), 22 codici (`hy`), 4 grafie diverse (`Ortoimmagini` 175 schede, `idrografia`, demografia con il trattino corto, doppio spazio), 6 categorie ISO (`Biota`, `Confini`…), 3 non temi (`EU` 362, `open data` 114, `~`), 2 stringhe di soli spazi. Gli spazi, su 627 schede (441 `p_bz`), nella scheda vista sono un residuo delle parole chiave bilingui: non sono un difetto della scheda.
+- **Regola**: Requisito 1.4 della [guida di compilazione v3.1](https://geodati.gov.it/geoportale/images/struttura/documenti/RNDT_manuale-parte-2_v3_1.pdf) (2025-10-03): valori esattamente uguali ai termini GEMET, nome del tema nella lingua dei metadati. Non verificato se valesse già per le schede più vecchie né se sia controllata in ingresso.
+- **Conformità, 20.740 dataset e serie**: 18.447 conformi (88,9%), 2.268 no (2.087 senza nessun termine corretto, 181 con un termine corretto e altri valori), 25 senza un valore utilizzabile. Cause, cumulabili: altra lingua 1.718 (1.716 inglese in schede italiane), non temi 477, codici 213, grafie 194, categorie ISO 12.
+- **Concentrazione**: 53 enti su 173; i primi 5 (Friuli-Venezia Giulia 700, Sardegna 364, Liguria 278, Lazio 213, Provincia di Lodi 197) fanno il 77%, i primi 10 il 94%.
+- **Effetto sulla ricerca**: col solo nome italiano si trovano 18.626 schede, con tutte le forme 20.713. Il modulo Ricerca Dettagliata cerca italiano e inglese (dai valori della pagina) e lascia fuori 408 schede. I servizi non hanno il tema.
+- **Workaround**: `--inspire-theme`/`--inspire-cluster` cercano tutte le forme; lista in `codelists.py` (`INSPIRE_THEMES`, `INSPIRE_VARIANTS`), da ricontrollare con una scansione. Equivalenze solo certe: `EU`, `open data` e categorie ISO non vanno su nessun tema.
+- Non segnalato ad AgID: bozza in Gmail nel thread «Alcune osservazioni», non inviata.
+
 # Harvest verso dati.gov.it (verificato 2026-11-02)
 
 Non riguarda la CLI, ma dice cosa succede alle schede RNDT a valle. Misure dall'API CKAN di dati.gov.it (`package_search`, `harvest_source_show`) confrontate con il REST di RNDT; materiale in `tmp/dgi/` (gitignored).
