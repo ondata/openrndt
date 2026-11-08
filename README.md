@@ -23,6 +23,37 @@ Il [Repertorio Nazionale dei Dati Territoriali](https://geodati.gov.it/geoportal
 il catalogo ufficiale italiano dei metadati geografici (ISO 19115/19139). Espone REST
 API per cercare e scaricare i metadati.
 
+## Cosa aggiunge la CLI al geoportale
+
+Il [geoportale](https://geodati.gov.it/geoportale/ricerca-dettagliata) è pensato per consultare il catalogo a vista: ci si disegna un'area sulla mappa e si sfogliano le schede. openrndt lavora sullo stesso catalogo ed è pensata per l'uso da programma: conviene quando vuoi contare, esportare o ripetere una ricerca, o farla guidare da un agente. Le differenze sono di tre tipi, e in parte sono una questione di preferenze: noi troviamo più comoda la modalità machine-to-machine.
+
+### Non disponibili nel modulo di ricerca del sito
+
+| Cosa vuoi fare | Comando | Come funziona |
+|---|---|---|
+| Esportare i risultati | `openrndt --format csv search --q ortofoto --profile qgis --num 100`, `openrndt footprints --q ortofoto > riquadri.geojson` | JSON, CSV con le colonne pronte per QGIS, GeoJSON con i riquadri, fino a 5.000 schede per richiesta. |
+| Leggere la licenza anche dai vincoli d'uso | `openrndt --format compact search --ipa r_lombar --q DUSAF --num 5` | Il campo `license` riporta anche la licenza dichiarata nel blocco INSPIRE delle condizioni d'uso. |
+
+### Pronte qui, sul sito con la sintassi di ricerca
+
+Il modulo del sito non ha un campo per queste ricerche, ma il suo campo di testo in modalità «Testo» accetta la sintassi di ricerca del catalogo. Chi la conosce può scrivere la query dell'ultima colonna e ottiene lo stesso numero di schede.
+
+| Cosa vuoi fare | Comando | Nel campo di testo del sito |
+|---|---|---|
+| Trovare tutti i dati di un ente dal codice IPA, comprese tutte le grafie del nome e le schede senza ente responsabile | `openrndt search --ipa r_sardeg` | `apiso_Identifier_s:/[rR]_[sS][aA][rR][dD][eE][gG]:.*/`. Il codice scritto come testo semplice può non bastare, perché nel catalogo il prefisso è sia maiuscolo sia minuscolo: `r_sardeg` trova 590 schede su 766. |
+| Trovare un ente da una parte del nome, varianti comprese, come «Regione Piemonte - A1601B» | `openrndt search --org "regione piemonte"` | `EnteResponsabile_s:/.*[rR][eE][gG][iI][oO][nN][eE] [pP][iI][eE][mM][oO][nN][tT][eE].*/` |
+| Cercare un tema in tutte le forme presenti nel catalogo: nome italiano, inglese, codice e altre grafie | `openrndt search --inspire-theme hy` | `INSPIRETheme_s:("Idrografia" OR "Hydrography" OR "hy" OR "idrografia")`. Il filtro per temi del modulo cerca nome italiano e inglese. |
+
+### Più comode da programma
+
+| Cosa vuoi fare | Comando | Come funziona |
+|---|---|---|
+| Cercare per regione o comune | `openrndt discover --what ipa --match "comune di firenze"`, poi `openrndt search --ipa c_d612`; per area `openrndt search --q AmbitoTerritoriale_s:Locale --bbox 11.2,44.4,11.5,44.6` | A un agente basta nominare il territorio: trova il codice dell'ente o le coordinate e combina i filtri. Restringere all'ambito locale toglie le schede che coprono l'area solo perché dichiarano un riquadro più grande: nell'esempio, 61 contro 2.870. |
+| Esplorare un gruppo di temi | `openrndt discover --what inspire_themes`, poi `openrndt search --inspire-cluster mare-atmosfera` | I 9 gruppi con i loro 34 temi in un albero consultabile offline, e un solo filtro per tutto il gruppo. |
+| Sapere se i link di una scheda funzionano | `openrndt resources <id>` | Controlla in un colpo servizi e download, anche di più schede insieme. |
+| Vedere i layer di un WMS o WMTS | `openrndt resources <id> --layers` | L'elenco dei layer come dati, ognuno con il link che lo apre sulla mappa in GeoLibre web. |
+| Automatizzare | [libreria Python](#uso-come-libreria-python) e [skill per agenti AI](#per-agenti-ai) | Le stesse ricerche in uno script o guidate da un agente, con output strutturato e comandi ripetibili. |
+
 ## Installazione
 
 ### Da PyPI

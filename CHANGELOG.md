@@ -4,6 +4,17 @@ Tutte le modifiche rilevanti di questo progetto sono documentate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/); il progetto segue [Semantic Versioning](https://semver.org/lang/it/).
 
+## [3.15.0] - 2026-11-08
+
+Ora puoi cercare i dati del Repertorio per argomento, scegliendo uno dei 34 temi europei INSPIRE o uno dei 9 grandi gruppi che li raccolgono, come «Mare e Atmosfera» o «Scienze della Terra». Prima una ricerca sull'idrografia trovava solo le schede scritte con il nome italiano del tema: ora trova anche quelle che lo riportano in inglese o con una sigla, e passa da 857 a 1.022 schede. Il filtro si combina con gli altri, per esempio un tema e un ente, e un elenco consultabile anche senza connessione mostra tutti i gruppi e i temi disponibili.
+
+### Added
+
+- **`--inspire-theme` e `--inspire-cluster`** su `search` e `footprints`: uno o più temi (codice o nome italiano o inglese, es. `hy,ps`) o cluster (es. `mare-atmosfera`), in AND con gli altri filtri. La clausola su `INSPIRETheme_s` contiene tutte le forme del tema presenti nel catalogo: nome italiano, inglese, codice e grafie osservate. Solo dataset e serie: i servizi non hanno il tema.
+- **`discover --what inspire_themes`**: albero offline dei 9 cluster e dei 34 temi.
+- **Libreria**: `search(inspire_theme=, inspire_cluster=)` e `inspire_tree()`.
+- **Link GeoLibre**: un solo tema diventa `rndtTheme`, con una nota perché il plugin cerca solo il nome italiano; più temi o un cluster finiscono in `untranslated`.
+
 ## [3.14.0] - 2026-11-02
 
 ### Changed

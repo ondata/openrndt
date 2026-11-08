@@ -19,12 +19,12 @@ compatibility: >
   resources, discover). Dalla 3.3.0 `get` emette il documento normalizzato e
   accetta `--raw`, dalla 3.3.1 `get`, `resources` e `search --id` accettano un
   UUID senza prefisso, dalla 3.4.0 le parole di `--q` sono unite in AND, dalla
-  3.5.0 gli output portano `geolibre_url`: con una CLI precedente le ricette che
-  li usano falliscono.
+  3.5.0 gli output portano `geolibre_url`, dalla 3.15.0 ci sono `--inspire-theme`
+  e `--inspire-cluster`: con una CLI precedente le ricette che li usano falliscono.
   Installazione: `uv tool install openrndt` (da PyPI) oppure `uvx openrndt`.
 metadata:
   author: ondata
-  version: "3.13.2"
+  version: "3.14.0"
 ---
 
 # RNDT Explorer — esplorazione guidata del catalogo

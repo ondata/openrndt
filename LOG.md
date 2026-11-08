@@ -1,5 +1,12 @@
 # LOG
 
+## 2026-11-08 (3.15.0: temi e cluster INSPIRE)
+
+- **PR #51** mergiata in rebase: Greptile verde, nessun commento.
+- **Vocabolario IPA non rigenerato**: due tentativi fermati da `httpx.ReadTimeout` durante la scansione del catalogo. Resta quello del 2026-11-02 (183 codici, 23.753 schede), valido.
+- **README**: sezione «Cosa aggiunge la CLI al geoportale», con ciò che manca nel modulo del sito, ciò che lì richiede la sintassi di ricerca (con la query equivalente) e ciò che è più comodo da programma.
+- **Note di rilascio**: da questa versione aprono con un testo per chi usa l'applicazione senza scrivere codice.
+
 ## 2026-11-08 (temi e cluster INSPIRE)
 
 - **Origine**: pagina https://www.dati.gov.it/geodati (9 cluster, 34 temi). La CLI i temi li usava solo a mano con `--q`.
