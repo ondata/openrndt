@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-08 (skill: territorio nominato, filtro per bbox)
+
+- La skill filtrava per stringa o per ente anche quando la domanda nominava un luogo. Elevazione e ortofoto in provincia di Palermo: `--q palermo` 0, `--ipa r_sicili` 0, con il bbox 45. Ora il territorio nominato va su `--bbox`, con il riquadro da confini-amministrativi.it (dati ISTAT); Nominatim resta per frazioni e località.
+
 ## 2026-11-08 (temi INSPIRE per gli agenti)
 
 - `discover --what search_params` spiega `inspire_theme` e `inspire_cluster`; `lucene_fields` avverte che `INSPIRETheme_s` è il valore come scritto nella scheda. Nella skill: per chi esplora senza idee chiare si parte dall'albero dei temi, e la ricetta dei WMS per tema usa `--inspire-theme`.

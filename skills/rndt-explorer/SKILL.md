@@ -224,9 +224,29 @@ Cita sempre `id` o `url` delle schede: una tabella di soli titoli non è
 verificabile. Sequenza estesa, numeri misurati e due strade da non prendere in
 [`references/workflows.md`](./references/workflows.md) §12.
 
+### Se la domanda nomina un territorio, filtra per bbox
+
+Quando l'utente nomina una regione, una provincia o un comune, usa `--bbox`: non cercare il nome del luogo nel testo o tra gli enti. I dati che coprono un territorio sono spesso pubblicati da enti nazionali o regionali, e il nome del luogo nelle schede non c'è. Elevazione e ortofoto in provincia di Palermo (2026-11-08): `--q palermo` 0 schede, `--ipa r_sicili` 0, con il bbox 45, da Ministero dell'Ambiente, IGM, AGEA e altri. Testo ed ente si aggiungono dopo, per restringere.
+
+Il bbox ufficiale viene da [Confini amministrativi](https://www.confini-amministrativi.it/) di onData (dati ISTAT, in WGS84): nessuna chiave, si cerca per nome esatto.
+
+```bash
+A=https://www.confini-amministrativi.it/api/v2/it
+R=$(curl -s "$A/" | jq -r '[._links.item[].title|select(test("^[0-9]{8}$"))]|max')
+BB='[.. | arrays | select(length==2 and (.[0]|type)=="number")] | "\(map(.[0])|min),\(map(.[1])|min),\(map(.[0])|max),\(map(.[1])|max)"'
+
+COD=$(curl -s "$A/$R/unita-territoriali-sovracomunali.json" | jq -r '.[]|select(.den_uts=="Palermo").cod_uts')
+B=$(curl -s "$A/$R/unita-territoriali-sovracomunali/$COD.geo.json" | jq -r "$BB")
+openrndt --format compact search --inspire-theme el,oi --bbox "$B" --num 50
+```
+
+Per una regione: `regioni.json`, filtro `.den_reg`, chiave `.cod_reg`, poi `regioni/<cod_reg>.geo.json`. Per un comune: `comuni.json`, filtro `.comune`, chiave `.pro_com_t` (con lo zero iniziale), poi `comuni/<pro_com_t>.geo.json`. I nomi vanno scritti come ISTAT, accenti compresi («Cefalù»). Province e città metropolitane sono entrambe in `unita-territoriali-sovracomunali`.
+
+Il filtro è per sovrapposizione: restano le schede che coprono tutta Italia e qualcuna con il riquadro sbagliato (per Palermo anche schede di ARPA Piemonte e Regione Lombardia). Dillo all'utente, oppure restringi con `AmbitoTerritoriale_s:Regionale` o `Locale`; attento che quel campo può escludere tutto (`Locale` a Palermo dà 0).
+
 ### Da un toponimo al bbox
 
-`--bbox` vuole coordinate: per un comune, una frazione o una località usa
+`--bbox` vuole coordinate: per una frazione o una località, che i confini ISTAT non hanno, usa
 Nominatim (OpenStreetMap) con **una** chiamata, non web search o scraping di siti
 aggregatori (lenti, fragili, non ufficiali). Nominatim restituisce il bbox come
 `[lat_min, lat_max, lon_min, lon_max]`: va riordinato in `xmin,ymin,xmax,ymax`.
