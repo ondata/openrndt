@@ -89,6 +89,11 @@ openrndt footprints --q "catasto" --num 50 > footprints.geojson
 # Per categoria tematica ISO 19115
 openrndt search --data-category planningCadastre --num 5
 
+# Per tema o cluster INSPIRE, in tutte le forme presenti nel catalogo (solo dataset e serie)
+openrndt search --inspire-theme hy --num 5
+openrndt search --inspire-cluster mare-atmosfera --ipa r_sardeg --num 5
+openrndt discover --what inspire_themes
+
 # Singolo metadato (documento normalizzato: contatto, bbox, lineage, risorse)
 openrndt get age:D_E973_MARSAGLIA
 
@@ -463,6 +468,9 @@ for r in results["results"]:
 
 # Filtro per categoria e bbox
 results = search(data_category="planningCadastre", bbox="7,44,8,45", num=10)
+
+# Filtro per tema o cluster INSPIRE; inspire_tree() dà l'elenco offline
+results = search(inspire_theme="hy", ipa="r_toscan", num=10)
 
 # Dettaglio singolo metadato: get_item dà la busta Elasticsearch grezza,
 # item_record il documento normalizzato (lo stesso che stampa la CLI)

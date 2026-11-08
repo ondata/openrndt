@@ -39,8 +39,9 @@ Lista completa in [`result-structure.md`](./result-structure.md). I più ricorre
 ## Esempi verificati live
 
 ```bash
-# Tema INSPIRE
-openrndt search --q 'INSPIRETheme_s:Idrografia' --num 5         # → 863 totali (2026-07-17)
+# Tema INSPIRE: --inspire-theme cerca tutte le forme, il campo no
+openrndt search --inspire-theme hy --num 5                      # → 1.022 totali (2026-11-08)
+openrndt search --q 'INSPIRETheme_s:Idrografia' --num 5         # → 857, solo il nome italiano
 
 # Ente (forma breve)
 openrndt search --q 'contact_organizations_s:"Agenzia delle Entrate"' --num 5

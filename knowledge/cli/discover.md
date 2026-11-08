@@ -19,6 +19,7 @@ Nessuna chiamata di rete: le codelist sono costanti Python in `codelists.py`. È
 | `search_params` | Parametri dell'endpoint search con note d'uso. |
 | `lucene_fields` | Campi Elasticsearch interrogabili in `--q`, con suffissi (`_txt`, `_s`, `_dt`, `_i`, `_b`) e regole wildcard. |
 | `ipa` | Vocabolario dei codici IPA presenti nel RNDT (non è in `all`): codice, se è nell'Indice PA, nome e acronimo IPA, categoria IPA (`categoria`, `nome_categoria`: `L6`, «Comuni e loro Consorzi e Associazioni»), nomi in `EnteResponsabile_s`, schede, grafie del prefisso. Con `--match <testo>` solo i codici il cui codice, nome, acronimo o ente lo contiene (`--match arpae` → `arpa`); la categoria non entra nella ricerca. Se il vocabolario non trova nulla, `--match` cerca nell'anagrafica dell'Indice PA nel pacchetto (`data/ipa-enti.csv.gz`, 23.757 enti, 397 KB) e restituisce, con un avviso su stderr, gli enti senza schede nel RNDT: stessa forma, `schede: 0`, `enti` e `grafie` vuoti (#44). `--match "comune di palermo"` → `c_g273`; `palermo` → 41 enti, prima le categorie che pubblicano più schede nel RNDT (Comune e Città metropolitana prima di scuole e ordini). In JSON `{"generato", "codici"}`. Vocabolario e anagrafica li scrive `scripts/build_ipa_vocabulary.py` prima di ogni release. |
+| `inspire_themes` | Albero offline (non è in `all`) dei 9 cluster INSPIRE di dati.gov.it con i 34 temi: in JSON `cluster`, `nome`, `temi` (`codice`, `it`, `en`), in tabella e CSV una riga per tema. |
 
 # Examples
 
@@ -27,6 +28,7 @@ openrndt discover                                # tutto, JSON
 openrndt discover --what data_categories
 openrndt --format table discover --what lucene_fields
 openrndt --format table discover --what ipa --match veneto
+openrndt --format csv discover --what inspire_themes
 ```
 
 Sezione sconosciuta → `BadParameter` con l'elenco delle sezioni disponibili, exit 2.

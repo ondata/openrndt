@@ -1,5 +1,10 @@
 # Knowledge Bundle — Update Log
 
+## 2026-11-08
+
+* **Update**: [cli/search.md](/cli/search.md), [cli/footprints.md](/cli/footprints.md), [cli/discover.md](/cli/discover.md), [library/python-api.md](/library/python-api.md) — `--inspire-theme`, `--inspire-cluster`, `discover --what inspire_themes`, `inspire_tree`.
+* **Update**: [api/known-issues.md](/api/known-issues.md) — valori di `INSPIRETheme_s` e Requisito 1.4.
+
 ## 2026-11-01
 
 * **Update**: [cli/get.md](/cli/get.md) — `geolibre_map_url`, `--no-map-link`, id e fileid.
