@@ -261,6 +261,7 @@ def _no_results_hint(
     time: str | None,
     org: str | None = None,
     org_exact: str | None = None,
+    inspire: bool = False,
 ) -> None:
     """Avviso su stderr per ricerca senza risultati, con suggerimenti contestuali."""
     hints: list[str] = []
@@ -320,6 +321,8 @@ def _no_results_hint(
             hints.append(f'allarga il testo di --q o usa wildcard (es. --q "*{q}*")')
     if data_category:
         hints.append("rimuovi --data-category")
+    if inspire:
+        hints.append("rimuovi il filtro sul tema INSPIRE: il tema esiste solo su dataset e serie, mai sui servizi")
     if time:
         hints.append("allarga o rimuovi --time (il periodo può non avere record)")
     if bbox:
@@ -577,6 +580,19 @@ def search(
         "-c",
         help="Categoria tematica ISO 19115 (es. planningCadastre). Vedi `discover`.",
     ),
+    inspire_theme: str | None = typer.Option(
+        None,
+        "--inspire-theme",
+        help=(
+            "Tema INSPIRE per codice o nome, più temi separati da virgola (es. hy,ps). Cerca tutte "
+            "le forme del tema nel catalogo. Solo dataset e serie. Elenco: discover --what inspire_themes."
+        ),
+    ),
+    inspire_cluster: str | None = typer.Option(
+        None,
+        "--inspire-cluster",
+        help="Cluster di temi INSPIRE, più cluster separati da virgola (es. mare-atmosfera). Elenco: discover --what inspire_themes.",
+    ),
     time: str | None = typer.Option(None, "--time", help="Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd."),
     modified: str | None = typer.Option(None, "--modified", help="Intervallo modifica record nel catalogo yyyy-mm-dd/yyyy-mm-dd."),
     updated_from: str | None = typer.Option(
@@ -656,6 +672,8 @@ def search(
             org_exact=org_exact,
             ipa=ipa,
             data_category=data_category,
+            inspire_theme=inspire_theme,
+            inspire_cluster=inspire_cluster,
             time=time,
             modified=modified,
             updated_from=updated_from,
@@ -691,6 +709,8 @@ def search(
         org_exact=org_exact,
         ipa=ipa,
         data_category=data_category,
+        inspire_theme=inspire_theme,
+        inspire_cluster=inspire_cluster,
         time=time,
         modified=modified,
         updated_from=updated_from,
@@ -712,14 +732,14 @@ def search(
         payload = {"total": payload.get("total"), "geolibre_search": link, **payload}
         output.emit(payload)
         if zero:
-            _no_results_hint(q, bbox, data_category, time, org, org_exact)
+            _no_results_hint(q, bbox, data_category, time, org, org_exact, bool(inspire_theme or inspire_cluster))
         elif _uses_date_filters(sort, modified, updated_from, updated_to, published_from, published_to, time):
             typer.echo(_RAW_DATE_NOTE, err=True)
         return
     if mode == "compact":
         rows = compact_results(payload)
         if not rows:
-            _no_results_hint(q, bbox, data_category, time, org, org_exact)
+            _no_results_hint(q, bbox, data_category, time, org, org_exact, bool(inspire_theme or inspire_cluster))
             return
         output.emit(payload, table_rows=rows)
         return
@@ -730,7 +750,7 @@ def search(
     else:
         rows = _result_rows(payload)
     if not rows:
-        _no_results_hint(q, bbox, data_category, time, org, org_exact)
+        _no_results_hint(q, bbox, data_category, time, org, org_exact, bool(inspire_theme or inspire_cluster))
         return
     title = f"RNDT — {payload.get('num', len(rows))} di {payload.get('total', '?')}"
     caption = _table_date_caption(rows[0])
@@ -785,6 +805,19 @@ def footprints(
         "-c",
         help="Categoria tematica ISO 19115 (es. planningCadastre). Vedi `discover`.",
     ),
+    inspire_theme: str | None = typer.Option(
+        None,
+        "--inspire-theme",
+        help=(
+            "Tema INSPIRE per codice o nome, più temi separati da virgola (es. hy,ps). Cerca tutte "
+            "le forme del tema nel catalogo. Solo dataset e serie. Elenco: discover --what inspire_themes."
+        ),
+    ),
+    inspire_cluster: str | None = typer.Option(
+        None,
+        "--inspire-cluster",
+        help="Cluster di temi INSPIRE, più cluster separati da virgola (es. mare-atmosfera). Elenco: discover --what inspire_themes.",
+    ),
     time: str | None = typer.Option(None, "--time", help="Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd."),
     modified: str | None = typer.Option(None, "--modified", help="Intervallo modifica record nel catalogo yyyy-mm-dd/yyyy-mm-dd."),
     updated_from: str | None = typer.Option(
@@ -830,6 +863,8 @@ def footprints(
             org_exact=org_exact,
             ipa=ipa,
             data_category=data_category,
+            inspire_theme=inspire_theme,
+            inspire_cluster=inspire_cluster,
             time=time,
             modified=modified,
             updated_from=updated_from,
@@ -873,7 +908,7 @@ def footprints(
     }
     output.emit(geojson)
     if _total_count(payload) == 0:
-        _no_results_hint(q, bbox, data_category, time, org, org_exact)
+        _no_results_hint(q, bbox, data_category, time, org, org_exact, bool(inspire_theme or inspire_cluster))
 
 
 @app.command()
@@ -1051,7 +1086,7 @@ def discover(
     what: str = typer.Option(
         "all",
         "--what",
-        help="Sezione: all|data_categories|sort_values|output_formats|search_params|lucene_fields|ipa.",
+        help="Sezione: all|data_categories|sort_values|output_formats|search_params|lucene_fields|ipa|inspire_themes.",
     ),
     match: str | None = typer.Option(
         None,
@@ -1095,6 +1130,15 @@ def discover(
         return
     if match is not None:
         raise typer.BadParameter("--match vale solo con --what ipa.")
+    if what == "inspire_themes":
+        tree = codelists.inspire_tree()
+        rows = [
+            {"cluster": c["cluster"], "nome_cluster": c["nome"], "codice": t["codice"], "tema": t["it"], "tema_en": t["en"]}
+            for c in tree
+            for t in c["temi"]
+        ]
+        output.emit(tree, table_rows=rows, table_title="Cluster e temi INSPIRE")
+        return
     full = codelists.codelist_payload()
     if what == "all":
         if output.get_mode() == "json":
@@ -1106,7 +1150,7 @@ def discover(
         return
     if what not in full:
         raise typer.BadParameter(
-            f"Sezione sconosciuta: {what}. Disponibili: {', '.join(['all', *full.keys()])}."
+            f"Sezione sconosciuta: {what}. Disponibili: {', '.join(['all', *full.keys(), 'inspire_themes'])}."
         )
     values = full[what]
     if output.get_mode() == "json":

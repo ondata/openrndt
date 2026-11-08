@@ -6,6 +6,8 @@ Permette al comando `discover` di funzionare offline.
 
 from __future__ import annotations
 
+from typing import Any
+
 # ISO 19115 — TopicCategoryCode (categorie tematiche dataset).
 # Fonte: https://standards.iso.org/iso/19115/resources/Codelists/cat/codelists.xml#MD_TopicCategoryCode
 DATA_CATEGORIES: dict[str, str] = {
@@ -161,6 +163,84 @@ LUCENE_FIELDS: dict[str, str] = {
     "apiso_CRS": "Sistema di riferimento (es. EPSG:4326)",
     "apiso_Degree_b": "Conformità INSPIRE: true | false",
 }
+
+
+# Temi INSPIRE: codice e nomi dal registro ufficiale
+# (https://inspire.ec.europa.eu/theme/theme.it.json e theme.en.json, letti il 2026-11-08).
+INSPIRE_THEMES: dict[str, dict[str, str]] = {
+    "ac": {"it": "Condizioni atmosferiche", "en": "Atmospheric conditions"},
+    "ad": {"it": "Indirizzi", "en": "Addresses"},
+    "af": {"it": "Impianti agricoli e di acquacoltura", "en": "Agricultural and aquaculture facilities"},
+    "am": {
+        "it": "Zone sottoposte a gestione/limitazioni/regolamentazione e unità con obbligo di comunicare dati",
+        "en": "Area management/restriction/regulation zones and reporting units",
+    },
+    "au": {"it": "Unità amministrative", "en": "Administrative units"},
+    "br": {"it": "Regioni biogeografiche", "en": "Bio-geographical regions"},
+    "bu": {"it": "Edifici", "en": "Buildings"},
+    "cp": {"it": "Parcelle catastali", "en": "Cadastral parcels"},
+    "ef": {"it": "Impianti di monitoraggio ambientale", "en": "Environmental monitoring facilities"},
+    "el": {"it": "Elevazione", "en": "Elevation"},
+    "er": {"it": "Risorse energetiche", "en": "Energy resources"},
+    "ge": {"it": "Geologia", "en": "Geology"},
+    "gg": {"it": "Sistemi di griglie geografiche", "en": "Geographical grid systems"},
+    "gn": {"it": "Nomi geografici", "en": "Geographical names"},
+    "hb": {"it": "Habitat e biotopi", "en": "Habitats and biotopes"},
+    "hh": {"it": "Salute umana e sicurezza", "en": "Human health and safety"},
+    "hy": {"it": "Idrografia", "en": "Hydrography"},
+    "lc": {"it": "Copertura del suolo", "en": "Land cover"},
+    "lu": {"it": "Utilizzo del territorio", "en": "Land use"},
+    "mf": {"it": "Elementi geografici meteorologici", "en": "Meteorological geographical features"},
+    "mr": {"it": "Risorse minerarie", "en": "Mineral resources"},
+    "nz": {"it": "Zone a rischio naturale", "en": "Natural risk zones"},
+    "of": {"it": "Elementi geografici oceanografici", "en": "Oceanographic geographical features"},
+    "oi": {"it": "Orto immagini", "en": "Orthoimagery"},
+    "pd": {"it": "Distribuzione della popolazione — demografia", "en": "Population distribution — demography"},
+    "pf": {"it": "Produzione e impianti industriali", "en": "Production and industrial facilities"},
+    "ps": {"it": "Siti protetti", "en": "Protected sites"},
+    "rs": {"it": "Sistemi di coordinate", "en": "Coordinate reference systems"},
+    "sd": {"it": "Distribuzione delle specie", "en": "Species distribution"},
+    "so": {"it": "Suolo", "en": "Soil"},
+    "sr": {"it": "Regioni marine", "en": "Sea regions"},
+    "su": {"it": "Unità statistiche", "en": "Statistical units"},
+    "tn": {"it": "Reti di trasporto", "en": "Transport networks"},
+    "us": {"it": "Servizi di pubblica utilità e servizi amministrativi", "en": "Utility and governmental services"},
+}
+
+# Altre grafie dello stesso tema presenti in `INSPIRETheme_s`, oltre a nome
+# italiano, nome inglese e codice (scansione di tutte le schede, 2026-11-08).
+# Il campo distingue maiuscole e minuscole e non è un elenco controllato.
+INSPIRE_VARIANTS: dict[str, tuple[str, ...]] = {
+    "am": ("Zone sottoposte a gestione/limitazioni/regolamentazione\xa0 e unità con obbligo di comunicare dati",),
+    "hy": ("idrografia",),
+    "oi": ("Ortoimmagini",),
+    "pd": ("Distribuzione della popolazione - demografia",),
+}
+
+# I 9 cluster tematici INSPIRE, nei raggruppamenti di https://www.dati.gov.it/geodati.
+INSPIRE_CLUSTERS: dict[str, dict[str, Any]] = {
+    "biodiversita": {"nome": "Biodiversità e Aree sottoposte a gestione", "temi": ["sd", "hb", "br", "ps", "am"]},
+    "copertura-uso-suolo": {"nome": "Copertura del suolo e Utilizzo del Territorio", "temi": ["lc", "lu"]},
+    "dati-di-base": {"nome": "Dati di base topografici e catastali", "temi": ["bu", "hy", "ad", "gn", "cp", "tn", "au"]},
+    "elevazione-orto": {"nome": "Elevazione, Orto immagini, Sistemi di Riferimento, Griglie geografiche", "temi": ["el", "oi", "rs", "gg"]},
+    "impianti-servizi": {"nome": "Impianti e Servizi di pubblica utilità", "temi": ["af", "pf", "us"]},
+    "mare-atmosfera": {"nome": "Mare e Atmosfera", "temi": ["ac", "mf", "of", "sr"]},
+    "monitoraggio": {"nome": "Monitoraggio e Osservazioni ambientali", "temi": ["ef"]},
+    "scienze-terra": {"nome": "Scienze della Terra", "temi": ["ge", "er", "mr", "so", "nz"]},
+    "statistica": {"nome": "Statistica", "temi": ["pd", "hh", "su"]},
+}
+
+
+def inspire_tree() -> list[dict[str, Any]]:
+    """Albero offline dei cluster INSPIRE con i loro temi."""
+    return [
+        {
+            "cluster": slug,
+            "nome": cluster["nome"],
+            "temi": [{"codice": code, **INSPIRE_THEMES[code]} for code in cluster["temi"]],
+        }
+        for slug, cluster in INSPIRE_CLUSTERS.items()
+    ]
 
 
 def codelist_payload() -> dict[str, dict[str, str]]:
