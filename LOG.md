@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-08 (link GeoLibre per tema: tolta la nota)
+
+- Plugin 0.5.3 nel registro dalle 11:20 UTC (opengeos/geolibre-plugins#143): ogni tema cerca tutte le forme, anche con `rndtTheme`. Tolta da `geolibre_search_url` la nota «solo il nome italiano». I cluster nel plugin non si fanno: `--inspire-cluster` e i temi multipli restano in `untranslated`.
+
 ## 2026-11-08 (3.15.0: temi e cluster INSPIRE)
 
 - **PR #51** mergiata in rebase: Greptile verde, nessun commento.

@@ -95,7 +95,7 @@ def test_geolibre_link():
     one = geolibre_search_url(inspire_theme="Idrografia")
     assert one["url"].endswith("&rndtTheme=hy")
     assert one["untranslated"] == []
-    assert "nome italiano" in one["notes"][0]
+    assert one["notes"] == []
     assert geolibre_search_url(inspire_theme="hy,oi")["untranslated"] == ["inspire_theme"]
     assert geolibre_search_url(inspire_cluster="statistica")["untranslated"] == ["inspire_cluster"]
 

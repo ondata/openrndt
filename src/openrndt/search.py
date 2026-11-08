@@ -656,9 +656,8 @@ def geolibre_search_url(
         params.append(("rndtKeywords", ",".join(v.strip() for v in data_category.split(",") if v.strip())))
     theme_codes = _inspire_theme_codes(inspire_theme)
     if len(theme_codes) == 1:
-        # `rndtTheme` accetta un solo tema e il plugin lo cerca col nome italiano.
+        # `rndtTheme` accetta un solo tema; dal plugin 0.5.3 ne cerca tutte le forme.
         params.append(("rndtTheme", theme_codes[0]))
-        notes.append("inspire_theme: il plugin cerca il tema solo con il nome italiano, può trovare meno schede")
     elif theme_codes:
         untranslated.append("inspire_theme")
     if _inspire_cluster_codes(inspire_cluster):
