@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-08 (temi INSPIRE per gli agenti)
+
+- `discover --what search_params` spiega `inspire_theme` e `inspire_cluster`; `lucene_fields` avverte che `INSPIRETheme_s` è il valore come scritto nella scheda. Nella skill: per chi esplora senza idee chiare si parte dall'albero dei temi, e la ricetta dei WMS per tema usa `--inspire-theme`.
+
 ## 2026-11-08 (link GeoLibre per tema: tolta la nota)
 
 - Plugin 0.5.3 nel registro dalle 11:20 UTC (opengeos/geolibre-plugins#143): ogni tema cerca tutte le forme, anche con `rndtTheme`. Tolta da `geolibre_search_url` la nota «solo il nome italiano». I cluster nel plugin non si fanno: `--inspire-cluster` e i temi multipli restano in `untranslated`.

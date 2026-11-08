@@ -100,7 +100,16 @@ openrndt --format json discover --what sort_values
 openrndt --format json discover --what output_formats
 openrndt --format json discover --what search_params
 openrndt --format json discover --what lucene_fields           # campi Lucene
+openrndt --format json discover --what inspire_themes          # 9 cluster e 34 temi INSPIRE
 ```
+
+**Se l'utente non ha le idee chiare, parti dai temi.** Davanti a una richiesta esplorativa («che dati ci sono?», «da dove comincio?») non tentare una ricerca a caso: leggi `discover --what inspire_themes`, presenta i 9 gruppi con parole semplici e fai scegliere un gruppo o un tema. Per dire quante schede ci sono:
+
+```bash
+openrndt --format json search --inspire-cluster mare-atmosfera --num 1 | jq .total
+```
+
+Poi restringi con il territorio, l'ente o il testo. Il tema esiste solo su dataset e serie: i servizi si cercano per testo o per ente.
 
 Dettaglio delle categorie ISO 19115 e cheat sheet
 "bisogno → categoria" in [`references/categories.md`](./references/categories.md).

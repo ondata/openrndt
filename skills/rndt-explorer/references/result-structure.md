@@ -123,7 +123,7 @@ Questi sono i più ricorrenti e utili per costruire `q=campo:valore`:
 | `description`                   | descrizione testuale                                              |
 | `fileid`                        | uguale al `id` del risultato                                      |
 | `keywords_s`                    | parole chiave (include la categoria ISO 19115)                    |
-| `INSPIRETheme_s`                | tema INSPIRE (es. `Idrografia`, `Trasporti`)                      |
+| `INSPIRETheme_s`                | tema INSPIRE come scritto nella scheda (`Idrografia`, `Hydrography`, `hy`): per filtrare usa `--inspire-theme` |
 | `contact_organizations_s`       | array di tutti gli enti responsabili                              |
 | `apiso_OrganizationName_txt`    | nome completo dell'organizzazione principale                      |
 | `EnteResponsabile_s`            | ente responsabile in forma breve (es. `Regione Siciliana`)        |

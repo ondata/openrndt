@@ -83,7 +83,16 @@ SEARCH_PARAMS: dict[str, str] = {
     "bbox": "Bounding box WGS84 nel formato xmin,ymin,xmax,ymax.",
     "bbox_crs": "Parametro CLI (non API): CRS esplicito della bbox. Supportati EPSG:4326, CRS:84, WGS84.",
     "dataCategory": "Una o più categorie ISO 19115 separate da virgola.",
-    "time": "Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
+    "inspire_theme": (
+        "Parametro CLI (non API): uno o più temi INSPIRE per codice o nome, separati da "
+        "virgola, in OR. Cerca tutte le forme del tema nel catalogo. Solo dataset e serie: "
+        "i servizi non hanno il tema. Elenco: `discover --what inspire_themes`."
+    ),
+    "inspire_cluster": (
+        "Parametro CLI (non API): uno o più dei 9 cluster di temi INSPIRE, separati da "
+        "virgola, in OR. Elenco: `discover --what inspire_themes`."
+    ),
+    "time":"Intervallo temporale della risorsa yyyy-mm-dd/yyyy-mm-dd.",
     "modified": "Intervallo di modifica del record nel catalogo yyyy-mm-dd/yyyy-mm-dd. Diverso da `time`: filtra quando il metadato è stato aggiornato nel RNDT, non la copertura temporale della risorsa.",
     "org": (
         "Parametro CLI (non API): ente responsabile che contiene il testo, senza "
@@ -143,7 +152,7 @@ LUCENE_FIELDS: dict[str, str] = {
     "contact_organizations_s": "Organizzazioni di contatto (array)",
     # Classificazione tematica
     "apiso_TopicCategory_s": "Categoria ISO 19115 (es. planningCadastre)",
-    "INSPIRETheme_s": "Tema INSPIRE",
+    "INSPIRETheme_s": "Tema INSPIRE come scritto nella scheda (nome italiano, inglese o codice; case-sensitive). Per filtrare usa `--inspire-theme`.",
     "OpenDataTheme_s": "Tema open data",
     "AmbitoTerritoriale_s": "Ambito: Regionale | Nazionale | Locale (anche Regional/Local in inglese; il campo manca su ~28% dei record)",
     # Date (sortable: usabili sia in range [da TO a] sia come `sort=campo:desc`)

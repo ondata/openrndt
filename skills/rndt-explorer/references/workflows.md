@@ -36,8 +36,8 @@ openrndt --format json get "$ID" | jq -r '.resources[] | "\(.type)\t\(.url)"'
 
 ```bash
 openrndt --format json search \
-  --q 'INSPIRETheme_s:Idrografia' \
-  --num 500 \
+  --inspire-theme hy \
+  --num 1100 \
   | jq -r '.results[].links[]?
             | select(.dctype=="WMS") | .href' \
   | sort -u > wms-idrografia.txt
