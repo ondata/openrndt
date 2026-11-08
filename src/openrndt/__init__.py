@@ -2,6 +2,7 @@
 
 from openrndt._version import __version__
 from openrndt.cli import main
+from openrndt.codelists import inspire_tree
 from openrndt.ipa import (
     find_ipa,
     find_ipa_registry,
@@ -52,6 +53,7 @@ __all__ = [
     "ipa_clause",
     "ipa_vocabulary",
     "ipa_vocabulary_date",
+    "inspire_tree",
     "main",
     "search",
     "compact_results",

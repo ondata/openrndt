@@ -8,7 +8,12 @@ from typing import Any, cast
 from urllib.parse import quote
 
 from openrndt.client import rndt_request
-from openrndt.codelists import DATA_CATEGORIES
+from openrndt.codelists import (
+    DATA_CATEGORIES,
+    INSPIRE_CLUSTERS,
+    INSPIRE_THEMES,
+    INSPIRE_VARIANTS,
+)
 from openrndt.ipa import ipa_clause
 from openrndt.resources import _infer_kind, extract_resources
 
@@ -42,6 +47,52 @@ def _build_category_clause(values: str) -> str:
         return f"keywords_s:{items[0]}"
     joined = " OR ".join(items)
     return f"keywords_s:({joined})"
+
+
+def _inspire_theme_codes(values: str | None) -> list[str]:
+    """Codici dei temi INSPIRE indicati per codice, nome italiano o inglese."""
+    names = {code: code for code in INSPIRE_THEMES}
+    for code, theme in INSPIRE_THEMES.items():
+        names[theme["it"].lower()] = code
+        names[theme["en"].lower()] = code
+    for code, variants in INSPIRE_VARIANTS.items():
+        names.update({variant.lower(): code for variant in variants})
+    codes: list[str] = []
+    for value in (values or "").split(","):
+        if not value.strip():
+            continue
+        match = names.get(value.strip().lower())
+        if match is None:
+            raise ValueError(f"Tema INSPIRE sconosciuto: {value.strip()}. Elenco: discover --what inspire_themes.")
+        if match not in codes:
+            codes.append(match)
+    return codes
+
+
+def _inspire_cluster_codes(values: str | None) -> list[str]:
+    """Codici dei temi dei cluster INSPIRE indicati."""
+    codes: list[str] = []
+    for value in (values or "").split(","):
+        slug = value.strip().lower()
+        if not slug:
+            continue
+        if slug not in INSPIRE_CLUSTERS:
+            raise ValueError(f"Cluster INSPIRE sconosciuto: {value.strip()}. Elenco: discover --what inspire_themes.")
+        codes += [code for code in INSPIRE_CLUSTERS[slug]["temi"] if code not in codes]
+    return codes
+
+
+def _build_inspire_clause(codes: list[str]) -> str:
+    """Clausola su `INSPIRETheme_s` con tutte le forme dei temi indicati.
+
+    Il campo riporta il valore come lo scrive ogni scheda: nome italiano,
+    inglese, codice o altre grafie, con distinzione di maiuscole.
+    """
+    forms: list[str] = []
+    for code in codes:
+        forms += [INSPIRE_THEMES[code]["it"], INSPIRE_THEMES[code]["en"], code, *INSPIRE_VARIANTS.get(code, ())]
+    joined = " OR ".join(f'"{form}"' for form in forms)
+    return f"INSPIRETheme_s:({joined})" if forms else ""
 
 
 def _normalize_bbox_crs(bbox_crs: str | None) -> str | None:
@@ -218,6 +269,8 @@ def search(
     org_exact: str | None = None,
     ipa: str | None = None,
     data_category: str | None = None,
+    inspire_theme: str | None = None,
+    inspire_cluster: str | None = None,
     time: str | None = None,
     modified: str | None = None,
     updated_from: str | None = None,
@@ -245,6 +298,11 @@ def search(
     ``ipa`` filtra sul codice IPA dell'ente titolare, il prefisso dell'id, senza
     distinzione di maiuscole: uno o più codici separati da virgola, in OR
     (vedi :func:`openrndt.ipa.ipa_clause`). Si combina in AND con ``org``.
+
+    ``inspire_theme`` (codici o nomi, separati da virgola, in OR) e
+    ``inspire_cluster`` (slug dei cluster) filtrano sui temi INSPIRE in tutte le
+    forme presenti nel catalogo (:func:`openrndt.codelists.inspire_tree` ha
+    l'elenco). Il tema esiste solo su dataset e serie: i servizi restano fuori.
 
     Nota su `sort` (verificato live): l'ordinamento reale usa la sintassi
     `campo:asc|desc` su un campo sortable (keyword `_s`, data `_dt`, intero `_i`),
@@ -283,7 +341,10 @@ def search(
         clause = _build_category_clause(data_category)
         if clause:
             non_q_clauses.append(clause)
-    updated_clause = _build_date_range_clause("apiso_Modified_dt", updated_from, updated_to, label="updated")
+    for codes in (_inspire_theme_codes(inspire_theme), _inspire_cluster_codes(inspire_cluster)):
+        if codes:
+            non_q_clauses.append(_build_inspire_clause(codes))
+    updated_clause =_build_date_range_clause("apiso_Modified_dt", updated_from, updated_to, label="updated")
     if updated_clause:
         non_q_clauses.append(updated_clause)
     published_clause = _build_date_range_clause(
@@ -537,6 +598,8 @@ def geolibre_search_url(
     org_exact: str | None = None,
     ipa: str | None = None,
     data_category: str | None = None,
+    inspire_theme: str | None = None,
+    inspire_cluster: str | None = None,
     time: str | None = None,
     modified: str | None = None,
     updated_from: str | None = None,
@@ -560,7 +623,7 @@ def geolibre_search_url(
     _check_q_mode(q_mode)
     filters = {
         "q": q, "bbox": bbox, "org": org, "org_exact": org_exact, "ipa": ipa, "data_category": data_category,
-        "time": time, "modified": modified, "updated_from": updated_from, "updated_to": updated_to,
+        "inspire_theme": inspire_theme, "inspire_cluster": inspire_cluster, "time": time, "modified": modified, "updated_from": updated_from, "updated_to": updated_to,
         "published_from": published_from, "published_to": published_to, "sort": sort,
     }
     if item_id:
@@ -591,6 +654,15 @@ def geolibre_search_url(
         params.append(("rndtIpa", ",".join(v.strip() for v in ipa.split(",") if v.strip())))
     if data_category is not None and data_category.strip():
         params.append(("rndtKeywords", ",".join(v.strip() for v in data_category.split(",") if v.strip())))
+    theme_codes = _inspire_theme_codes(inspire_theme)
+    if len(theme_codes) == 1:
+        # `rndtTheme` accetta un solo tema e il plugin lo cerca col nome italiano.
+        params.append(("rndtTheme", theme_codes[0]))
+        notes.append("inspire_theme: il plugin cerca il tema solo con il nome italiano, può trovare meno schede")
+    elif theme_codes:
+        untranslated.append("inspire_theme")
+    if _inspire_cluster_codes(inspire_cluster):
+        untranslated.append("inspire_cluster")
     if updated_from is not None or updated_to is not None:
         params.append(("rndtDate", "modified"))
         params += [(k, v) for k, v in (("rndtFrom", updated_from), ("rndtTo", updated_to)) if v is not None]
