@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-10 (README: prompt per agenti)
+
+- Nuova sezione `Agent quickstart`, secondo START-001 di agent-ready-data-tools: un prompt da incollare che controlla cosa c'è già, chiede conferma solo per ciò che manca, arriva a una prima ricerca reale e dichiara evidenze, fallback e lingua.
+
 ## 2026-11-10 (README: stato)
 
 - Il banner diceva ancora `v2.0` con il pacchetto alla 3.15.0: ora `v3.x`.

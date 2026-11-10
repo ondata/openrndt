@@ -54,6 +54,30 @@ Il modulo del sito non ha un campo per queste ricerche, ma il suo campo di testo
 | Vedere i layer di un WMS o WMTS | `openrndt resources <id> --layers` | L'elenco dei layer come dati, ognuno con il link che lo apre sulla mappa in GeoLibre web. |
 | Automatizzare | [libreria Python](#uso-come-libreria-python) e [skill per agenti AI](#per-agenti-ai) | Le stesse ricerche in uno script o guidate da un agente, con output strutturato e comandi ripetibili. |
 
+## Agent quickstart
+
+Incolla questo prompt nel tuo agente AI, senza bisogno di skill o server MCP: controlla cosa hai già, chiede conferma prima di installare ciò che manca e arriva a una prima ricerca reale nel catalogo.
+
+```text
+Aiutami a usare openrndt (https://github.com/ondata/openrndt), una CLI Python che interroga il Repertorio Nazionale dei Dati Territoriali (RNDT), il catalogo ufficiale italiano dei metadati geografici, e restituisce schede e URL reali di servizi WMS, WFS e download.
+
+Procedi così:
+1. Esegui `openrndt --version`. Se risponde 3.15.0 o successiva, la CLI è già installata: non chiedermi nulla e vai al punto 3.
+2. Se manca o è più vecchia e l'ambiente lo permette, chiedimi conferma e installala con `uv tool install openrndt`, oppure aggiornala con `uv tool upgrade openrndt`. Se manca `uv`, chiedimi se installarlo seguendo https://docs.astral.sh/uv/getting-started/installation/ (serve Python 3.12 o successivo). Poi ripeti `openrndt --version`.
+3. Leggi `openrndt --help`. È pensato per gli agenti, quindi usalo come guida principale e apri il `--help` di ogni comando prima di usarlo. `openrndt discover` elenca i valori validi dei filtri senza usare la rete.
+4. Prima prova: ricava il codice dell'ente con `openrndt discover --what ipa --match torino` (atteso `c_l219`, Comune di Torino), poi fai una sola ricerca reale con `openrndt --format compact search --ipa c_l219 --q catasto --num 3` (attese tre righe JSON con `id` che inizia per `c_l219:` e `org` uguale a Comune di Torino). Mostrami titolo, ente e risorse (`resources`) di ogni riga.
+5. Solo alla fine, in un unico messaggio, proponimi due o tre ricerche possibili a partire da questo risultato, chiedimi quali dati territoriali sto cercando e proponimi due extra facoltativi, se non li ho già: la skill `rndt-explorer`, che guida la ricerca passo passo (https://github.com/ondata/openrndt/tree/main/skills/rndt-explorer, da installare nel modo previsto dal tuo client), e GeoLibre, consigliato dal progetto per portare i dati su una mappa (https://github.com/ondata/openrndt/blob/main/README.md#vedere-i-dati-su-una-mappa-geolibre-consigliato). Non installare nessuno dei due senza il mio sì.
+
+Regole:
+- `--format` va prima del comando (`openrndt --format compact search ...`), altrimenti dà errore.
+- Usa solo id, codici e URL restituiti dalla CLI: non inventarli e non completarli a memoria.
+- `open: false` vuol dire solo che l'ente non ha dichiarato il dato come aperto in quel campo, non che sia chiuso.
+- `updated` è la data della scheda, non del dato. La data del dato è `data_date` in `openrndt get <id>`: se manca, dimmi che non è nota.
+- Per il resto segui https://github.com/ondata/openrndt/blob/main/skills/rndt-explorer/SKILL.md e https://github.com/ondata/openrndt/blob/main/README.md
+
+Mostrami i comandi usati e i risultati reali, con la fonte, le date disponibili e i limiti. Se installazione, rete o esecuzione non sono disponibili, dimmi cosa è bloccato e dammi i comandi documentati da lanciare a mano. Non inventare risultati e non dire di aver eseguito ciò che non hai eseguito. Rispondimi nella mia lingua.
+```
+
 ## Installazione
 
 ### Da PyPI
