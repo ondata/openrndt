@@ -15,7 +15,7 @@ pensata per essere orchestrata da un'AI.
 
 > **Al meglio con un'AI.** openrndt funziona benissimo da solo, ma **dà il massimo se guidato da un agente AI**: la CLI è progettata per essere composta, interrogata e orchestrata passo passo. Per un'esperienza guidata — scoperta delle codelist, ricerca con filtri progressivi, dettaglio del metadato, risorse scaricabili — abbinala alla Agent Skill [`rndt-explorer`](https://github.com/ondata/openrndt/blob/main/skills/rndt-explorer/SKILL.md) inclusa in questo repo. I principi di design sono nella sezione [Per agenti AI](#per-agenti-ai).
 
-> Stato: v2.0 — read-only.
+> Stato: v3.x — read-only.
 
 ## Cos'è il RNDT
 

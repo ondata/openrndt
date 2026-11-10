@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-10 (README: stato)
+
+- Il banner diceva ancora `v2.0` con il pacchetto alla 3.15.0: ora `v3.x`.
+
 ## 2026-11-08 (skill: territorio nominato, filtro per bbox)
 
 - La skill filtrava per stringa o per ente anche quando la domanda nominava un luogo. Elevazione e ortofoto in provincia di Palermo: `--q palermo` 0, `--ipa r_sicili` 0, con il bbox 45. Ora il territorio nominato va su `--bbox`, con il riquadro da confini-amministrativi.it (dati ISTAT); Nominatim resta per frazioni e località.
