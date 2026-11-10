@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-10 (metadati per la ricerca)
+
+- GitHub: descrizione in italiano, homepage su PyPI e 20 topic (erano vuoti). `pyproject.toml`: stessa descrizione, 9 keyword, 3 classifier, link `Homepage` e `Changelog`; su PyPI arrivano con la prossima release.
+
 ## 2026-11-10 (README: prompt per agenti)
 
 - Nuova sezione `Agent quickstart`, secondo START-001 di agent-ready-data-tools: un prompt da incollare che controlla cosa c'è già, chiede conferma solo per ciò che manca, arriva a una prima ricerca reale e dichiara evidenze, fallback e lingua.

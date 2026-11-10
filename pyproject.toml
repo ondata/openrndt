@@ -1,24 +1,27 @@
 [project]
 name = "openrndt"
 version = "3.15.0"
-description = "CLI Python per il Repertorio Nazionale dei Dati Territoriali (RNDT) — pensata per essere orchestrata da un'AI"
+description = "CLI e libreria Python per il Repertorio Nazionale dei Dati Territoriali (RNDT), il catalogo italiano dei metadati geografici: cerca dataset, servizi WMS/WFS e download (ISO 19115, INSPIRE). Pensata per gli agenti AI."
 readme = "README.md"
 authors = [
     { name = "Andrea Borruso", email = "aborruso@gmail.com" }
 ]
 license = { text = "MIT" }
 requires-python = ">=3.12"
-keywords = ["rndt", "geodati", "inspire", "metadata", "iso19115", "iso19139", "open-data", "italy"]
+keywords = ["rndt", "geodati", "inspire", "metadata", "iso19115", "iso19139", "open-data", "italy", "cli", "gis", "geospatial", "spatial-data", "wms", "wfs", "geoportale", "dati-territoriali", "ai-agents"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Natural Language :: Italian",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = [
     "httpx>=0.28.1",
@@ -31,8 +34,10 @@ dependencies = [
 openrndt = "openrndt:main"
 
 [project.urls]
+Homepage = "https://github.com/ondata/openrndt"
 Repository = "https://github.com/ondata/openrndt"
 Issues = "https://github.com/ondata/openrndt/issues"
+Changelog = "https://github.com/ondata/openrndt/blob/main/CHANGELOG.md"
 "RNDT Portal" = "https://geodati.gov.it/geoportale/"
 "RNDT REST API" = "https://geodati.gov.it/geoportale/eng/strumenti-en/rest-api"
 
