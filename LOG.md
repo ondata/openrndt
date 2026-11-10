@@ -1,5 +1,9 @@
 # LOG
 
+## 2026-11-10 (README: badge DeepWiki)
+
+- `deepwiki.com/badge.svg` risponde 429 con la pagina «Vercel Security Checkpoint» e su GitHub restava il solo testo: ora badge statico shields.io, stesso link.
+
 ## 2026-11-10 (metadati per la ricerca)
 
 - GitHub: descrizione in italiano, homepage su PyPI e 20 topic (erano vuoti). `pyproject.toml`: stessa descrizione, 9 keyword, 3 classifier, link `Homepage` e `Changelog`; su PyPI arrivano con la prossima release.
